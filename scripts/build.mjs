@@ -1,11 +1,21 @@
 #!/usr/bin/env node
-// Build script: reads NDJSON, flattens each row, dedupes transcripts,
-// parses facets out of global_key, builds a MiniSearch index, and writes
-// AES-GCM-encrypted blobs to public/.
+// Build script: reads one or more NDJSONs, flattens each row, dedupes
+// transcripts, parses facets out of global_key + annotator from
+// label.label_details.created_by, builds a MiniSearch index, encrypts
+// outputs.
 //
-// Usage:  node scripts/build.mjs path/to/your.ndjson
-// Default input: ./input.ndjson
-// Password:      env var SEARCH_PASSWORD (required)
+// Usage:
+//   node scripts/build.mjs FILE[:BATCH] [FILE[:BATCH] ...]
+//
+//   FILE  — path to NDJSON
+//   BATCH — optional name for this batch. Defaults to the filename
+//           minus extension (e.g. "input.ndjson" -> "input").
+//
+// Examples:
+//   node scripts/build.mjs input.ndjson
+//   node scripts/build.mjs jan.ndjson:january feb.ndjson:february
+//
+// Password env var SEARCH_PASSWORD is required.
 
 import fs from 'node:fs';
 import path from 'node:path';
@@ -13,17 +23,15 @@ import readline from 'node:readline';
 import crypto from 'node:crypto';
 import MiniSearch from 'minisearch';
 
-const INPUT = process.argv[2] || 'input.ndjson';
-const OUT_DIR = 'public';
-const DATA_PATH = path.join(OUT_DIR, 'data.enc');
-const INDEX_PATH = path.join(OUT_DIR, 'index.enc');
-const META_PATH = path.join(OUT_DIR, 'meta.json'); // public; carries facet lists & KDF params
+// ---------------------------------------------------------------------------
+// Args & env
+// ---------------------------------------------------------------------------
+const inputs = process.argv.slice(2);
+if (inputs.length === 0) inputs.push('input.ndjson'); // default
 
 const PASSWORD = process.env.SEARCH_PASSWORD;
 if (!PASSWORD) {
   console.error('✗ SEARCH_PASSWORD env var is required.');
-  console.error('  Local:   SEARCH_PASSWORD="your-password" npm run build');
-  console.error('  CI:      set SEARCH_PASSWORD as a repo secret (see README).');
   process.exit(1);
 }
 if (PASSWORD.length < 8) {
@@ -31,25 +39,41 @@ if (PASSWORD.length < 8) {
   process.exit(1);
 }
 
-if (!fs.existsSync(INPUT)) {
-  console.error(`✗ Input file not found: ${INPUT}`);
-  process.exit(1);
-}
+const OUT_DIR = 'public';
+const DATA_PATH = path.join(OUT_DIR, 'data.enc');
+const INDEX_PATH = path.join(OUT_DIR, 'index.enc');
+const META_PATH = path.join(OUT_DIR, 'meta.json');
 fs.mkdirSync(OUT_DIR, { recursive: true });
 
-// ---------------------------------------------------------------------------
-// Global key parsing
-// ---------------------------------------------------------------------------
-//
-// Filenames look like:  YPJT2-Center-Jan-25-2026-0100Z_25_VAD_v2.wav
-//                       \___/ \____/ \__________/ \__/
-//                       airport position    date     time
-//
-// We parse defensively: anything that doesn't match the pattern still works,
-// it just gets fewer facet values populated.
+// Parse FILE[:BATCH] specs.
+const jobs = inputs.map(spec => {
+  // Allow bare "FILE" (no colon) or "FILE:BATCH". Windows paths like
+  // "C:\foo\bar.ndjson" have a colon — we only treat the LAST colon as
+  // a separator if what follows looks like a batch name (no slashes).
+  const lastColon = spec.lastIndexOf(':');
+  if (lastColon > 1) { // > 1 to skip Windows drive letter "C:"
+    const maybeBatch = spec.slice(lastColon + 1);
+    if (!maybeBatch.includes('/') && !maybeBatch.includes('\\') && !maybeBatch.includes('.')) {
+      return { file: spec.slice(0, lastColon), batch: maybeBatch };
+    }
+  }
+  // Default batch = basename without extension.
+  return { file: spec, batch: path.basename(spec).replace(/\.ndjson$/i, '') };
+});
 
+for (const job of jobs) {
+  if (!fs.existsSync(job.file)) {
+    console.error(`✗ Input not found: ${job.file}`);
+    process.exit(1);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Parsers
+// ---------------------------------------------------------------------------
+
+// Filename: YPJT2-Center-Jan-25-2026-0100Z_25_VAD_v2.wav
 const KEY_RE = /^([A-Z0-9]+)-([A-Za-z]+)-([A-Za-z]+-\d+-\d+)-(\d+Z)_/;
-
 function parseKey(key) {
   if (!key) return {};
   const m = key.match(KEY_RE);
@@ -57,32 +81,66 @@ function parseKey(key) {
   return { airport: m[1], position: m[2], date: m[3], time: m[4] };
 }
 
+// created_by: "usr.email.cmnpwy74k0xdt07080m2ca04e@internal.labelbox.com"
+//                       \________________________/
+//                                annotator id
+const ANNOTATOR_RE = /^usr\.email\.([^@]+)@/;
+function parseAnnotator(createdBy) {
+  if (!createdBy) return null;
+  const m = String(createdBy).match(ANNOTATOR_RE);
+  return m ? m[1] : String(createdBy); // fallback: use whole string
+}
+// workflow_history: array of {action, created_at, created_by, ...}.
+// A row is "reviewed" if it has at least one Approve action.
+// We grab the most recent Approve and pull reviewer + timestamp.
+function parseReview(workflowHistory) {
+  if (!Array.isArray(workflowHistory)) {
+    return { reviewed: false, reviewedBy: null, reviewedAt: null };
+  }
+  const approvals = workflowHistory
+    .filter(e => e?.action === 'Approve')
+    .sort((a, b) => String(b?.created_at).localeCompare(String(a?.created_at)));
+  if (approvals.length === 0) {
+    return { reviewed: false, reviewedBy: null, reviewedAt: null };
+  }
+  const latest = approvals[0];
+  return {
+    reviewed: true,
+    reviewedBy: parseAnnotator(latest.created_by) ?? latest.created_by ?? null,
+    reviewedAt: latest.created_at ?? null,
+  };
+}
 // ---------------------------------------------------------------------------
 // Row flattening
 // ---------------------------------------------------------------------------
 
-function flatten(row) {
+function flatten(row, batchName) {
   const id = row?.data_row?.id;
   const key = row?.data_row?.global_key;
   const duration = row?.media_attributes?.duration ?? null;
 
   const projects = row?.projects ?? {};
-  const firstProject = Object.values(projects)[0];
+  const projectEntries = Object.entries(projects);
+  const projectId = projectEntries[0]?.[0] ?? null;
+  const firstProject = projectEntries[0]?.[1];
   const label = firstProject?.labels?.[0];
-
+  const review = parseReview(firstProject?.project_details?.workflow_history);
   const facets = parseKey(key);
+  const annotator = parseAnnotator(label?.label_details?.created_by);
 
   if (!label) {
-    return { id, key, duration, ...facets, speakers: 0, roles: [], segments: [], transcript: '' };
+    return {
+      id, key, duration, projectId, ...facets,
+      batch: batchName, annotator, ...review,
+      speakers: 0, roles: [], segments: [], transcript: '',
+    };
   }
 
-  // Build "Speaker 1" -> "pilot" map from top-level classifications.
+  // "Speaker 1" -> "pilot"
   const speakerRoles = {};
-  const topClassifications = label?.annotations?.classifications ?? [];
-  for (const c of topClassifications) {
+  for (const c of label?.annotations?.classifications ?? []) {
     if (c?.value === 'how_many_speakers_are_there') {
-      const inner = c?.radio_answer?.classifications ?? [];
-      for (const sub of inner) {
+      for (const sub of c?.radio_answer?.classifications ?? []) {
         const m = sub?.value?.match(/speaker_(\d+)$/);
         if (!m) continue;
         const speakerLabel = `Speaker ${m[1]}`;
@@ -95,7 +153,6 @@ function flatten(row) {
   const segmentsBlock = label?.annotations?.segments ?? {};
   const timestampBlock = label?.annotations?.timestamp ?? {};
 
-  // feature_id -> "Speaker N", scraped from any timestamp entry.
   const featureToSpeaker = {};
   for (const tsEntry of Object.values(timestampBlock)) {
     for (const cls of tsEntry?.classifications ?? []) {
@@ -105,7 +162,6 @@ function flatten(row) {
     }
   }
 
-  // feature_id -> { startMs -> text }
   const featureTextByStart = {};
   for (const [tsKey, tsEntry] of Object.entries(timestampBlock)) {
     const startMs = Number(tsKey);
@@ -120,7 +176,6 @@ function flatten(row) {
     }
   }
 
-  // Assemble segments.
   const segments = [];
   for (const [fid, ranges] of Object.entries(segmentsBlock)) {
     const speakerLabel = featureToSpeaker[fid] ?? 'Speaker ?';
@@ -145,52 +200,62 @@ function flatten(row) {
   }
 
   const transcript = dedupedSegments.map(s => s.text).filter(Boolean).join(' \u2022 ');
-
   const roles = Object.keys(speakerRoles).sort().map(k => speakerRoles[k]);
 
   return {
-    id,
-    key,
-    duration,
-    ...facets,
+    id, key, duration, projectId, ...facets,
+    batch: batchName, annotator, ...review,
     speakers: roles.length,
-    roles,
-    segments: dedupedSegments,
-    transcript,
+    roles, segments: dedupedSegments, transcript,
   };
 }
 
 // ---------------------------------------------------------------------------
-// Stream NDJSON
+// Stream all input files
 // ---------------------------------------------------------------------------
+const seenIds = new Set(); // dedupe across batches by row id
 const rows = [];
-let lineNum = 0;
-let skipped = 0;
+let totalLines = 0;
+let totalSkipped = 0;
+let totalDuped = 0;
 
-console.log(`→ Reading ${INPUT}`);
-const rl = readline.createInterface({
-  input: fs.createReadStream(INPUT, { encoding: 'utf8' }),
-  crlfDelay: Infinity,
-});
+for (const job of jobs) {
+  console.log(`→ Reading ${job.file}  (batch="${job.batch}")`);
+  let lineNum = 0;
+  let kept = 0;
+  let skipped = 0;
+  let duped = 0;
 
-for await (const line of rl) {
-  lineNum++;
-  const trimmed = line.trim();
-  if (!trimmed) continue;
-  try {
-    const flat = flatten(JSON.parse(trimmed));
-    if (!flat.transcript) { skipped++; continue; }
-    rows.push(flat);
-  } catch (e) {
-    console.warn(`  ! line ${lineNum} parse error: ${e.message}`);
-    skipped++;
+  const rl = readline.createInterface({
+    input: fs.createReadStream(job.file, { encoding: 'utf8' }),
+    crlfDelay: Infinity,
+  });
+
+  for await (const line of rl) {
+    lineNum++;
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    try {
+      const flat = flatten(JSON.parse(trimmed), job.batch);
+      if (!flat.transcript) { skipped++; continue; }
+      if (flat.id && seenIds.has(flat.id)) { duped++; continue; }
+      if (flat.id) seenIds.add(flat.id);
+      rows.push(flat);
+      kept++;
+    } catch (e) {
+      console.warn(`  ! line ${lineNum} parse error: ${e.message}`);
+      skipped++;
+    }
+    if (lineNum % 1000 === 0) process.stdout.write(`  ${lineNum} lines\r`);
   }
-  if (lineNum % 1000 === 0) process.stdout.write(`  ${lineNum} lines\r`);
+  console.log(`  ${lineNum} lines · kept ${kept} · skipped ${skipped} · duped ${duped}`);
+  totalLines += lineNum; totalSkipped += skipped; totalDuped += duped;
 }
-console.log(`✓ Parsed ${lineNum} lines, kept ${rows.length}, skipped ${skipped}`);
-
+console.log(`✓ Total: ${totalLines} lines read, ${rows.length} kept, ${totalSkipped} skipped, ${totalDuped} duped`);
+const reviewedCount = rows.filter(r => r.reviewed).length;
+console.log(`  Reviewed: ${reviewedCount} / ${rows.length} (${((reviewedCount/rows.length)*100).toFixed(1)}%)`);
 // ---------------------------------------------------------------------------
-// Collect facets (sorted, with counts)
+// Facets
 // ---------------------------------------------------------------------------
 function collectFacet(field) {
   const counts = new Map();
@@ -205,9 +270,12 @@ function collectFacet(field) {
 }
 
 const facets = {
-  airport: collectFacet('airport'),
-  position: collectFacet('position'),
-  date: collectFacet('date'),
+  airport:   collectFacet('airport'),
+  position:  collectFacet('position'),
+  date:      collectFacet('date'),
+  batch:     collectFacet('batch'),
+  annotator: collectFacet('annotator'),
+  reviewer:  collectFacet('reviewedBy'),
 };
 
 // ---------------------------------------------------------------------------
@@ -215,8 +283,9 @@ const facets = {
 // ---------------------------------------------------------------------------
 const ms = new MiniSearch({
   fields: ['transcript', 'key'],
-  storeFields: ['key', 'duration', 'speakers', 'roles', 'segments', 'transcript',
-                'airport', 'position', 'date', 'time'],
+  storeFields: ['id', 'projectId', 'key', 'duration', 'speakers', 'roles', 'segments', 'transcript',
+    'airport', 'position', 'date', 'time', 'batch', 'annotator',
+    'reviewed', 'reviewedBy', 'reviewedAt'],
   searchOptions: {
     boost: { key: 2 },
     fuzzy: 0.2,
@@ -229,52 +298,32 @@ console.log(`→ Building MiniSearch index (${rows.length} docs)`);
 ms.addAll(rows);
 
 // ---------------------------------------------------------------------------
-// Encrypt and write
+// Encrypt
 // ---------------------------------------------------------------------------
-//
-// Crypto: PBKDF2-SHA256 (600k iterations, OWASP 2023 minimum) -> 256-bit key
-//         -> AES-256-GCM with random 12-byte IV per blob.
-// Salt is shared across blobs (committed in meta.json), so the password only
-// derives the key once on the client.
-
 const ITERATIONS = 600_000;
 const SALT = crypto.randomBytes(16);
 
 function deriveKey(password, salt) {
   return crypto.pbkdf2Sync(password, salt, ITERATIONS, 32, 'sha256');
 }
-
 function encrypt(plaintextBuffer, key) {
   const iv = crypto.randomBytes(12);
   const cipher = crypto.createCipheriv('aes-256-gcm', key, iv);
   const enc = Buffer.concat([cipher.update(plaintextBuffer), cipher.final()]);
   const tag = cipher.getAuthTag();
-  // Output format: [12-byte IV][16-byte tag][ciphertext]
   return Buffer.concat([iv, tag, enc]);
 }
 
 console.log(`→ Deriving key (PBKDF2, ${ITERATIONS.toLocaleString()} iterations)`);
 const key = deriveKey(PASSWORD, SALT);
 
-const dataBuf = Buffer.from(JSON.stringify(rows));
-const indexBuf = Buffer.from(JSON.stringify(ms.toJSON()));
-
 console.log(`→ Encrypting blobs (AES-256-GCM)`);
-fs.writeFileSync(DATA_PATH, encrypt(dataBuf, key));
-fs.writeFileSync(INDEX_PATH, encrypt(indexBuf, key));
+fs.writeFileSync(DATA_PATH, encrypt(Buffer.from(JSON.stringify(rows)), key));
+fs.writeFileSync(INDEX_PATH, encrypt(Buffer.from(JSON.stringify(ms.toJSON())), key));
 
-// Public meta — KDF params + facet lists. Facet values aren't sensitive on
-// their own (they're airport codes, sector names, dates) and we need them to
-// populate dropdowns BEFORE the user enters the password. If you consider
-// even the facet list sensitive, move this into the encrypted blob.
 const meta = {
-  version: 1,
-  kdf: {
-    name: 'PBKDF2',
-    hash: 'SHA-256',
-    iterations: ITERATIONS,
-    salt: SALT.toString('base64'),
-  },
+  version: 2,
+  kdf: { name: 'PBKDF2', hash: 'SHA-256', iterations: ITERATIONS, salt: SALT.toString('base64') },
   cipher: 'AES-256-GCM',
   count: rows.length,
   totalSeconds: rows.reduce((a, r) => a + (r.duration || 0), 0),
@@ -287,4 +336,5 @@ const indexKB = (fs.statSync(INDEX_PATH).size / 1024).toFixed(0);
 console.log(`✓ Wrote ${DATA_PATH} (${dataKB} KB)`);
 console.log(`✓ Wrote ${INDEX_PATH} (${indexKB} KB)`);
 console.log(`✓ Wrote ${META_PATH}`);
-console.log(`  Password set. Anyone with the URL but not the password sees only ciphertext.`);
+console.log(`  Batches: ${facets.batch.map(b => `${b.value}(${b.count})`).join(', ')}`);
+console.log(`  Annotators: ${facets.annotator.length} distinct`);
