@@ -28,74 +28,105 @@ jobs:
       - run: npm ci
 
       # ---------------------------------------------------------------------
-      # Download NDJSON from Google Drive.
+      # GDRIVE_FILES is a comma-separated list of "FILE_ID:BATCH_NAME" pairs.
+      # Example secret value:
+      #   1abc...XYZ:january, 2def...UVW:february
       #
-      # Google Drive blocks direct downloads of files > ~100 MB with a virus-
-      # scan warning interstitial. We work around it the standard way:
-      # 1. First curl gets the interstitial HTML and a session cookie
-      # 2. Parse the confirm token + uuid out of the HTML
-      # 3. Second curl uses the token + cookie to grab the actual file
-      #
-      # Reference (the technique most CLI tools use):
-      #   https://github.com/wkentaro/gdown
+      # Backwards compat: if you only set GDRIVE_FILE_ID (the old single-file
+      # secret), we treat it as one entry with batch name "input".
       # ---------------------------------------------------------------------
-      - name: Fetch NDJSON from Google Drive
+      - name: Fetch NDJSON(s) from Google Drive
         env:
+          GDRIVE_FILES: ${{ secrets.GDRIVE_FILES }}
           GDRIVE_FILE_ID: ${{ secrets.GDRIVE_FILE_ID }}
         run: |
           set -euo pipefail
-          if [ -z "${GDRIVE_FILE_ID:-}" ]; then
-            echo "✗ GDRIVE_FILE_ID secret is not set."
+
+          # Normalize: prefer GDRIVE_FILES; fall back to single GDRIVE_FILE_ID.
+          SPEC="${GDRIVE_FILES:-}"
+          if [ -z "$SPEC" ] && [ -n "${GDRIVE_FILE_ID:-}" ]; then
+            SPEC="${GDRIVE_FILE_ID}:input"
+          fi
+          if [ -z "$SPEC" ]; then
+            echo "✗ Neither GDRIVE_FILES nor GDRIVE_FILE_ID is set."
             exit 1
           fi
 
-          URL="https://drive.usercontent.google.com/download?id=${GDRIVE_FILE_ID}&export=download"
+          download_one() {
+            local FILE_ID="$1"
+            local OUT="$2"
+            local URL="https://drive.usercontent.google.com/download?id=${FILE_ID}&export=download"
 
-          # First request: get cookies + the confirmation page.
-          curl -sSL -c cookies.txt -o page.html "$URL"
+            # First request: cookies + interstitial HTML (for files > ~100MB)
+            curl -sSL -c "${OUT}.cookies" -o "${OUT}.page" "$URL"
 
-          # Try to extract a "confirm" token (form input) and uuid (form input)
-          # from the HTML. Drive's exact markup changes occasionally; this
-          # handles the most common forms.
-          CONFIRM=$(grep -oE 'name="confirm" value="[^"]+"' page.html | head -1 | sed -E 's/.*value="([^"]+)".*/\1/' || true)
-          UUID=$(grep -oE 'name="uuid" value="[^"]+"' page.html | head -1 | sed -E 's/.*value="([^"]+)".*/\1/' || true)
+            local CONFIRM UUID DOWNLOAD_URL
+            CONFIRM=$(grep -oE 'name="confirm" value="[^"]+"' "${OUT}.page" | head -1 | sed -E 's/.*value="([^"]+)".*/\1/' || true)
+            UUID=$(grep -oE 'name="uuid" value="[^"]+"' "${OUT}.page" | head -1 | sed -E 's/.*value="([^"]+)".*/\1/' || true)
 
-          if [ -n "${CONFIRM:-}" ] && [ -n "${UUID:-}" ]; then
-            DOWNLOAD_URL="https://drive.usercontent.google.com/download?id=${GDRIVE_FILE_ID}&export=download&confirm=${CONFIRM}&uuid=${UUID}"
-          elif [ -n "${CONFIRM:-}" ]; then
-            DOWNLOAD_URL="https://drive.usercontent.google.com/download?id=${GDRIVE_FILE_ID}&export=download&confirm=${CONFIRM}"
-          else
-            # No interstitial — small file, or Drive served the file directly.
-            # Use the original URL.
-            DOWNLOAD_URL="$URL"
-          fi
+            if [ -n "${CONFIRM:-}" ] && [ -n "${UUID:-}" ]; then
+              DOWNLOAD_URL="https://drive.usercontent.google.com/download?id=${FILE_ID}&export=download&confirm=${CONFIRM}&uuid=${UUID}"
+            elif [ -n "${CONFIRM:-}" ]; then
+              DOWNLOAD_URL="https://drive.usercontent.google.com/download?id=${FILE_ID}&export=download&confirm=${CONFIRM}"
+            else
+              DOWNLOAD_URL="$URL"
+            fi
 
-          echo "→ Downloading NDJSON…"
-          curl -sSL -b cookies.txt -o input.ndjson "$DOWNLOAD_URL"
+            curl -sSL -b "${OUT}.cookies" -o "$OUT" "$DOWNLOAD_URL"
 
-          # Sanity check: did we actually get an NDJSON, or HTML again?
-          SIZE=$(wc -c < input.ndjson)
-          FIRST_LINE=$(head -c 200 input.ndjson)
-          echo "→ Downloaded $(numfmt --to=iec --suffix=B "$SIZE")"
-          if echo "$FIRST_LINE" | grep -qiE '<!doctype html|<html'; then
-            echo "✗ Got HTML instead of NDJSON. The Drive share link might not be public,"
-            echo "  or the GDRIVE_FILE_ID is wrong, or Drive's interstitial markup changed."
-            echo "  First 200 bytes of what we got:"
-            echo "$FIRST_LINE"
-            exit 1
-          fi
-          if [ "$SIZE" -lt 1000 ]; then
-            echo "✗ File is suspiciously small ($SIZE bytes). Check sharing settings."
-            exit 1
-          fi
-          echo "✓ NDJSON looks good."
+            local SIZE FIRST
+            SIZE=$(wc -c < "$OUT")
+            FIRST=$(head -c 200 "$OUT")
+            if echo "$FIRST" | grep -qiE '<!doctype html|<html'; then
+              echo "✗ ${OUT}: got HTML, not NDJSON. First 200 bytes:"
+              echo "$FIRST"
+              exit 1
+            fi
+            if [ "$SIZE" -lt 1000 ]; then
+              echo "✗ ${OUT}: file too small ($SIZE bytes). Check sharing."
+              exit 1
+            fi
 
-          rm -f cookies.txt page.html
+            rm -f "${OUT}.cookies" "${OUT}.page"
+            echo "✓ ${OUT}: $(numfmt --to=iec --suffix=B "$SIZE")"
+          }
+
+          # Build the list of args we'll pass to npm run build.
+          BUILD_ARGS=""
+
+          # Split SPEC on commas. Trim whitespace around each entry.
+          IFS=',' read -ra ENTRIES <<< "$SPEC"
+          for raw in "${ENTRIES[@]}"; do
+            entry=$(echo "$raw" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+            [ -z "$entry" ] && continue
+
+            # Split on the rightmost colon: ID:BATCH
+            FILE_ID="${entry%:*}"
+            BATCH="${entry##*:}"
+            if [ "$FILE_ID" = "$BATCH" ]; then
+              echo "✗ Entry '$entry' is missing :BATCH suffix. Use 'FILE_ID:batch_name'."
+              exit 1
+            fi
+
+            # Sanity: batch name must be filename-safe.
+            if ! echo "$BATCH" | grep -qE '^[A-Za-z0-9_.-]+$'; then
+              echo "✗ Batch name '$BATCH' contains invalid characters. Use letters, digits, dot, dash, underscore."
+              exit 1
+            fi
+
+            OUT="batch-${BATCH}.ndjson"
+            echo "→ Downloading ${BATCH}..."
+            download_one "$FILE_ID" "$OUT"
+            BUILD_ARGS="$BUILD_ARGS $OUT:$BATCH"
+          done
+
+          # Save args for the next step.
+          echo "BUILD_ARGS=$BUILD_ARGS" >> "$GITHUB_ENV"
 
       - name: Build encrypted search index
         env:
           SEARCH_PASSWORD: ${{ secrets.SEARCH_PASSWORD }}
-        run: npm run build -- input.ndjson
+        run: npm run build -- $BUILD_ARGS
 
       - uses: actions/upload-pages-artifact@v3
         with:
