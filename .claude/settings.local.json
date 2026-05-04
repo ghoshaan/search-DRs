@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir CoastalLatency*.ndjson)",
+      "PowerShell(cd \"C:\\\\Users\\\\ghosh\\\\OneDrive\\\\Desktop\\\\atc-search\"; $env:SEARCH_PASSWORD = \"ZoomFilterScan60\"; node scripts/build.mjs CoastalLatency.ndjson:CoastalLatency:2026-05-04 CoastalLatency2.ndjson:CoastalLatency:2026-05-05)",
+      "PowerShell(cd \"C:\\\\Users\\\\ghosh\\\\OneDrive\\\\Desktop\\\\atc-search\"; $env:SEARCH_PASSWORD = \"ZoomFilterScan60\"; node scripts/build.mjs CoastalLatency.ndjson:CoastalLatency:2026-05-04-01 CoastalLatency2.ndjson:CoastalLatency:2026-05-04-05)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\ghosh\\\\OneDrive\\\\Desktop\\\\atc-search\" -Recurse -Directory)",
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(git lfs *)",
+      "Bash(python3 scripts/build_args.py)",
+      "Bash(SEARCH_PASSWORD=ZoomFilterScan60 bash scripts/build.sh)",
+      "Bash(node -e ' *)",
+      "Bash(find public *)",
+      "Bash(ls public/)",
+      "Bash(git filter-repo *)",
+      "Bash(pip install *)",
+      "Bash(\"C:\\\\Users\\\\ghosh\\\\AppData\\\\Local\\\\Python\\\\pythoncore-3.14-64\\\\Scripts\\\\git-filter-repo.exe\" --path-glob '*.ndjson' --invert-paths --force)",
+      "Bash(git commit *)",
+      "Bash(git remote *)"
+    ]
+  }
+}
