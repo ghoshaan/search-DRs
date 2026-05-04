@@ -128,11 +128,14 @@
   .version-badge.open { color: var(--amber); border-color: rgba(255,179,71,0.4); }
   .history-panel { display: none; margin-top: 10px; border-left: 2px solid var(--line-2); padding-left: 14px; }
   .history-panel.open { display: block; }
-  .history-entry { display: grid; grid-template-columns: 100px 18px 1fr; gap: 8px; align-items: baseline; padding: 2px 0; font-size: 11px; }
-  .history-date { color: var(--ink-faint); font-variant-numeric: tabular-nums; }
-  .history-glyph { color: var(--amber); text-align: center; }
-  .history-desc { color: var(--ink-dim); }
-  .history-segs { margin: 4px 0 10px 126px; border-left: 1px solid var(--line); padding-left: 10px; }
+  .version-block { padding: 6px 0 8px; }
+  .version-block + .version-block { border-top: 1px solid var(--line-2); padding-top: 10px; margin-top: 2px; }
+  .version-block-header { display: flex; gap: 10px; align-items: baseline; font-size: 11px; margin-bottom: 5px; }
+  .version-block-date { color: var(--ink-faint); font-variant-numeric: tabular-nums; min-width: 100px; }
+  .version-block-glyph { color: var(--amber); min-width: 16px; text-align: center; }
+  .version-block-desc { color: var(--ink-dim); }
+  .version-block.current .version-block-date { color: var(--amber); }
+  .version-block.current .version-block-desc { color: var(--ink); }
 
   .empty { padding: 80px 32px; text-align: center; color: var(--ink-faint); }
   .empty .glyph { font-family: 'Fraunces', serif; font-size: 64px; font-style: italic; color: var(--line-2); margin-bottom: 12px; }
@@ -212,7 +215,7 @@
         <button class="facet-clear" data-clear="date" title="clear">×</button>
       </div>
       <div class="group">
-        <span class="sep">annotator</span>
+        <span class="sep">labeler</span>
         <input class="facet-input annotator" id="f-annotator" type="text" list="d-annotator" placeholder="any" autocomplete="off">
         <datalist id="d-annotator"></datalist>
         <button class="facet-clear" data-clear="annotator" title="clear">×</button>
@@ -501,7 +504,7 @@ function renderDoc(d, terms) {
     </div>
   `).join('');
   const reviewedAtShort = d.reviewedAt ? new Date(d.reviewedAt).toISOString().slice(0, 10) : '';
-  const annotatorLine = d.annotator ? `<div class="annotator-line">annotator <b>${escapeHtml(d.annotator)}</b></div>` : '';
+  const annotatorLine = d.annotator ? `<div class="annotator-line">labeler <b>${escapeHtml(d.annotator)}</b></div>` : '';
   const reviewerLine = d.reviewed && d.reviewedBy ? `<div class="annotator-line">reviewer <b>${escapeHtml(d.reviewedBy)}</b>${reviewedAtShort ? ` <span style="color:var(--ink-faint)">· ${reviewedAtShort}</span>` : ''}</div>` : '';
   // Build Labelbox URL if we have both project + row id. Otherwise fall back
   // to plain text (some rows from older builds may be missing projectId).
@@ -526,7 +529,7 @@ function renderDoc(d, terms) {
 <div class="segments">${segs}</div>
       ${annotatorLine}
       ${reviewerLine}
-      ${renderHistory(versions, d.id)}
+      ${renderHistory(versions, d.id, d)}
     </article>
   `;
 }
@@ -540,27 +543,32 @@ function versionGlyph(v, prevV) {
   return '·';
 }
 function versionDesc(v) {
-  if (v.changeType === 'initial') return `initial · annotator ${escapeHtml(v.annotator || '?')}`;
+  if (v.changeType === 'initial') return `initial · labeler ${escapeHtml(v.annotator || '?')}`;
   if (v.changeType === 'content-only') return 'transcript revised';
   if (v.changeType === 'state-only') return v.reviewed ? `approved by ${escapeHtml(v.reviewedBy || '?')}` : 'review status changed';
   if (v.changeType === 'state-and-content') return v.reviewed ? `approved · transcript revised` : 'transcript revised · status changed';
   return escapeHtml(v.changeType || '?');
 }
-function renderHistory(versions, id) {
+function renderVersionSegs(segments) {
+  if (!segments || !segments.length) return '';
+  return `<div class="segments">${segments.map(s =>
+    `<div class="seg"><span class="seg-time">${formatMs(s.start)}</span><span class="seg-role ${s.role || 'unknown'}">${escapeHtml(s.role || '?')}</span><span class="seg-text">${escapeHtml(s.text)}</span></div>`
+  ).join('')}</div>`;
+}
+function renderHistory(versions, id, d) {
   if (!versions || !versions.length) return '';
   const rev = [...versions].reverse();
-  const entries = rev.map((v, i) => {
-    const header = `<div class="history-entry"><span class="history-date">${escapeHtml(v.snapshotDate || '—')}</span><span class="history-glyph">${versionGlyph(v, rev[i + 1])}</span><span class="history-desc">${versionDesc(v)}</span></div>`;
-    // Show segments for all versions except state-only (content unchanged there)
-    const showSegs = v.changeType !== 'state-only' && v.segments && v.segments.length;
-    const segsHtml = showSegs
-      ? `<div class="history-segs">${v.segments.map(s =>
-          `<div class="seg"><span class="seg-time">${formatMs(s.start)}</span><span class="seg-role ${s.role || 'unknown'}">${escapeHtml(s.role || '?')}</span><span class="seg-text">${escapeHtml(s.text)}</span></div>`
-        ).join('')}</div>`
-      : '';
-    return header + segsHtml;
+  // Current block: header only — segments already visible on the card above
+  const currentDesc = d.reviewed
+    ? `current · approved by ${escapeHtml(d.reviewedBy || '?')}`
+    : `current · labeler ${escapeHtml(d.annotator || '?')}`;
+  const currentBlock = `<div class="version-block current"><div class="version-block-header"><span class="version-block-date">${escapeHtml(d.snapshotDate || '—')}</span><span class="version-block-glyph">●</span><span class="version-block-desc">${currentDesc}</span></div></div>`;
+  // Prior version blocks: header + segments (skip segments for state-only changes)
+  const priorBlocks = rev.map((v, i) => {
+    const segs = v.changeType !== 'state-only' ? renderVersionSegs(v.segments) : '';
+    return `<div class="version-block"><div class="version-block-header"><span class="version-block-date">${escapeHtml(v.snapshotDate || '—')}</span><span class="version-block-glyph">${versionGlyph(v, rev[i + 1])}</span><span class="version-block-desc">${versionDesc(v)}</span></div>${segs}</div>`;
   }).join('');
-  return `<div class="history-panel" id="hp-${escapeAttr(String(id))}">${entries}</div>`;
+  return `<div class="history-panel" id="hp-${escapeAttr(String(id))}">${currentBlock}${priorBlocks}</div>`;
 }
 
 function formatMs(ms) { return ms == null ? '' : (ms / 1000).toFixed(2) + 's'; }
