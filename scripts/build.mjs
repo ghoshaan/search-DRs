@@ -273,7 +273,7 @@ const rows = [];
 const grouped = new Map();
 
 for (const occ of allOccurrences) {
-  if (!occ.id) { rows.push({ ...occ, versions: [] }); continue; }
+  if (!occ.id) { rows.push({ ...occ, drId: null, versions: [] }); continue; }
   if (!grouped.has(occ.id)) grouped.set(occ.id, []);
   grouped.get(occ.id).push(occ);
 }
@@ -308,7 +308,7 @@ for (const occurrences of grouped.values()) {
     prevContentKey = contentKey;
   }
 
-  rows.push({ ...primary, versions });
+  rows.push({ ...primary, drId: primary.id, versions });
 }
 
 const reviewedCount = rows.filter(r => r.reviewed).length;
@@ -342,10 +342,10 @@ const facets = {
 // MiniSearch index
 // ---------------------------------------------------------------------------
 const ms = new MiniSearch({
-  fields: ['transcript', 'key', 'id'],
+  fields: ['transcript', 'key', 'drId'],
   storeFields: ['id', 'projectId', 'key', 'duration', 'speakers', 'roles', 'segments', 'transcript',
     'airport', 'position', 'date', 'time', 'batch', 'snapshotDate', 'annotator',
-    'reviewed', 'reviewedBy', 'reviewedAt', 'versions'],
+    'reviewed', 'reviewedBy', 'reviewedAt', 'drId', 'versions'],
   searchOptions: {
     boost: { key: 2 },
     fuzzy: 0.2,
