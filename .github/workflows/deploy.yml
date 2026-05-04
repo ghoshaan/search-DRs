@@ -101,17 +101,17 @@ jobs:
             [ -z "$entry" ] && continue
 
             # Split on colons: FILE_ID:BATCH[:DATE]
-            # DATE is optional. If present, must be YYYY-MM-DD.
+            # DATE is optional. If present, must be YYYY-MM-DD or YYYY-MM-DD-HH.
             IFS=':' read -ra PARTS <<< "$entry"
             if [ "${#PARTS[@]}" -lt 2 ]; then
-              echo "✗ Entry '$entry' is missing :BATCH suffix. Use 'FILE_ID:batch_name[:YYYY-MM-DD]'."
+              echo "✗ Entry '$entry' is missing :BATCH suffix. Use 'FILE_ID:batch_name[:YYYY-MM-DD[-HH]]'."
               exit 1
             fi
             FILE_ID="${PARTS[0]}"
             BATCH="${PARTS[1]}"
             DATE="${PARTS[2]:-}"
-            if [ -n "$DATE" ] && ! echo "$DATE" | grep -qE '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'; then
-              echo "✗ Date '$DATE' must be YYYY-MM-DD."
+            if [ -n "$DATE" ] && ! echo "$DATE" | grep -qE '^[0-9]{4}-[0-9]{2}-[0-9]{2}(-[0-9]{2})?$'; then
+              echo "✗ Date '$DATE' must be YYYY-MM-DD or YYYY-MM-DD-HH."
               exit 1
             fi
 

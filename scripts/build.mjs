@@ -45,7 +45,7 @@ const INDEX_PATH = path.join(OUT_DIR, 'index.enc');
 const META_PATH = path.join(OUT_DIR, 'meta.json');
 fs.mkdirSync(OUT_DIR, { recursive: true });
 
-const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+const DATE_RE = /^\d{4}-\d{2}-\d{2}(-\d{2})?$/; // YYYY-MM-DD or YYYY-MM-DD-HH
 const jobs = inputs.map(spec => {
   // Spec formats: "FILE", "FILE:BATCH", or "FILE:BATCH:YYYY-MM-DD".
   // Windows paths have "C:" — handle by checking if the trailing piece
