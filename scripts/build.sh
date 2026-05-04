@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Ensure LFS objects are present (Vercel clones shallow; pull real files)
-if [ -d .git ]; then
+# Attempt LFS pull if inside a git repo with git-lfs available
+if [ -d .git ] && command -v git-lfs &>/dev/null; then
   echo "→ Pulling Git LFS objects"
-  git lfs pull
+  git lfs pull || echo "  git lfs pull failed — continuing with files as-is"
 fi
 
 # Diagnostic: show NDJSON file sizes so logs reveal if LFS files are real
