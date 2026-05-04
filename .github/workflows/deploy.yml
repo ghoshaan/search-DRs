@@ -100,8 +100,7 @@ jobs:
             entry=$(echo "$raw" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
             [ -z "$entry" ] && continue
 
-
-# Split on colons: FILE_ID:BATCH[:DATE]
+            # Split on colons: FILE_ID:BATCH[:DATE]
             # DATE is optional. If present, must be YYYY-MM-DD.
             IFS=':' read -ra PARTS <<< "$entry"
             if [ "${#PARTS[@]}" -lt 2 ]; then
@@ -125,7 +124,7 @@ jobs:
             OUT="batch-${BATCH}.ndjson"
             echo "→ Downloading ${BATCH}..."
             download_one "$FILE_ID" "$OUT"
-if [ -n "$DATE" ]; then
+            if [ -n "$DATE" ]; then
               BUILD_ARGS="$BUILD_ARGS $OUT:$BATCH:$DATE"
             else
               BUILD_ARGS="$BUILD_ARGS $OUT:$BATCH"
