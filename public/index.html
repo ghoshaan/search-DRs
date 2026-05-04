@@ -196,6 +196,11 @@
         <button class="pill" data-review="unreviewed">unreviewed</button>
       </div>
       <div class="group">
+        <span class="sep">history</span>
+        <button class="pill active" data-history="all">all</button>
+        <button class="pill" data-history="edited">edited</button>
+      </div>
+      <div class="group">
         <span class="sep">batch</span>
         <select class="facet-select" id="f-batch"></select>
         <button class="facet-clear" data-clear="batch" title="clear">×</button>
@@ -263,6 +268,7 @@ let allDocs = [];
 let meta = null;
 let activeFilter = 'all';
 let activeReview = 'all';
+let activeHistory = 'all';
 const facetSel = { airport: '', position: '', date: '', batch: '', annotator: '', reviewer: '' };
 let currentResults = null;
 
@@ -459,6 +465,7 @@ function applyFilters(docs) {
     if (facetSel.date && d.date !== facetSel.date) return false;
     if (facetSel.annotator && d.annotator !== facetSel.annotator) return false;
     if (facetSel.reviewer && d.reviewedBy !== facetSel.reviewer) return false;
+    if (activeHistory === 'edited' && !hasRealHistory(d.versions, d)) return false;
     return true;
   });
 }
@@ -495,7 +502,7 @@ function renderDoc(d, terms) {
     ? `<span class="tag tag-reviewed" title="reviewed by ${escapeAttr(d.reviewedBy || '?')}${reviewedAtFmt ? ' on ' + reviewedAtFmt : ''}">✓ reviewed</span>`
     : `<span class="tag tag-unreviewed">unreviewed</span>`;
   const versions = d.versions || [];
-  const vBadge = versions.length > 0 && !versions[0].reviewed
+  const vBadge = hasRealHistory(versions, d)
     ? `<button class="version-badge" data-vid="${escapeAttr(String(d.id))}">&#x1F4DC; ${versions.length}</button>`
     : '';
   const segs = (d.segments || []).map(s => `
@@ -629,8 +636,14 @@ function renderVersionSegs(segments, currentSegments) {
     return `<div class="seg"><span class="seg-time">${formatMs(s.start)}</span><span class="seg-role ${s.role || 'unknown'}">${escapeHtml(s.role || '?')}</span><span class="seg-text">${textHtml}</span></div>`;
   }).join('')}</div>`;
 }
+function hasRealHistory(versions, d) {
+  if (!versions || !versions.length) return false;
+  if (versions.some(v => v.changeType !== 'initial')) return true;
+  const first = versions[0];
+  return first.reviewed !== d.reviewed || (first.transcript || '') !== (d.transcript || '');
+}
 function renderHistory(versions, id, d) {
-  if (!versions || !versions.length) return '';
+  if (!versions || !versions.length || !hasRealHistory(versions, d)) return '';
   const rev = [...versions].reverse();
   const currentDesc = d.reviewed
     ? `approved by ${escapeHtml(d.reviewedBy || '?')}`
@@ -679,6 +692,14 @@ document.querySelectorAll('.pill[data-review]').forEach(btn => {
     document.querySelectorAll('.pill[data-review]').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     activeReview = btn.dataset.review;
+    rerun();
+  });
+});
+document.querySelectorAll('.pill[data-history]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.pill[data-history]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeHistory = btn.dataset.history;
     rerun();
   });
 });

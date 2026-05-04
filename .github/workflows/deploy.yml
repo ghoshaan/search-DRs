@@ -28,6 +28,26 @@ jobs:
       - run: npm ci
 
       # ---------------------------------------------------------------------
+      # Step 1: Export directly from Labelbox API (preferred).
+      # Set secret LABELBOX_PROJECTS (comma-separated PROJECT_ID:BATCH[:DATE])
+      # and LABELBOX_API_KEY to enable this path.  If LABELBOX_PROJECTS is
+      # empty the step exits cleanly and Step 2 (Google Drive) takes over.
+      # ---------------------------------------------------------------------
+      - name: Export NDJSON from Labelbox
+        env:
+          LABELBOX_API_KEY: ${{ secrets.LABELBOX_API_KEY }}
+          LABELBOX_PROJECTS: ${{ secrets.LABELBOX_PROJECTS }}
+        run: |
+          set -euo pipefail
+          if [ -z "${LABELBOX_PROJECTS:-}" ]; then
+            echo "→ LABELBOX_PROJECTS not set — skipping Labelbox export, will fall back to Google Drive"
+            exit 0
+          fi
+          pip install labelbox --quiet
+          python3 scripts/lb_export.py
+
+      # ---------------------------------------------------------------------
+      # Step 2: Google Drive fallback — only runs when Step 1 was skipped.
       # GDRIVE_FILES is a comma-separated list of "FILE_ID:BATCH_NAME" pairs.
       # Example secret value:
       #   1abc...XYZ:january, 2def...UVW:february
@@ -36,6 +56,7 @@ jobs:
       # secret), we treat it as one entry with batch name "input".
       # ---------------------------------------------------------------------
       - name: Fetch NDJSON(s) from Google Drive
+        if: env.BUILD_ARGS == ''
         env:
           GDRIVE_FILES: ${{ secrets.GDRIVE_FILES }}
           GDRIVE_FILE_ID: ${{ secrets.GDRIVE_FILE_ID }}
