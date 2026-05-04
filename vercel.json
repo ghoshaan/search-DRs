@@ -1,0 +1,5 @@
+{
+  "buildCommand": "bash -c 'node scripts/build.mjs $(python3 scripts/build_args.py)'",
+  "outputDirectory": "public",
+  "framework": null
+}
