@@ -304,9 +304,20 @@ function sameSnapshot(a, b) {
          a.reviewed === b.reviewed &&
          (a.annotator || null) === (b.annotator || null);
 }
+function parseSnapshotDate(s) {
+  const m = String(s ?? '').match(/^(\d+)-(\d+)-(\d+)(?:-(\d+)(?:-(\d+))?)?$/);
+  if (!m) return [0, 0, 0, 0, 0];
+  return [+m[1], +m[2], +m[3], +(m[4] ?? 0), +(m[5] ?? 0)];
+}
+function compareSnapshotDate(a, b) {
+  const da = parseSnapshotDate(a.snapshotDate), db = parseSnapshotDate(b.snapshotDate);
+  for (let i = 0; i < da.length; i++) if (da[i] !== db[i]) return da[i] - db[i];
+  return 0;
+}
+
 for (const occurrences of grouped.values()) {
   // Sort chronologically so we can walk the transition sequence
-  occurrences.sort((a, b) => String(a.snapshotDate ?? '').localeCompare(String(b.snapshotDate ?? '')));
+  occurrences.sort(compareSnapshotDate);
 
   // Collapse runs of consecutive identical snapshots, keeping the newest of
   // each run. Re-downloading the same Labelbox data on different days

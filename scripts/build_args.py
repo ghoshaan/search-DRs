@@ -26,13 +26,13 @@ def _extract_date(filename):
     m = re.search(r'- (\d{1,2})_(\d{1,2})_(\d{4})(?:\s+\(\d+\))?\.ndjson$', filename, re.IGNORECASE)
     if m:
         base = f"{m.group(3)}-{int(m.group(1)):02d}-{int(m.group(2)):02d}"
-        return f"{base}-{dl_num}" if dl_num else base
+        return f"{base}-{dl_num:03d}" if dl_num else base
 
     # ISO timestamp fallback (for files without a trailing pull-date)
     m = re.search(r'(\d{4})(\d{2})(\d{2})T(\d{2})\d{4}Z', filename)
     if m:
         base = f"{m.group(1)}-{m.group(2)}-{m.group(3)}-{m.group(4)}"
-        return f"{base}-{dl_num}" if dl_num else base
+        return f"{base}-{dl_num:03d}" if dl_num else base
 
     return None
 
