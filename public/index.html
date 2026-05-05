@@ -194,6 +194,17 @@
     .seg { grid-template-columns: 48px 40px 1fr; gap: 8px; }
     h1 { font-size: 22px; }
   }
+  /* Comments */
+  .comment-wrap { margin-top: 14px; padding-top: 10px; border-top: 1px dashed var(--line-2); }
+  .comment-input { width: 100%; background: var(--panel); border: 1px solid var(--line-2); color: var(--ink); font-family: inherit; font-size: 12px; padding: 8px 12px; border-radius: 0; outline: none; resize: vertical; min-height: 44px; transition: border-color 0.15s; }
+  .comment-input:focus { border-color: var(--amber); box-shadow: 0 0 0 1px var(--amber); }
+
+  /* Pagination */
+  .pagination { display: flex; justify-content: center; align-items: center; gap: 16px; padding: 24px 32px; border-top: 1px solid var(--line); }
+  .page-btn { background: var(--panel); border: 1px solid var(--line-2); color: var(--ink-dim); padding: 8px 16px; cursor: pointer; font-family: inherit; font-size: 11px; text-transform: uppercase; letter-spacing: 0.14em; transition: all 0.15s; }
+  .page-btn:hover:not(:disabled) { border-color: var(--amber); color: var(--amber); }
+  .page-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  .page-info { font-size: 11px; color: var(--ink-dim); text-transform: uppercase; letter-spacing: 0.14em; }
 </style>
 </head>
 <body>
@@ -295,6 +306,7 @@
   </div>
 
   <main id="results"></main>
+  <div class="pagination" id="pagination"></div> <!-- ADD THIS LINE -->
 
   <div class="selection-bar" id="selection-bar">
     <span class="selection-bar-count"><b id="sel-count">0</b> selected</span>
@@ -332,10 +344,27 @@ let activeReview = 'all';
 let activeHistory = 'all';
 let activeSort = 'relevance'; // <-- ADD THIS
 const facetSel = { airport: '', position: '', date: '', batch: '', annotator: '', reviewer: '' };let currentResults = null;
-
 const SESSION_KEY = 'atc-search-key-v1';
 const SELECTION_KEY = 'atc-search-selection-v1';
 let selection = new Set();
+
+// --- ADD THESE NEW VARIABLES ---
+const COMMENTS_KEY = 'atc-search-comments-v1';
+let commentsMap = new Map();
+let currentPage = 1;
+const PAGE_SIZE = 50;
+let filteredDocs = []; 
+
+function loadComments() {
+  try {
+    const saved = localStorage.getItem(COMMENTS_KEY);
+    if (saved) commentsMap = new Map(JSON.parse(saved));
+  } catch { commentsMap = new Map(); }
+}
+function saveComments() {
+  localStorage.setItem(COMMENTS_KEY, JSON.stringify([...commentsMap]));
+}
+// -------------------------------
 
 // ====================== Crypto ======================
 async function deriveKey(password, saltBytes, iterations) {
@@ -432,7 +461,7 @@ async function loadEncryptedData(cryptoKey) {
   $('m-docs').textContent = meta.count.toLocaleString();
   $('m-hours').textContent = ((meta.totalSeconds || 0) / 3600).toFixed(1);
   statusL.textContent = `ready · ${meta.count.toLocaleString()} recordings`;
-  renderInitial();
+  rerun();
 }
 
 function showApp() { lock.style.display = 'none'; app.classList.add('unlocked'); q.focus(); }
@@ -504,9 +533,60 @@ function populateFacets() {
 
 // ====================== Search ======================
 function rerun() {
+  currentPage = 1; // Reset to page 1 on new search/filter
   const query = q.value.trim();
-  if (!query) { currentResults = null; renderInitial(); return; }
-  doSearch(query);
+  
+  if (!query) {
+    currentResults = null;
+    filteredDocs = applySort(applyFilters(allDocs));
+  } else {
+    const t0 = performance.now();
+    const hits = ms.search(query, { combineWith: 'AND' });
+    currentResults = hits;
+    filteredDocs = applySort(applyFilters(hits));
+    statusR.textContent = `${filteredDocs.length.toLocaleString()} of ${hits.length.toLocaleString()} hits · ${(performance.now() - t0).toFixed(1)}ms`;
+  }
+  
+  updateDatalists(filteredDocs);
+  renderPage();
+}
+
+function renderPage() {
+  const pag = $('pagination');
+  if (!filteredDocs.length) {
+    results.innerHTML = `<div class="empty"><div class="glyph">∅</div>no transcripts matched.</div>`;
+    pag.innerHTML = '';
+    if (!currentResults) statusR.textContent = `showing 0 docs`;
+    return;
+  }
+
+  const totalPages = Math.ceil(filteredDocs.length / PAGE_SIZE);
+  if (currentPage > totalPages) currentPage = totalPages;
+
+  const start = (currentPage - 1) * PAGE_SIZE;
+  const end = start + PAGE_SIZE;
+  const slice = filteredDocs.slice(start, end);
+
+  if (!currentResults) {
+    statusR.textContent = `showing ${start + 1}-${Math.min(end, filteredDocs.length)} of ${filteredDocs.length.toLocaleString()}`;
+  }
+
+  results.innerHTML = slice.map(h => renderDoc(h, currentResults ? h.terms || [] : [])).join('');
+  renderPagination(totalPages);
+}
+
+function renderPagination(totalPages) {
+  const pag = $('pagination');
+  if (totalPages <= 1) { pag.innerHTML = ''; return; }
+
+  pag.innerHTML = `
+    <button class="page-btn" id="page-prev" ${currentPage === 1 ? 'disabled' : ''}>Prev</button>
+    <span class="page-info">Page ${currentPage} of ${totalPages}</span>
+    <button class="page-btn" id="page-next" ${currentPage === totalPages ? 'disabled' : ''}>Next</button>
+  `;
+
+  $('page-prev')?.addEventListener('click', () => { currentPage--; renderPage(); window.scrollTo(0, 0); });
+  $('page-next')?.addEventListener('click', () => { currentPage++; renderPage(); window.scrollTo(0, 0); });
 }
 function doSearch(query) {
   if (!ms) return;
@@ -558,30 +638,6 @@ function updateDatalists(docs) {
 
   $('d-annotator').innerHTML = buildHtml(annMap);
   $('d-reviewer').innerHTML = buildHtml(revMap);
-}function renderInitial() {
-  const filtered = applyFilters(allDocs);
-  const sorted = applySort(filtered); 
-  
-  updateDatalists(filtered); // <-- ADD THIS LINE
-
-  const slice = sorted.slice(0, 50); 
-  statusR.textContent = `showing ${slice.length} of ${filtered.length.toLocaleString()}`;
-  if (!slice.length) {
-    results.innerHTML = `<div class="empty"><div class="glyph">∅</div>nothing matches the current filters</div>`;
-    return;
-  }
-  results.innerHTML = slice.map(d => renderDoc(d, [])).join('');
-}function render(hits) {
-  const filtered = applyFilters(hits);
-  const sorted = applySort(filtered); 
-
-  updateDatalists(filtered); // <-- ADD THIS LINE
-
-  if (!sorted.length) {
-    results.innerHTML = `<div class="empty"><div class="glyph">∅</div>no transcripts matched.</div>`;
-    return;
-  }
-  results.innerHTML = sorted.slice(0, 200).map(h => renderDoc(h, h.terms || [])).join('');
 }
 
 function renderDoc(d, terms) {
@@ -610,8 +666,11 @@ function renderDoc(d, terms) {
   const annotatorLine = d.annotator ? `<div class="annotator-line">labeler <b>${escapeHtml(d.annotator)}</b></div>` : '';
   const reviewerLine = d.reviewed && d.reviewedBy ? `<div class="annotator-line">reviewer <b>${escapeHtml(d.reviewedBy)}</b>${reviewedAtShort ? ` <span style="color:var(--ink-faint)">· ${reviewedAtShort}</span>` : ''}</div>` : '';
   const idLine = d.id ? `<div class="annotator-line">id <span class="copy-id" data-copy="${escapeAttr(String(d.id))}" title="click to copy">${escapeHtml(String(d.id))}</span></div>` : '';
-  // Build Labelbox URL if we have both project + row id. Otherwise fall back
-  // to plain text (some rows from older builds may be missing projectId).
+  
+  // --- ADD THIS ---
+  const savedComment = commentsMap.get(String(d.id)) || '';
+  const commentUI = `<div class="comment-wrap"><textarea class="comment-input" data-cid="${escapeAttr(String(d.id))}" placeholder="Add a comment for export...">${escapeHtml(savedComment)}</textarea></div>`;
+  // ----------------
   const keyHtml = highlight(d.key, terms);
   const keyEl = (d.projectId && d.id)
     ? `<a class="result-key" href="https://app.labelbox.com/projects/${escapeAttr(d.projectId)}/data-rows/${escapeAttr(d.id)}" target="_blank" rel="noopener noreferrer">${keyHtml}</a>`
@@ -637,7 +696,9 @@ function renderDoc(d, terms) {
       ${reviewerLine}
       ${idLine}
       ${renderHistory(versions, d.id, d)}
+      ${commentUI} <!-- ADD THIS HERE -->
     </article>
+  `;
   `;
 }
 
@@ -893,6 +954,7 @@ function buildExportHtml(docs, filename, termsMap) {
     .row, .ver { break-inside: avoid; page-break-inside: avoid; }
     mark { -webkit-print-color-adjust: exact; print-color-adjust: exact; background: #fff48a !important; }
     mark.diff-del { -webkit-print-color-adjust: exact; print-color-adjust: exact; background: #fde0e0 !important; color: #b8231f !important; }
+    .export-comment { background: #fdfaf5; border-left: 2pt solid #ffb347; padding: 6pt 10pt; margin-top: 8pt; font-size: 9.5pt; color: #333; }
   }
 </style></head><body>
 <h1>ATC Transcript Export</h1>
@@ -923,11 +985,18 @@ function exportRow(d, terms) {
   const keyEl = (d.projectId && d.id)
     ? `<a href="https://app.labelbox.com/projects/${escapeAttr(d.projectId)}/data-rows/${escapeAttr(d.id)}">${keyHtml}</a>`
     : keyHtml;
+
+  // --- ADD THIS ---
+  const savedComment = commentsMap.get(String(d.id));
+  const commentHtml = savedComment ? `<div class="export-comment"><b>Note:</b><br>${escapeHtml(savedComment).replace(/\n/g, '<br>')}</div>` : '';
+  // ----------------
+
   return `<div class="row">
     <div class="row-key">${keyEl}</div>
     <div class="row-meta">${review}${batch}${labeler}${facets}<span>${dur}</span></div>
     <div class="segs">${segs}</div>
     ${versionsHtml}
+    ${commentHtml} <!-- AND ADD THIS HERE -->
   </div>`;
 }
 
@@ -954,7 +1023,20 @@ function exportVersion(v, terms, d) {
 }
 
 // ====================== Wire up ======================
+let commentDebounce;
+results.addEventListener('input', e => {
+  if (e.target.classList.contains('comment-input')) {
+    const id = e.target.dataset.cid;
+    const val = e.target.value;
+    
+    if (val.trim()) commentsMap.set(id, val);
+    else commentsMap.delete(id);
 
+    // Save to local storage automatically after they stop typing for 500ms
+    clearTimeout(commentDebounce);
+    commentDebounce = setTimeout(saveComments, 500); 
+  }
+});
 let debounceTimer;
 q.addEventListener('input', e => {
   clearTimeout(debounceTimer);
