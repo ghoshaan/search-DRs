@@ -745,23 +745,52 @@ function updateSelectionBar() {
   bar.classList.toggle('visible', selection.size > 0);
 }
 
+function sanitizeFilename(s) {
+  return String(s).replace(/[\\/:*?"<>|]+/g, '_').replace(/\s+/g, '_').replace(/_+/g, '_').replace(/^_+|_+$/g, '').slice(0, 180) || 'export';
+}
+
+function wouldMix(d) {
+  const docs = allDocs.filter(x => selection.has(x.id));
+  if (!docs.length) return null;
+  const batches = new Set(docs.map(x => x.batch || ''));
+  const labelers = new Set(docs.map(x => x.annotator || ''));
+  const mixesBatch = !batches.has(d.batch || '');
+  const mixesLabeler = !labelers.has(d.annotator || '');
+  if (!mixesBatch && !mixesLabeler) return null;
+  return { mixesBatch, mixesLabeler, newBatch: d.batch || '(none)', newLabeler: d.annotator || '(none)' };
+}
+
 function exportPdf() {
   if (!selection.size) return;
   const docs = allDocs.filter(d => selection.has(d.id));
   docs.sort((a, b) => String(a.key || '').localeCompare(String(b.key || '')));
+  const today = new Date().toISOString().slice(0, 10);
+  const batches = new Set(docs.map(d => d.batch || ''));
+  const labelers = new Set(docs.map(d => d.annotator || ''));
+  let filename;
+  if (batches.size === 1 && labelers.size === 1) {
+    const labeler = [...labelers][0] || 'unknown';
+    const batch = [...batches][0] || 'unknown';
+    filename = sanitizeFilename(`${labeler}_${batch}_${today}`);
+  } else {
+    const suggested = sanitizeFilename(`mixed_${today}`);
+    const input = prompt('Selection mixes batches or labelers — enter a filename for this export:', suggested);
+    if (input === null) return;
+    filename = sanitizeFilename(input) || suggested;
+  }
   const w = window.open('', '_blank');
   if (!w) { alert('popup blocked — allow popups to export'); return; }
   w.document.open();
-  w.document.write(buildExportHtml(docs));
+  w.document.write(buildExportHtml(docs, filename));
   w.document.close();
   w.addEventListener('load', () => setTimeout(() => w.print(), 300));
 }
 
-function buildExportHtml(docs) {
+function buildExportHtml(docs, filename) {
   const today = new Date().toISOString().slice(0, 10);
   const docsHtml = docs.map(d => exportRow(d)).join('');
   return `<!doctype html><html><head><meta charset="utf-8">
-<title>ATC Transcripts ${today} (${docs.length})</title>
+<title>${escapeHtml(filename)}</title>
 <style>
   @page { margin: 0.6in; }
   * { box-sizing: border-box; }
@@ -858,7 +887,20 @@ results.addEventListener('change', e => {
   const cb = e.target.closest('.select-cb');
   if (!cb) return;
   const id = cb.dataset.sel;
-  if (cb.checked) selection.add(id); else selection.delete(id);
+  if (cb.checked) {
+    const d = allDocs.find(x => x.id === id);
+    const mix = d ? wouldMix(d) : null;
+    if (mix) {
+      const parts = [];
+      if (mix.mixesBatch) parts.push(`a different batch (${mix.newBatch})`);
+      if (mix.mixesLabeler) parts.push(`a different labeler (${mix.newLabeler})`);
+      const msg = `This recording is from ${parts.join(' and ')} than your current selection.\n\nMixing means you'll need to set the filename manually at export. Continue?`;
+      if (!confirm(msg)) { cb.checked = false; return; }
+    }
+    selection.add(id);
+  } else {
+    selection.delete(id);
+  }
   saveSelection();
   updateSelectionBar();
 });
