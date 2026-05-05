@@ -166,11 +166,12 @@ function flatten(row, batchName, snapshotDate) {
   const review = parseReview(firstProject?.project_details?.workflow_history);
   const facets = parseKey(key);
   const annotator = parseAnnotator(label?.label_details?.created_by);
+  const createdAt = label?.label_details?.created_at ?? null;
 
   if (!label) {
     return {
       id, key, duration, projectId, ...facets,
-      batch: batchName, snapshotDate, annotator, ...review,
+      batch: batchName, snapshotDate, annotator, createdAt, ...review,
       speakers: 0, roles: [], segments: [], transcript: '',
     };
   }
@@ -243,7 +244,7 @@ function flatten(row, batchName, snapshotDate) {
 
   return {
     id, key, duration, projectId, ...facets,
-    batch: batchName, snapshotDate, annotator, ...review,
+    batch: batchName, snapshotDate, annotator, createdAt, ...review,
     speakers: roles.length,
     roles, segments: dedupedSegments, transcript,
   };
@@ -384,7 +385,7 @@ const ms = new MiniSearch({
   fields: ['transcript', 'key', 'drId'],
   storeFields: ['id', 'projectId', 'key', 'duration', 'speakers', 'roles', 'segments', 'transcript',
     'airport', 'position', 'date', 'time', 'batch', 'snapshotDate', 'annotator',
-    'reviewed', 'reviewedBy', 'reviewedAt', 'drId', 'versions'],
+    'reviewed', 'reviewedBy', 'reviewedAt', 'createdAt', 'drId', 'versions'],
   searchOptions: {
     boost: { key: 2 },
     fuzzy: 0.2,

@@ -437,7 +437,7 @@ async function loadEncryptedData(cryptoKey) {
     fields: ['transcript', 'key', 'drId'],
     storeFields: ['id', 'projectId', 'key', 'duration', 'speakers', 'roles', 'segments', 'transcript',
                   'airport', 'position', 'date', 'time', 'batch', 'snapshotDate', 'annotator',
-                  'reviewed', 'reviewedBy', 'reviewedAt', 'drId', 'versions'],
+                  'reviewed', 'reviewedBy', 'reviewedAt', 'createdAt', 'drId', 'versions'],
     searchOptions: { boost: { key: 2 }, fuzzy: 0.2, prefix: true },
     tokenize: (text) => text.split(/[\s,.;:!?()[\]{}"<>|/\\-]+/).filter(Boolean),
   });
@@ -604,12 +604,16 @@ function applyFilters(docs) {
   return d._pct;
 }
 
+function activityTimestamp(d) {
+  return d.reviewedAt || d.createdAt || '';
+}
+
 function applySort(docs) {
   if (activeSort === 'relevance') return docs;
   return [...docs].sort((a, b) => {
-    const dateA = a.snapshotDate || '';
-    const dateB = b.snapshotDate || '';
-    
+    const dateA = activityTimestamp(a);
+    const dateB = activityTimestamp(b);
+
     if (activeSort === 'newest') return String(dateB).localeCompare(String(dateA));
     if (activeSort === 'oldest') return String(dateA).localeCompare(String(dateB));
     
