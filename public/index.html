@@ -142,6 +142,42 @@
   .empty { padding: 80px 32px; text-align: center; color: var(--ink-faint); }
   .empty .glyph { font-family: 'Fraunces', serif; font-size: 64px; font-style: italic; color: var(--line-2); margin-bottom: 12px; }
 
+  /* Selection */
+  .result-key-wrap { display: flex; gap: 10px; align-items: center; flex: 1; min-width: 0; }
+  .result-key-wrap .result-key { flex: 1; min-width: 0; }
+  .select-cb {
+    appearance: none; -webkit-appearance: none;
+    width: 14px; height: 14px; border: 1px solid var(--line-2);
+    background: var(--panel); cursor: pointer; position: relative; flex-shrink: 0;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .select-cb:hover { border-color: var(--amber); }
+  .select-cb:checked { background: var(--amber); border-color: var(--amber); }
+  .select-cb:checked::after {
+    content: ''; position: absolute; left: 3px; top: 0;
+    width: 4px; height: 8px; border: solid var(--bg);
+    border-width: 0 2px 2px 0; transform: rotate(45deg);
+  }
+  .selection-bar {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: var(--panel); border-top: 1px solid var(--amber);
+    padding: 12px 32px; display: none;
+    align-items: center; justify-content: space-between; gap: 16px;
+    z-index: 20; box-shadow: 0 -8px 24px rgba(0,0,0,0.4);
+  }
+  .selection-bar.visible { display: flex; }
+  .selection-bar-count { font-size: 12px; color: var(--amber); text-transform: uppercase; letter-spacing: 0.14em; }
+  .selection-bar-count b { color: var(--amber); font-weight: 700; }
+  .selection-bar-actions { display: flex; gap: 10px; }
+  .sel-btn {
+    background: transparent; border: 1px solid var(--line-2); color: var(--ink-dim);
+    font-family: inherit; font-size: 11px; text-transform: uppercase; letter-spacing: 0.14em;
+    padding: 8px 14px; cursor: pointer; transition: all 0.15s;
+  }
+  .sel-btn:hover { color: var(--amber); border-color: var(--amber); }
+  .sel-btn.primary { background: var(--amber); color: var(--bg); border-color: var(--amber); font-weight: 700; }
+  .sel-btn.primary:hover { color: var(--bg); opacity: 0.85; }
+
   footer { border-top: 1px solid var(--line); padding: 16px 32px; font-size: 10px; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.16em; text-align: center; }
 
   @media (max-width: 640px) {
@@ -243,6 +279,14 @@
 
   <main id="results"></main>
 
+  <div class="selection-bar" id="selection-bar">
+    <span class="selection-bar-count"><b id="sel-count">0</b> selected</span>
+    <div class="selection-bar-actions">
+      <button class="sel-btn" id="sel-clear">clear</button>
+      <button class="sel-btn primary" id="sel-export">export pdf</button>
+    </div>
+  </div>
+
   <footer>built with minisearch · client-side encrypted · no tracking</footer>
 </div>
 
@@ -273,6 +317,8 @@ const facetSel = { airport: '', position: '', date: '', batch: '', annotator: ''
 let currentResults = null;
 
 const SESSION_KEY = 'atc-search-key-v1';
+const SELECTION_KEY = 'atc-search-selection-v1';
+let selection = new Set();
 
 // ====================== Crypto ======================
 async function deriveKey(password, saltBytes, iterations) {
@@ -365,6 +411,7 @@ async function loadEncryptedData(cryptoKey) {
 
   showApp();
   populateFacets();
+  loadSelection();
   $('m-docs').textContent = meta.count.toLocaleString();
   $('m-hours').textContent = ((meta.totalSeconds || 0) / 3600).toFixed(1);
   statusL.textContent = `ready · ${meta.count.toLocaleString()} recordings`;
@@ -521,11 +568,13 @@ function renderDoc(d, terms) {
   const keyEl = (d.projectId && d.id)
     ? `<a class="result-key" href="https://app.labelbox.com/projects/${escapeAttr(d.projectId)}/data-rows/${escapeAttr(d.id)}" target="_blank" rel="noopener noreferrer">${keyHtml}</a>`
     : `<div class="result-key">${keyHtml}</div>`;
+  const isSel = selection.has(d.id) ? 'checked' : '';
+  const cbEl = `<input type="checkbox" class="select-cb" data-sel="${escapeAttr(String(d.id))}" ${isSel} title="add to selection">`;
 
   return `
     <article class="result">
       <header class="result-head">
-        ${keyEl}
+        <div class="result-key-wrap">${cbEl}${keyEl}</div>
        <div class="result-tags">
           ${vBadge}
           ${reviewTag}
@@ -673,6 +722,119 @@ function highlight(text, terms) {
   catch { return safe; }
 }
 
+// ====================== Selection ======================
+function loadSelection() {
+  try {
+    const saved = localStorage.getItem(SELECTION_KEY);
+    if (!saved) { selection = new Set(); }
+    else {
+      const ids = new Set(JSON.parse(saved));
+      const valid = new Set(allDocs.map(d => d.id));
+      selection = new Set([...ids].filter(id => valid.has(id)));
+      if (selection.size !== ids.size) saveSelection(); // prune stale
+    }
+  } catch { selection = new Set(); }
+  updateSelectionBar();
+}
+function saveSelection() {
+  localStorage.setItem(SELECTION_KEY, JSON.stringify([...selection]));
+}
+function updateSelectionBar() {
+  const bar = $('selection-bar');
+  $('sel-count').textContent = selection.size;
+  bar.classList.toggle('visible', selection.size > 0);
+}
+
+function exportPdf() {
+  if (!selection.size) return;
+  const docs = allDocs.filter(d => selection.has(d.id));
+  docs.sort((a, b) => String(a.key || '').localeCompare(String(b.key || '')));
+  const w = window.open('', '_blank');
+  if (!w) { alert('popup blocked — allow popups to export'); return; }
+  w.document.open();
+  w.document.write(buildExportHtml(docs));
+  w.document.close();
+  w.addEventListener('load', () => setTimeout(() => w.print(), 300));
+}
+
+function buildExportHtml(docs) {
+  const today = new Date().toISOString().slice(0, 10);
+  const docsHtml = docs.map(d => exportRow(d)).join('');
+  return `<!doctype html><html><head><meta charset="utf-8">
+<title>ATC Transcripts ${today} (${docs.length})</title>
+<style>
+  @page { margin: 0.6in; }
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif; color: #111; font-size: 10.5pt; line-height: 1.5; margin: 0; }
+  h1 { font-size: 16pt; margin: 0 0 4pt; font-weight: 600; }
+  .header-meta { font-size: 9pt; color: #666; margin-bottom: 18pt; padding-bottom: 10pt; border-bottom: 1px solid #ccc; }
+  .row { page-break-inside: avoid; break-inside: avoid; margin-bottom: 18pt; padding-bottom: 14pt; border-bottom: 1px solid #ddd; }
+  .row:last-child { border-bottom: none; }
+  .row-key { font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-size: 11pt; font-weight: 600; word-break: break-all; }
+  .row-meta { font-size: 9pt; color: #555; margin: 4pt 0 10pt; }
+  .row-meta span { margin-right: 12pt; white-space: nowrap; }
+  .row-meta .reviewed { color: #2a7a3a; font-weight: 600; }
+  .row-meta .unreviewed { color: #999; }
+  .segs { margin: 6pt 0; }
+  .seg { display: grid; grid-template-columns: 56pt 44pt 1fr; gap: 8pt; padding: 1.5pt 0; font-size: 10pt; }
+  .seg-time { color: #888; font-variant-numeric: tabular-nums; font-family: ui-monospace, monospace; }
+  .seg-role { font-size: 8pt; text-transform: uppercase; letter-spacing: 0.05em; padding-top: 1.5pt; }
+  .seg-role.pilot { color: #2a7a3a; }
+  .seg-role.atc { color: #b86b00; }
+  .seg-role.unknown { color: #999; }
+  .seg-text { color: #111; }
+  .versions-h { font-size: 9pt; font-weight: 600; margin: 14pt 0 4pt; color: #555; text-transform: uppercase; letter-spacing: 0.06em; }
+  .ver { border-left: 2pt solid #ccc; padding: 4pt 0 4pt 10pt; margin: 6pt 0; page-break-inside: avoid; break-inside: avoid; }
+  .ver-h { font-size: 9pt; color: #666; margin-bottom: 3pt; }
+  .ver-h b { color: #111; font-weight: 600; }
+  @media print { .row, .ver { break-inside: avoid; page-break-inside: avoid; } }
+</style></head><body>
+<h1>ATC Transcript Export</h1>
+<div class="header-meta">${docs.length} recording${docs.length === 1 ? '' : 's'} · exported ${today}</div>
+${docsHtml}
+</body></html>`;
+}
+
+function exportRow(d) {
+  const dur = d.duration ? `${d.duration.toFixed(1)}s` : '—';
+  const facets = ['airport', 'position', 'date', 'time'].filter(f => d[f]).map(f => `<span>${escapeHtml(d[f])}</span>`).join('');
+  const review = d.reviewed
+    ? `<span class="reviewed">&#x2713; reviewed${d.reviewedBy ? ' by ' + escapeHtml(d.reviewedBy) : ''}${d.reviewedAt ? ' on ' + new Date(d.reviewedAt).toISOString().slice(0,10) : ''}</span>`
+    : `<span class="unreviewed">unreviewed</span>`;
+  const labeler = d.annotator ? `<span>labeler: ${escapeHtml(d.annotator)}</span>` : '';
+  const batch = d.batch ? `<span>batch: ${escapeHtml(d.batch)}</span>` : '';
+  const segs = (d.segments || []).map(s =>
+    `<div class="seg"><span class="seg-time">${formatMs(s.start)}</span><span class="seg-role ${s.role || 'unknown'}">${escapeHtml(s.role || '?')}</span><span class="seg-text">${escapeHtml(s.text)}</span></div>`
+  ).join('');
+
+  let versionsHtml = '';
+  if (d.versions && d.versions.length && hasRealHistory(d.versions, d)) {
+    const verBlocks = [...d.versions].reverse().map(v => exportVersion(v)).join('');
+    versionsHtml = `<div class="versions-h">Edit history (${d.versions.length} prior version${d.versions.length === 1 ? '' : 's'})</div>${verBlocks}`;
+  }
+
+  return `<div class="row">
+    <div class="row-key">${escapeHtml(d.key || d.id || '')}</div>
+    <div class="row-meta">${review}${batch}${labeler}${facets}<span>${dur}</span></div>
+    <div class="segs">${segs}</div>
+    ${versionsHtml}
+  </div>`;
+}
+
+function exportVersion(v) {
+  const date = v.snapshotDate || '—';
+  const desc = v.changeType === 'initial' ? `initial · labeler ${v.annotator || '?'}` :
+               v.changeType === 'content-only' ? 'transcript revised' :
+               v.changeType === 'state-only' ? (v.reviewed ? `approved by ${v.reviewedBy || '?'}` : 'review status changed') :
+               v.changeType === 'state-and-content' ? (v.reviewed ? 'approved · transcript revised' : 'transcript revised · status changed') :
+               (v.changeType || '');
+  const segs = (v.segments || []).map(s =>
+    `<div class="seg"><span class="seg-time">${formatMs(s.start)}</span><span class="seg-role ${s.role || 'unknown'}">${escapeHtml(s.role || '?')}</span><span class="seg-text">${escapeHtml(s.text)}</span></div>`
+  ).join('');
+  const segsHtml = v.changeType !== 'state-only' && segs ? `<div class="segs">${segs}</div>` : '';
+  return `<div class="ver"><div class="ver-h"><b>${escapeHtml(date)}</b> · ${escapeHtml(desc)}</div>${segsHtml}</div>`;
+}
+
 // ====================== Wire up ======================
 let debounceTimer;
 q.addEventListener('input', e => {
@@ -687,6 +849,23 @@ results.addEventListener('click', e => {
   panel.classList.toggle('open');
   badge.classList.toggle('open');
 });
+results.addEventListener('change', e => {
+  const cb = e.target.closest('.select-cb');
+  if (!cb) return;
+  const id = cb.dataset.sel;
+  if (cb.checked) selection.add(id); else selection.delete(id);
+  saveSelection();
+  updateSelectionBar();
+});
+$('sel-clear').addEventListener('click', () => {
+  if (!selection.size) return;
+  if (!confirm(`Clear ${selection.size} selected recording${selection.size === 1 ? '' : 's'}?`)) return;
+  selection.clear();
+  saveSelection();
+  updateSelectionBar();
+  document.querySelectorAll('.select-cb:checked').forEach(cb => cb.checked = false);
+});
+$('sel-export').addEventListener('click', exportPdf);
 document.querySelectorAll('.pill[data-review]').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.pill[data-review]').forEach(b => b.classList.remove('active'));
