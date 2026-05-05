@@ -760,11 +760,19 @@ function wouldMix(d) {
   return { mixesBatch, mixesLabeler, newBatch: d.batch || '(none)', newLabeler: d.annotator || '(none)' };
 }
 
+function getExportTermsMap() {
+  const map = {};
+  if (!currentResults) return map;
+  for (const h of currentResults) map[h.id] = h.terms || [];
+  return map;
+}
+
 function exportPdf() {
   if (!selection.size) return;
   const docs = allDocs.filter(d => selection.has(d.id));
   docs.sort((a, b) => String(a.key || '').localeCompare(String(b.key || '')));
   const today = new Date().toISOString().slice(0, 10);
+  const termsMap = getExportTermsMap();
   const batches = new Set(docs.map(d => d.batch || ''));
   const labelers = new Set(docs.map(d => d.annotator || ''));
   let filename;
@@ -781,14 +789,14 @@ function exportPdf() {
   const w = window.open('', '_blank');
   if (!w) { alert('popup blocked — allow popups to export'); return; }
   w.document.open();
-  w.document.write(buildExportHtml(docs, filename));
+  w.document.write(buildExportHtml(docs, filename, termsMap));
   w.document.close();
   w.addEventListener('load', () => setTimeout(() => w.print(), 300));
 }
 
-function buildExportHtml(docs, filename) {
+function buildExportHtml(docs, filename, termsMap) {
   const today = new Date().toISOString().slice(0, 10);
-  const docsHtml = docs.map(d => exportRow(d)).join('');
+  const docsHtml = docs.map(d => exportRow(d, termsMap[d.id] || [])).join('');
   return `<!doctype html><html><head><meta charset="utf-8">
 <title>${escapeHtml(filename)}</title>
 <style>
@@ -817,7 +825,12 @@ function buildExportHtml(docs, filename) {
   .ver { border-left: 2pt solid #ccc; padding: 4pt 0 4pt 10pt; margin: 6pt 0; page-break-inside: avoid; break-inside: avoid; }
   .ver-h { font-size: 9pt; color: #666; margin-bottom: 3pt; }
   .ver-h b { color: #111; font-weight: 600; }
-  @media print { .row, .ver { break-inside: avoid; page-break-inside: avoid; } }
+  mark { background: #fff48a; color: #111; padding: 0 1pt; border-radius: 1pt; }
+  .row-key mark { background: #fff48a; color: #111; }
+  @media print {
+    .row, .ver { break-inside: avoid; page-break-inside: avoid; }
+    mark { -webkit-print-color-adjust: exact; print-color-adjust: exact; background: #fff48a !important; }
+  }
 </style></head><body>
 <h1>ATC Transcript Export</h1>
 <div class="header-meta">${docs.length} recording${docs.length === 1 ? '' : 's'} · exported ${today}</div>
@@ -825,7 +838,7 @@ ${docsHtml}
 </body></html>`;
 }
 
-function exportRow(d) {
+function exportRow(d, terms) {
   const dur = d.duration ? `${d.duration.toFixed(1)}s` : '—';
   const facets = ['airport', 'position', 'date', 'time'].filter(f => d[f]).map(f => `<span>${escapeHtml(d[f])}</span>`).join('');
   const review = d.reviewed
@@ -834,28 +847,28 @@ function exportRow(d) {
   const labeler = d.annotator ? `<span>labeler: ${escapeHtml(d.annotator)}</span>` : '';
   const batch = d.batch ? `<span>batch: ${escapeHtml(d.batch)}</span>` : '';
   const segs = (d.segments || []).map(s =>
-    `<div class="seg"><span class="seg-time">${formatMs(s.start)}</span><span class="seg-role ${s.role || 'unknown'}">${escapeHtml(s.role || '?')}</span><span class="seg-text">${escapeHtml(s.text)}</span></div>`
+    `<div class="seg"><span class="seg-time">${formatMs(s.start)}</span><span class="seg-role ${s.role || 'unknown'}">${escapeHtml(s.role || '?')}</span><span class="seg-text">${highlight(s.text, terms)}</span></div>`
   ).join('');
 
   let versionsHtml = '';
   if (d.versions && d.versions.length && hasRealHistory(d.versions, d)) {
-    const verBlocks = [...d.versions].reverse().map(v => exportVersion(v)).join('');
+    const verBlocks = [...d.versions].reverse().map(v => exportVersion(v, terms)).join('');
     versionsHtml = `<div class="versions-h">Edit history (${d.versions.length} prior version${d.versions.length === 1 ? '' : 's'})</div>${verBlocks}`;
   }
 
-  const keyText = escapeHtml(d.key || d.id || '');
-  const keyHtml = (d.projectId && d.id)
-    ? `<a href="https://app.labelbox.com/projects/${escapeAttr(d.projectId)}/data-rows/${escapeAttr(d.id)}">${keyText}</a>`
-    : keyText;
+  const keyHtml = highlight(d.key || d.id || '', terms);
+  const keyEl = (d.projectId && d.id)
+    ? `<a href="https://app.labelbox.com/projects/${escapeAttr(d.projectId)}/data-rows/${escapeAttr(d.id)}">${keyHtml}</a>`
+    : keyHtml;
   return `<div class="row">
-    <div class="row-key">${keyHtml}</div>
+    <div class="row-key">${keyEl}</div>
     <div class="row-meta">${review}${batch}${labeler}${facets}<span>${dur}</span></div>
     <div class="segs">${segs}</div>
     ${versionsHtml}
   </div>`;
 }
 
-function exportVersion(v) {
+function exportVersion(v, terms) {
   const date = v.snapshotDate || '—';
   const desc = v.changeType === 'initial' ? `initial · labeler ${v.annotator || '?'}` :
                v.changeType === 'content-only' ? 'transcript revised' :
@@ -863,7 +876,7 @@ function exportVersion(v) {
                v.changeType === 'state-and-content' ? (v.reviewed ? 'approved · transcript revised' : 'transcript revised · status changed') :
                (v.changeType || '');
   const segs = (v.segments || []).map(s =>
-    `<div class="seg"><span class="seg-time">${formatMs(s.start)}</span><span class="seg-role ${s.role || 'unknown'}">${escapeHtml(s.role || '?')}</span><span class="seg-text">${escapeHtml(s.text)}</span></div>`
+    `<div class="seg"><span class="seg-time">${formatMs(s.start)}</span><span class="seg-role ${s.role || 'unknown'}">${escapeHtml(s.role || '?')}</span><span class="seg-text">${highlight(s.text, terms)}</span></div>`
   ).join('');
   const segsHtml = v.changeType !== 'state-only' && segs ? `<div class="segs">${segs}</div>` : '';
   return `<div class="ver"><div class="ver-h"><b>${escapeHtml(date)}</b> · ${escapeHtml(desc)}</div>${segsHtml}</div>`;
