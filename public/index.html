@@ -697,10 +697,21 @@ function renderVersionSegs(segments, currentSegments) {
   }).join('')}</div>`;
 }
 function hasRealHistory(versions, d) {
+  // Show the edit-history indicator only when there is BOTH a labeler-state
+  // (reviewed=false) and a reviewer-state (reviewed=true) snapshot in the
+  // chronology, and the two have different transcripts. Multiple
+  // labeler-only snapshots, multiple reviewer-only snapshots, or a review
+  // that approved without changes do not count.
   if (!versions || !versions.length) return false;
-  if (versions.some(v => v.changeType !== 'initial')) return true;
-  const first = versions[0];
-  return first.reviewed !== d.reviewed || (first.transcript || '') !== (d.transcript || '');
+  const all = [...versions, d];
+  let labelerVer = null;
+  let reviewerVer = null;
+  for (const v of all) {
+    if (v.reviewed) reviewerVer = v;
+    else labelerVer = v;
+  }
+  if (!labelerVer || !reviewerVer) return false;
+  return (labelerVer.transcript || '') !== (reviewerVer.transcript || '');
 }
 function renderHistory(versions, id, d) {
   if (!versions || !versions.length || !hasRealHistory(versions, d)) return '';
