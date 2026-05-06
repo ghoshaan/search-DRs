@@ -118,6 +118,7 @@
   .seg.seg-removed { border-left: 2px solid var(--red); padding-left: 6px; opacity: 0.8; }
   .seg.seg-added   { border-left: 2px solid var(--green); padding-left: 6px; opacity: 0.8; }
   .seg-role mark.diff-del, .seg-role mark.diff-add { font-size: inherit; text-transform: uppercase; letter-spacing: 0.05em; }
+  .seg-time mark.diff-del, .seg-time mark.diff-add { font-size: inherit; font-family: inherit; font-variant-numeric: tabular-nums; }
 
   .empty { padding: 80px 32px; text-align: center; color: var(--ink-faint); }
   .empty .glyph { font-family: 'Fraunces', serif; font-size: 64px; font-style: italic; color: var(--line-2); margin-bottom: 12px; }
@@ -703,12 +704,16 @@ function renderVersionSegs(segments, currentSegments) {
     if (!cur) {
       allItems.push({ start: s.start, html: `<div class="seg seg-removed"><span class="seg-time">${formatMs(s.start)}</span><span class="seg-role ${s.role || 'unknown'}">${escapeHtml(s.role || '?')}</span><span class="seg-text">${escapeHtml(s.text)}</span></div>` });
     } else {
-      const roleHtml = cur.role !== s.role
+      const oldRole = s.role || 'unknown', newRole = cur.role || 'unknown';
+      const roleHtml = oldRole !== newRole
         ? `<mark class="diff-del">${escapeHtml(s.role || '?')}</mark><mark class="diff-add">${escapeHtml(cur.role || '?')}</mark>`
         : escapeHtml(cur.role || '?');
-      const roleClass = cur.role || s.role || 'unknown';
+      const roleClass = newRole;
       const textHtml = wordDiff(s.text, cur.text).html;
-      allItems.push({ start: s.start, html: `<div class="seg"><span class="seg-time">${formatMs(s.start)}</span><span class="seg-role ${roleClass}"><span class="seg-role-label">${roleHtml}</span></span><span class="seg-text">${textHtml}</span></div>` });
+      const timeHtml = Math.round(s.start) !== Math.round(cur.start)
+        ? `<mark class="diff-del">${formatMs(s.start)}</mark><mark class="diff-add">${formatMs(cur.start)}</mark>`
+        : formatMs(s.start);
+      allItems.push({ start: s.start, html: `<div class="seg"><span class="seg-time">${timeHtml}</span><span class="seg-role ${roleClass}">${roleHtml}</span><span class="seg-text">${textHtml}</span></div>` });
     }
   });
   inserted.forEach(s => {

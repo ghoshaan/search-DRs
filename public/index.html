@@ -155,6 +155,7 @@
   .seg.seg-removed { border-left: 2px solid var(--red); padding-left: 6px; opacity: 0.8; }
   .seg.seg-added   { border-left: 2px solid var(--green); padding-left: 6px; opacity: 0.8; }
   .seg-role mark.diff-del, .seg-role mark.diff-add { font-size: inherit; text-transform: uppercase; letter-spacing: 0.05em; }
+  .seg-time mark.diff-del, .seg-time mark.diff-add { font-size: inherit; font-family: inherit; font-variant-numeric: tabular-nums; }
 
   .empty { padding: 80px 32px; text-align: center; color: var(--ink-faint); }
   .empty .glyph { font-family: 'Fraunces', serif; font-size: 64px; font-style: italic; color: var(--line-2); margin-bottom: 12px; }
@@ -879,7 +880,10 @@ function renderVersionSegs(segments, currentSegments) {
       const roleHtml = oldRole !== newRole
         ? `<span class="seg-role"><mark class="diff-del">${escapeHtml(s.role || '?')}</mark><mark class="diff-add">${escapeHtml(cur.role || '?')}</mark></span>`
         : `<span class="seg-role ${oldRole}">${escapeHtml(s.role || '?')}</span>`;
-      parts.push(`<div class="seg"><span class="seg-time">${formatMs(s.start)}</span>${roleHtml}<span class="seg-text">${textHtml}</span></div>`);
+      const timeHtml = Math.round(s.start) !== Math.round(cur.start)
+        ? `<mark class="diff-del">${formatMs(s.start)}</mark><mark class="diff-add">${formatMs(cur.start)}</mark>`
+        : formatMs(s.start);
+      parts.push(`<div class="seg"><span class="seg-time">${timeHtml}</span>${roleHtml}<span class="seg-text">${textHtml}</span></div>`);
     } else {
       parts.push(`<div class="seg seg-removed"><span class="seg-time">${formatMs(s.start)}</span><span class="seg-role ${s.role || 'unknown'}">${escapeHtml(s.role || '?')}</span><span class="seg-text"><mark class="diff-del">${escapeHtml(s.text)}</mark></span></div>`);
     }
@@ -1048,7 +1052,7 @@ function buildExportHtml(docs, filename, termsMap) {
   .ver.ver-submitted { border-left-color: #ffb347; background: #fffbf4; padding: 4pt 8pt 4pt 10pt; }
   .ver-h { font-size: 9pt; color: #666; margin-bottom: 3pt; }
   .ver-h b { color: #111; font-weight: 600; }
-  .ver-submitted-badge { display: inline-block; background: #fff0d0; color: #b86b00; border: 0.5pt solid #ffb347; border-radius: 2pt; font-size: 8pt; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; padding: 0 4pt; margin-right: 5pt; vertical-align: middle; }
+  .ver-submitted-tag { color: #b86b00; font-size: 8pt; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
   mark { background: #fff48a; color: #111; padding: 0 1pt; border-radius: 1pt; }
   .row-key mark { background: #fff48a; color: #111; }
   mark.diff-del { background: transparent; color: #b8231f; text-decoration: line-through; padding: 0; border-radius: 0; font-style: normal; }
@@ -1056,11 +1060,12 @@ function buildExportHtml(docs, filename, termsMap) {
   .seg.seg-removed { border-left: 2pt solid #e57373; padding-left: 6pt; }
   .seg.seg-added   { border-left: 2pt solid #2a7a3a; padding-left: 6pt; }
   .seg-role mark.diff-del, .seg-role mark.diff-add { font-size: 8pt; text-transform: uppercase; letter-spacing: 0.05em; }
+  .seg-time mark.diff-del, .seg-time mark.diff-add { font-size: inherit; font-family: inherit; font-variant-numeric: tabular-nums; }
   .ver-pct { color: #b8231f; opacity: 0.75; }
   @media print {
     .row, .ver { break-inside: avoid; page-break-inside: avoid; }
     mark { -webkit-print-color-adjust: exact; print-color-adjust: exact; background: #fff48a !important; }
-    mark.diff-del { color: #b8231f !important; text-decoration: line-through !important; }
+    mark.diff-del { -webkit-print-color-adjust: exact; print-color-adjust: exact; background: transparent !important; color: #b8231f !important; text-decoration: line-through !important; }
     mark.diff-add { -webkit-print-color-adjust: exact; print-color-adjust: exact; background: #d6f0d6 !important; color: #1a5e1a !important; }
     .export-comment { background: #fdfaf5; border-left: 2pt solid #ffb347; padding: 6pt 10pt; margin-top: 8pt; font-size: 9.5pt; color: #333; }
   }
@@ -1122,7 +1127,7 @@ function exportVersion(v, terms, d) {
     const { pct } = wordDiff(v.transcript || '', d.transcript || '');
     if (pct !== null) desc += ` · <span class="ver-pct">${pct}% changed</span>`;
   }
-  const badge = isSubmitted ? `<span class="ver-submitted-badge">submitted for review</span>` : '';
+  const badge = isSubmitted ? `<span class="ver-submitted-tag">submitted</span> · ` : '';
   let segsHtml = '';
   if (v.changeType !== 'state-only' && v.segments && v.segments.length) {
     const { pairs, inserted } = matchSegments(v.segments, d.segments || []);
@@ -1140,7 +1145,10 @@ function exportVersion(v, terms, d) {
         const roleHtml = oldRole !== newRole
           ? `<span class="seg-role"><mark class="diff-del">${escapeHtml(s.role || '?')}</mark><mark class="diff-add">${escapeHtml(cur.role || '?')}</mark></span>`
           : `<span class="seg-role ${oldRole}">${escapeHtml(s.role || '?')}</span>`;
-        parts.push(`<div class="seg"><span class="seg-time">${formatMs(s.start)}</span>${roleHtml}<span class="seg-text">${textHtml}</span></div>`);
+        const timeHtml = Math.round(s.start) !== Math.round(cur.start)
+          ? `<mark class="diff-del">${formatMs(s.start)}</mark><mark class="diff-add">${formatMs(cur.start)}</mark>`
+          : formatMs(s.start);
+        parts.push(`<div class="seg"><span class="seg-time">${timeHtml}</span>${roleHtml}<span class="seg-text">${textHtml}</span></div>`);
       } else {
         parts.push(`<div class="seg seg-removed"><span class="seg-time">${formatMs(s.start)}</span><span class="seg-role ${s.role || 'unknown'}">${escapeHtml(s.role || '?')}</span><span class="seg-text"><mark class="diff-del">${escapeHtml(s.text)}</mark></span></div>`);
       }
