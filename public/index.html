@@ -115,9 +115,9 @@
   .tag-reviewed { color: var(--pilot); border-color: rgba(111,207,151,0.4); cursor: help; }
   .tag-unreviewed { color: var(--ink-faint); border-color: var(--line-2); }
   .segments { display: grid; gap: 4px; margin-top: 8px; }
-  .seg { display: grid; grid-template-columns: 56px 48px 1fr; gap: 12px; align-items: baseline; padding: 4px 0; }
+  .seg { display: grid; grid-template-columns: 56px auto 1fr; gap: 12px; align-items: baseline; padding: 4px 0; }
   .seg-time { color: var(--ink-faint); font-size: 11px; font-variant-numeric: tabular-nums; }
-  .seg-role { font-size: 10px; text-transform: uppercase; letter-spacing: 0.14em; }
+  .seg-role { font-size: 10px; text-transform: uppercase; letter-spacing: 0.14em; white-space: nowrap; padding-right: 4px; }
   .seg-role.pilot { color: var(--pilot); }
   .seg-role.atc { color: var(--atc); }
   .seg-role.unknown { color: var(--ink-faint); }
@@ -1037,9 +1037,9 @@ function buildExportHtml(docs, filename, termsMap) {
   .row-meta .reviewed { color: #2a7a3a; font-weight: 600; }
   .row-meta .unreviewed { color: #999; }
   .segs { margin: 6pt 0; }
-  .seg { display: grid; grid-template-columns: 56pt 44pt 1fr; gap: 8pt; padding: 1.5pt 0; font-size: 10pt; }
+  .seg { display: grid; grid-template-columns: 56pt auto 1fr; gap: 8pt; padding: 1.5pt 0; font-size: 10pt; }
   .seg-time { color: #888; font-variant-numeric: tabular-nums; font-family: ui-monospace, monospace; }
-  .seg-role { font-size: 8pt; text-transform: uppercase; letter-spacing: 0.05em; padding-top: 1.5pt; }
+  .seg-role { font-size: 8pt; text-transform: uppercase; letter-spacing: 0.05em; padding-top: 1.5pt; white-space: nowrap; padding-right: 4pt; }
   .seg-role.pilot { color: #2a7a3a; }
   .seg-role.atc { color: #b86b00; }
   .seg-role.unknown { color: #999; }
@@ -1092,8 +1092,7 @@ function exportRow(d, terms) {
 
   let versionsHtml = '';
   if (hasHistory) {
-    const verBlocks = [...d.versions].reverse().map(v => exportVersion(v, terms, d)).join('');
-    versionsHtml = `<div class="versions-h">Edit history (${d.versions.length} prior version${d.versions.length === 1 ? '' : 's'})</div>${verBlocks}`;
+    versionsHtml = [...d.versions].reverse().map(v => exportVersion(v, terms, d)).join('');
   }
 
   const keyHtml = highlight(d.key || d.id || '', terms);
@@ -1127,7 +1126,7 @@ function exportVersion(v, terms, d) {
     const { pct } = wordDiff(v.transcript || '', d.transcript || '');
     if (pct !== null) desc += ` · <span class="ver-pct">${pct}% changed</span>`;
   }
-  const badge = isSubmitted ? `<span class="ver-submitted-tag">submitted</span> · ` : '';
+  const badge = isSubmitted ? `<span class="ver-submitted-tag">reviewed</span> · ` : '';
   let segsHtml = '';
   if (v.changeType !== 'state-only' && v.segments && v.segments.length) {
     const { pairs, inserted } = matchSegments(v.segments, d.segments || []);
