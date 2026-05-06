@@ -161,6 +161,7 @@
   .da-eq  { color: var(--ink-faint); }
   .da-del { color: var(--red); text-decoration: line-through; }
   .da-ins { color: var(--green); }
+  .time-diff { display: flex; flex-direction: column; gap: 1px; }
 
   .empty { padding: 80px 32px; text-align: center; color: var(--ink-faint); }
   .empty .glyph { font-family: 'Fraunces', serif; font-size: 64px; font-style: italic; color: var(--line-2); margin-bottom: 12px; }
@@ -961,7 +962,7 @@ function renderVersionSegs(segments, currentSegments) {
         ? `<span class="seg-role"><mark class="diff-del">${escapeHtml(s.role || '?')}</mark><mark class="diff-add">${escapeHtml(cur.role || '?')}</mark></span>`
         : `<span class="seg-role ${oldRole}">${escapeHtml(s.role || '?')}</span>`;
       const timeHtml = Math.round(s.start) !== Math.round(cur.start)
-        ? `<mark class="diff-del">${formatMs(s.start)}</mark><mark class="diff-add">${formatMs(cur.start)}</mark>`
+        ? `<span class="time-diff"><mark class="diff-del">${formatMs(s.start)}</mark><mark class="diff-add">${formatMs(cur.start)}</mark></span>`
         : formatMs(s.start);
       parts.push(`<div class="seg"><span class="seg-time">${timeHtml}</span>${roleHtml}<span class="seg-text">${textHtml}</span></div>`);
     } else {
@@ -1128,6 +1129,7 @@ function buildExportHtml(docs, filename, termsMap) {
   .da-eq  { color: #aaa; }
   .da-del { color: #b8231f; text-decoration: line-through; }
   .da-ins { color: #1a5e1a; }
+  .time-diff { display: flex; flex-direction: column; gap: 1pt; }
   mark { background: #fff48a; color: #111; padding: 0 1pt; border-radius: 1pt; }
   .row-key mark { background: #fff48a; color: #111; }
   mark.diff-del { background: transparent; color: #b8231f; text-decoration: line-through; padding: 0; border-radius: 0; font-style: normal; }
@@ -1224,7 +1226,7 @@ function exportVersion(v, terms, d) {
           ? `<span class="seg-role"><mark class="diff-del">${escapeHtml(s.role || '?')}</mark><mark class="diff-add">${escapeHtml(cur.role || '?')}</mark></span>`
           : `<span class="seg-role ${oldRole}">${escapeHtml(s.role || '?')}</span>`;
         const timeHtml = Math.round(s.start) !== Math.round(cur.start)
-          ? `<mark class="diff-del">${formatMs(s.start)}</mark><mark class="diff-add">${formatMs(cur.start)}</mark>`
+          ? `<span class="time-diff"><mark class="diff-del">${formatMs(s.start)}</mark><mark class="diff-add">${formatMs(cur.start)}</mark></span>`
           : formatMs(s.start);
         parts.push(`<div class="seg"><span class="seg-time">${timeHtml}</span>${roleHtml}<span class="seg-text">${textHtml}</span></div>`);
       } else {

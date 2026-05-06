@@ -45,7 +45,8 @@
       "PowerShell(Get-Content *)",
       "PowerShell(cd \"C:\\\\Users\\\\ghosh\\\\OneDrive\\\\Desktop\\\\atc-search\"; $args = python scripts/build_args.py 2>&1; if \\($LASTEXITCODE -ne 0\\) { Write-Output \"build_args failed: $args\" } else { Write-Output \"Args: $args\" })",
       "PowerShell(cd \"C:\\\\Users\\\\ghosh\\\\OneDrive\\\\Desktop\\\\atc-search\"; $buildArgs = python scripts/build_args.py; node scripts/build.mjs $buildArgs.Split\\(\"`n\"\\))",
-      "PowerShell(cd \"C:\\\\Users\\\\ghosh\\\\OneDrive\\\\Desktop\\\\atc-search\"; $env:SEARCH_PASSWORD = \"ZoomFilterScan60\"; $buildArgs = python scripts/build_args.py; node scripts/build.mjs $buildArgs.Split\\(\"`n\"\\))"
+      "PowerShell(cd \"C:\\\\Users\\\\ghosh\\\\OneDrive\\\\Desktop\\\\atc-search\"; $env:SEARCH_PASSWORD = \"ZoomFilterScan60\"; $buildArgs = python scripts/build_args.py; node scripts/build.mjs $buildArgs.Split\\(\"`n\"\\))",
+      "Bash(Get-ChildItem *)"
     ]
   }
 }
