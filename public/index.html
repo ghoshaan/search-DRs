@@ -1562,21 +1562,24 @@ function toggleStatsDetail(tr) {
   tr.after(row);
 }
 
-function concernColor(score) {
-  if (score >= 60) return 'var(--red)';
-  if (score >= 25) return 'var(--amber)';
+function concernColor(score, max) {
+  if (!max) return 'var(--ink-dim)';
+  const pct = score / max;
+  if (pct >= 0.7) return 'var(--red)';
+  if (pct >= 0.35) return 'var(--amber)';
   return 'var(--pilot)';
 }
 
 function renderLabelerStats() {
   const stats = computeLabelerStats(labelerSortCol, labelerSortDir);
+  const maxConcern = stats.length ? Math.max(...stats.map(s => s.totalConcern)) : 0;
   const tbody = $('stats-tbody');
   tbody.innerHTML = stats.map(s => `
     <tr class="stats-row" onclick="toggleStatsDetail(this)"
         data-submitted="${s.submitted}" data-approved="${s.approved}" data-avgpct="${s.avgPct}"
         data-roleflips="${s.roleFlips}" data-capschg="${s.capsChange}" data-timeshifts="${s.timeShifts}">
       <td><span class="copy-id" data-copy="${escapeAttr(s.annotator)}" title="click to copy" onclick="event.stopPropagation()">${escapeHtml(s.annotator)}</span></td>
-      <td style="text-align: right; font-weight: 500; color: ${concernColor(s.concernScore)};">${s.totalConcern}</td>
+      <td style="text-align: right; font-weight: 500; color: ${concernColor(s.totalConcern, maxConcern)};">${s.totalConcern}</td>
       <td style="text-align: right;">${s.withHistory}</td>
     </tr>
   `).join('');
@@ -1744,13 +1747,14 @@ function computeRevAsLabelerStats(sortCol, sortDir) {
 
 function renderRevAsLabelerStats() {
   const stats = computeRevAsLabelerStats(revAsLabelerSortCol, revAsLabelerSortDir);
+  const maxConcern = stats.length ? Math.max(...stats.map(s => s.totalConcern)) : 0;
   const tbody = $('rev-as-labeler-stats-tbody');
   tbody.innerHTML = stats.map(s => `
     <tr class="stats-row" onclick="toggleStatsDetail(this)"
         data-submitted="${s.submitted}" data-approved="${s.approved}" data-avgpct="${s.avgPct}"
         data-roleflips="${s.roleFlips}" data-capschg="${s.capsChange}" data-timeshifts="${s.timeShifts}">
       <td><span class="copy-id" data-copy="${escapeAttr(s.annotator)}" title="click to copy" onclick="event.stopPropagation()">${escapeHtml(s.annotator)}</span></td>
-      <td style="text-align: right; font-weight: 500; color: ${concernColor(s.concernScore)};">${s.totalConcern}</td>
+      <td style="text-align: right; font-weight: 500; color: ${concernColor(s.totalConcern, maxConcern)};">${s.totalConcern}</td>
       <td style="text-align: right;">${s.withHistory}</td>
     </tr>
   `).join('');
