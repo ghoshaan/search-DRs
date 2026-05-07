@@ -204,18 +204,18 @@
 
   footer { border-top: 1px solid var(--line); padding: 16px 32px; font-size: 11px; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.16em; text-align: center; }
 
-  .stats-panel, .reviewer-stats-panel { display: none; border-bottom: 1px solid var(--line); background: var(--panel); }
-  .stats-panel.open, .reviewer-stats-panel.open { display: block; }
-  .stats-panel tbody tr, .reviewer-stats-panel tbody tr { border-bottom: 1px solid var(--line-2); }
-  .stats-panel tbody tr:hover, .reviewer-stats-panel tbody tr:hover { background: rgba(255,179,71,0.05); }
-  .stats-panel td, .reviewer-stats-panel td { padding: 10px 8px; }
-  .stats-panel th, .reviewer-stats-panel th { transition: all 0.15s; }
-  .stats-panel th:hover, .reviewer-stats-panel th:hover { color: var(--amber); }
-  .stats-panel th[data-active], .reviewer-stats-panel th[data-active] { border-bottom-color: var(--amber); color: var(--amber); }
-  .stats-panel th .sort-indicator, .reviewer-stats-panel th .sort-indicator { opacity: 0.4; display: inline-block; }
-  .stats-panel th[data-active] .sort-indicator, .reviewer-stats-panel th[data-active] .sort-indicator { opacity: 1; }
-  .stats-panel th[data-active="asc"] .sort-indicator::after, .reviewer-stats-panel th[data-active="asc"] .sort-indicator::after { content: "↑"; }
-  .stats-panel th[data-active="desc"] .sort-indicator::after, .reviewer-stats-panel th[data-active="desc"] .sort-indicator::after { content: "↓"; }
+  .stats-panel, .reviewer-stats-panel, .rev-as-labeler-stats-panel { display: none; border-bottom: 1px solid var(--line); background: var(--panel); }
+  .stats-panel.open, .reviewer-stats-panel.open, .rev-as-labeler-stats-panel.open { display: block; }
+  .stats-panel tbody tr, .reviewer-stats-panel tbody tr, .rev-as-labeler-stats-panel tbody tr { border-bottom: 1px solid var(--line-2); }
+  .stats-panel tbody tr:hover, .reviewer-stats-panel tbody tr:hover, .rev-as-labeler-stats-panel tbody tr:hover { background: rgba(255,179,71,0.05); }
+  .stats-panel td, .reviewer-stats-panel td, .rev-as-labeler-stats-panel td { padding: 10px 8px; }
+  .stats-panel th, .reviewer-stats-panel th, .rev-as-labeler-stats-panel th { transition: all 0.15s; }
+  .stats-panel th:hover, .reviewer-stats-panel th:hover, .rev-as-labeler-stats-panel th:hover { color: var(--amber); }
+  .stats-panel th[data-active], .reviewer-stats-panel th[data-active], .rev-as-labeler-stats-panel th[data-active] { border-bottom-color: var(--amber); color: var(--amber); }
+  .stats-panel th .sort-indicator, .reviewer-stats-panel th .sort-indicator, .rev-as-labeler-stats-panel th .sort-indicator { opacity: 0.4; display: inline-block; }
+  .stats-panel th[data-active] .sort-indicator, .reviewer-stats-panel th[data-active] .sort-indicator, .rev-as-labeler-stats-panel th[data-active] .sort-indicator { opacity: 1; }
+  .stats-panel th[data-active="asc"] .sort-indicator::after, .reviewer-stats-panel th[data-active="asc"] .sort-indicator::after, .rev-as-labeler-stats-panel th[data-active="asc"] .sort-indicator::after { content: "↑"; }
+  .stats-panel th[data-active="desc"] .sort-indicator::after, .reviewer-stats-panel th[data-active="desc"] .sort-indicator::after, .rev-as-labeler-stats-panel th[data-active="desc"] .sort-indicator::after { content: "↓"; }
 
   @media (max-width: 640px) {
     header, .search-wrap, .status, .result, footer { padding-left: 16px; padding-right: 16px; }
@@ -260,6 +260,7 @@
       <span><b id="m-hours">—</b> hours</span>
       <button class="lock-out" id="btn-stats">labelers</button>
       <button class="lock-out" id="btn-reviewer-stats">reviewers</button>
+      <button class="lock-out" id="btn-rev-as-labeler-stats">rev-as-labeler</button>
       <button class="lock-out" id="btn-lock">lock</button>
     </div>
   </header>
@@ -301,6 +302,27 @@
           </tr>
         </thead>
         <tbody id="reviewer-stats-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="rev-as-labeler-stats-panel" id="rev-as-labeler-stats-panel">
+    <div style="padding: 20px; max-width: 900px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h2 style="margin: 0; font-family: inherit; font-size: 16px; font-weight: 500;">Reviewer-as-Labeler Statistics</h2>
+        <button class="lock-out" id="btn-close-rev-as-labeler-stats">close</button>
+      </div>
+      <table id="rev-as-labeler-stats-table" style="width: 100%; border-collapse: collapse; font-size: 13px;">
+        <thead>
+          <tr style="border-bottom: 1px solid var(--line); text-align: left;">
+            <th data-sort="annotator" style="padding: 8px; font-weight: 500; color: var(--ink-dim); text-transform: uppercase; letter-spacing: 0.12em; font-size: 11px; cursor: pointer; user-select: none; border-bottom: 2px solid transparent;">Labeler <span class="sort-indicator">⇅</span></th>
+            <th data-sort="submitted" style="padding: 8px; font-weight: 500; color: var(--ink-dim); text-transform: uppercase; letter-spacing: 0.12em; font-size: 11px; text-align: right; cursor: pointer; user-select: none; border-bottom: 2px solid transparent;">Submitted <span class="sort-indicator">⇅</span></th>
+            <th data-sort="approved" style="padding: 8px; font-weight: 500; color: var(--ink-dim); text-transform: uppercase; letter-spacing: 0.12em; font-size: 11px; text-align: right; cursor: pointer; user-select: none; border-bottom: 2px solid transparent;">Approved <span class="sort-indicator">⇅</span></th>
+            <th data-sort="withHistory" style="padding: 8px; font-weight: 500; color: var(--ink-dim); text-transform: uppercase; letter-spacing: 0.12em; font-size: 11px; text-align: right; cursor: pointer; user-select: none; border-bottom: 2px solid transparent;">Has History <span class="sort-indicator">⇅</span></th>
+            <th data-sort="avgPct" style="padding: 8px; font-weight: 500; color: var(--ink-dim); text-transform: uppercase; letter-spacing: 0.12em; font-size: 11px; text-align: right; cursor: pointer; user-select: none; border-bottom: 2px solid transparent;">Avg % Changed <span class="sort-indicator">⇅</span></th>
+          </tr>
+        </thead>
+        <tbody id="rev-as-labeler-stats-tbody"></tbody>
       </table>
     </div>
   </div>
@@ -1420,10 +1442,20 @@ $('f-sort').addEventListener('change', (e) => {
 // ====================== Labeler Stats ======================
 let labelerSortCol = 'avgPct', labelerSortDir = 'desc';
 
+function buildRoleSets() {
+  const annotatorIds = new Set(), reviewerIds = new Set();
+  for (const d of allDocs) {
+    if (d.annotator) annotatorIds.add(d.annotator);
+    if (d.reviewedBy) reviewerIds.add(d.reviewedBy);
+  }
+  return { annotatorIds, reviewerIds };
+}
+
 function computeLabelerStats(sortCol, sortDir) {
+  const { reviewerIds } = buildRoleSets();
   const stats = new Map();
   for (const d of allDocs) {
-    if (!d.annotator) continue;
+    if (!d.annotator || reviewerIds.has(d.annotator)) continue;
     if (!stats.has(d.annotator)) {
       stats.set(d.annotator, { submitted: 0, approved: 0, pctChanges: [] });
     }
@@ -1487,9 +1519,10 @@ $('btn-close-stats').addEventListener('click', () => {
 let reviewerSortCol = 'avgPct', reviewerSortDir = 'asc';
 
 function computeReviewerStats(sortCol, sortDir) {
+  const { annotatorIds } = buildRoleSets();
   const stats = new Map();
   for (const d of allDocs) {
-    if (!d.reviewed || !d.reviewedBy) continue;
+    if (!d.reviewed || !d.reviewedBy || annotatorIds.has(d.reviewedBy)) continue;
     if (!stats.has(d.reviewedBy)) {
       stats.set(d.reviewedBy, { approved: 0, pctChanges: [] });
     }
@@ -1547,6 +1580,73 @@ $('btn-close-reviewer-stats').addEventListener('click', () => {
   $('reviewer-stats-panel').classList.remove('open');
 });
 
+// ====================== Reviewer-as-Labeler Stats ======================
+let revAsLabelerSortCol = 'avgPct', revAsLabelerSortDir = 'desc';
+
+function computeRevAsLabelerStats(sortCol, sortDir) {
+  const { reviewerIds } = buildRoleSets();
+  const stats = new Map();
+  for (const d of allDocs) {
+    if (!d.annotator || !reviewerIds.has(d.annotator)) continue;
+    if (!stats.has(d.annotator)) {
+      stats.set(d.annotator, { submitted: 0, approved: 0, pctChanges: [] });
+    }
+    const s = stats.get(d.annotator);
+    s.submitted++;
+    if (d.reviewed) s.approved++;
+    if (hasRealHistory(d.versions, d)) s.pctChanges.push(getDocPct(d));
+  }
+
+  const result = [];
+  for (const [annotator, data] of stats) {
+    if (data.pctChanges.length === 0) continue;
+    const withHistory = data.pctChanges.length;
+    const avgPct = (data.pctChanges.reduce((a, b) => a + b, 0) / withHistory).toFixed(1);
+    result.push({ annotator, ...data, withHistory, avgPct });
+  }
+
+  result.sort((a, b) => {
+    let aVal = a[sortCol], bVal = b[sortCol];
+    if (sortCol === 'avgPct') {
+      aVal = parseFloat(a.avgPct);
+      bVal = parseFloat(b.avgPct);
+      return sortDir === 'asc' ? aVal - bVal : bVal - aVal;
+    }
+    if (sortCol === 'annotator') {
+      return sortDir === 'asc' ? String(aVal).localeCompare(String(bVal)) : String(bVal).localeCompare(String(aVal));
+    }
+    return sortDir === 'asc' ? aVal - bVal : bVal - aVal;
+  });
+  return result;
+}
+
+function renderRevAsLabelerStats() {
+  const stats = computeRevAsLabelerStats(revAsLabelerSortCol, revAsLabelerSortDir);
+  const tbody = $('rev-as-labeler-stats-tbody');
+  tbody.innerHTML = stats.map(s => `
+    <tr>
+      <td><span class="copy-id" data-copy="${escapeAttr(s.annotator)}" title="click to copy">${escapeHtml(s.annotator)}</span></td>
+      <td style="text-align: right;">${s.submitted}</td>
+      <td style="text-align: right;">${s.approved}</td>
+      <td style="text-align: right;">${s.withHistory}</td>
+      <td style="text-align: right; color: var(--amber);">${s.avgPct}</td>
+    </tr>
+  `).join('');
+  updateSortIndicators('rev-as-labeler-stats-table', revAsLabelerSortCol, revAsLabelerSortDir);
+}
+
+$('btn-rev-as-labeler-stats').addEventListener('click', () => {
+  const panel = $('rev-as-labeler-stats-panel');
+  panel.classList.toggle('open');
+  if (panel.classList.contains('open')) {
+    renderRevAsLabelerStats();
+  }
+});
+
+$('btn-close-rev-as-labeler-stats').addEventListener('click', () => {
+  $('rev-as-labeler-stats-panel').classList.remove('open');
+});
+
 function updateSortIndicators(tableId, col, dir) {
   const table = $(tableId);
   table.querySelectorAll('th').forEach(th => {
@@ -1581,6 +1681,19 @@ document.querySelectorAll('#reviewer-stats-table th[data-sort]').forEach(th => {
       reviewerSortDir = 'asc';
     }
     renderReviewerStats();
+  });
+});
+
+document.querySelectorAll('#rev-as-labeler-stats-table th[data-sort]').forEach(th => {
+  th.addEventListener('click', () => {
+    const col = th.dataset.sort;
+    if (revAsLabelerSortCol === col) {
+      revAsLabelerSortDir = revAsLabelerSortDir === 'asc' ? 'desc' : 'asc';
+    } else {
+      revAsLabelerSortCol = col;
+      revAsLabelerSortDir = 'asc';
+    }
+    renderRevAsLabelerStats();
   });
 });
 
