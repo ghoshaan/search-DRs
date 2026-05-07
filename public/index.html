@@ -204,6 +204,12 @@
 
   footer { border-top: 1px solid var(--line); padding: 16px 32px; font-size: 10px; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.16em; text-align: center; }
 
+  .stats-panel { display: none; border-bottom: 1px solid var(--line); background: var(--panel); }
+  .stats-panel.open { display: block; }
+  .stats-panel tbody tr { border-bottom: 1px solid var(--line-2); }
+  .stats-panel tbody tr:hover { background: rgba(255,179,71,0.05); }
+  .stats-panel td { padding: 10px 8px; }
+
   @media (max-width: 640px) {
     header, .search-wrap, .status, .result, footer { padding-left: 16px; padding-right: 16px; }
     .seg { grid-template-columns: 48px 40px 1fr; gap: 8px; }
@@ -245,9 +251,30 @@
     <div class="meta">
       <span><b id="m-docs">—</b> recordings</span>
       <span><b id="m-hours">—</b> hours</span>
+      <button class="lock-out" id="btn-stats">labelers</button>
       <button class="lock-out" id="btn-lock">lock</button>
     </div>
   </header>
+
+  <div class="stats-panel" id="stats-panel">
+    <div style="padding: 20px; max-width: 900px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h2 style="margin: 0; font-family: inherit; font-size: 16px; font-weight: 500;">Labeler Statistics</h2>
+        <button class="lock-out" id="btn-close-stats">close</button>
+      </div>
+      <table id="stats-table" style="width: 100%; border-collapse: collapse; font-size: 12px;">
+        <thead>
+          <tr style="border-bottom: 1px solid var(--line); text-align: left;">
+            <th style="padding: 8px; font-weight: 500; color: var(--ink-dim); text-transform: uppercase; letter-spacing: 0.12em; font-size: 10px;">Labeler</th>
+            <th style="padding: 8px; font-weight: 500; color: var(--ink-dim); text-transform: uppercase; letter-spacing: 0.12em; font-size: 10px; text-align: right;">Reviews</th>
+            <th style="padding: 8px; font-weight: 500; color: var(--ink-dim); text-transform: uppercase; letter-spacing: 0.12em; font-size: 10px; text-align: right;">Reviewed</th>
+            <th style="padding: 8px; font-weight: 500; color: var(--ink-dim); text-transform: uppercase; letter-spacing: 0.12em; font-size: 10px; text-align: right;">Avg % Changed</th>
+          </tr>
+        </thead>
+        <tbody id="stats-tbody"></tbody>
+      </table>
+    </div>
+  </div>
 
   <div class="search-wrap">
     <div class="search-row">
@@ -1357,6 +1384,62 @@ $('f-sort').addEventListener('change', (e) => {
   activeSort = e.target.value;
   rerun();
 });
+
+// ====================== Labeler Stats ======================
+function computeLabelerStats() {
+  const stats = new Map();
+  for (const d of allDocs) {
+    if (!d.annotator) continue;
+    if (!stats.has(d.annotator)) {
+      stats.set(d.annotator, { reviews: 0, reviewed: 0, pctChanges: [] });
+    }
+    const s = stats.get(d.annotator);
+    s.reviews++;
+    if (d.reviewed) s.reviewed++;
+    const pct = getDocPct(d);
+    if (pct !== null && pct !== undefined) s.pctChanges.push(pct);
+  }
+
+  const result = [];
+  for (const [annotator, data] of stats) {
+    const avgPct = data.pctChanges.length > 0
+      ? (data.pctChanges.reduce((a, b) => a + b, 0) / data.pctChanges.length).toFixed(1)
+      : '—';
+    result.push({ annotator, ...data, avgPct });
+  }
+  result.sort((a, b) => {
+    const aAvg = a.pctChanges.length > 0 ? a.pctChanges.reduce((x, y) => x + y, 0) / a.pctChanges.length : -1;
+    const bAvg = b.pctChanges.length > 0 ? b.pctChanges.reduce((x, y) => x + y, 0) / b.pctChanges.length : -1;
+    return bAvg - aAvg;
+  });
+  return result;
+}
+
+function renderLabelerStats() {
+  const stats = computeLabelerStats();
+  const tbody = $('stats-tbody');
+  tbody.innerHTML = stats.map(s => `
+    <tr>
+      <td>${escapeHtml(s.annotator)}</td>
+      <td style="text-align: right;">${s.reviews}</td>
+      <td style="text-align: right;">${s.reviewed}</td>
+      <td style="text-align: right; color: ${s.pctChanges.length > 0 ? 'var(--amber)' : 'var(--ink-dim)'};">${s.avgPct}</td>
+    </tr>
+  `).join('');
+}
+
+$('btn-stats').addEventListener('click', () => {
+  const panel = $('stats-panel');
+  panel.classList.toggle('open');
+  if (panel.classList.contains('open')) {
+    renderLabelerStats();
+  }
+});
+
+$('btn-close-stats').addEventListener('click', () => {
+  $('stats-panel').classList.remove('open');
+});
+
 (async function main() {
   try { meta = await fetchMeta(); }
   catch { showLock('couldn\u2019t load meta.json (have you built yet?)'); return; }
