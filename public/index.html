@@ -162,6 +162,14 @@
   .da-del { color: var(--red); text-decoration: line-through; }
   .da-ins { color: var(--green); }
   .time-diff { display: flex; flex-direction: column; gap: 1px; }
+  .edit-tag { display: inline-block; font-size: 10px; padding: 0 5px; border: 1px solid; margin-left: 5px; vertical-align: middle; text-transform: uppercase; letter-spacing: 0.1em; line-height: 1.6; }
+  .edit-tag-role { color: var(--red); border-color: rgba(229,115,115,0.35); }
+  .edit-tag-caps { color: var(--ink-faint); border-color: var(--line-2); }
+  .edit-tag-time { color: var(--pilot); border-color: rgba(111,207,151,0.3); }
+  .ct-breakdown { font-size: 12px; color: var(--ink-dim); margin-bottom: 14px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .ct-label { text-transform: uppercase; letter-spacing: 0.1em; font-size: 11px; margin-right: 2px; }
+  .ct-pill { padding: 3px 9px; border: 1px solid var(--line-2); }
+  .ct-pill b { color: var(--ink); font-weight: 500; }
 
   .empty { padding: 80px 32px; text-align: center; color: var(--ink-faint); }
   .empty .glyph { font-family: 'Fraunces', serif; font-size: 65px; font-style: italic; color: var(--line-2); margin-bottom: 12px; }
@@ -266,7 +274,7 @@
   </header>
 
   <div class="stats-panel" id="stats-panel">
-    <div style="padding: 20px; max-width: 900px;">
+    <div style="padding: 20px; max-width: 1200px;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
         <h2 style="margin: 0; font-family: inherit; font-size: 16px; font-weight: 500;">Labeler Statistics</h2>
         <button class="lock-out" id="btn-close-stats">close</button>
@@ -279,6 +287,9 @@
             <th data-sort="approved" style="padding: 8px; font-weight: 500; color: var(--ink-dim); text-transform: uppercase; letter-spacing: 0.12em; font-size: 11px; text-align: right; cursor: pointer; user-select: none; border-bottom: 2px solid transparent;">Approved <span class="sort-indicator">⇅</span></th>
             <th data-sort="withHistory" style="padding: 8px; font-weight: 500; color: var(--ink-dim); text-transform: uppercase; letter-spacing: 0.12em; font-size: 11px; text-align: right; cursor: pointer; user-select: none; border-bottom: 2px solid transparent;">Has History <span class="sort-indicator">⇅</span></th>
             <th data-sort="avgPct" style="padding: 8px; font-weight: 500; color: var(--ink-dim); text-transform: uppercase; letter-spacing: 0.12em; font-size: 11px; text-align: right; cursor: pointer; user-select: none; border-bottom: 2px solid transparent;">Avg % Changed <span class="sort-indicator">⇅</span></th>
+            <th data-sort="roleFlips" style="padding: 8px; font-weight: 500; color: var(--ink-dim); text-transform: uppercase; letter-spacing: 0.12em; font-size: 11px; text-align: right; cursor: pointer; user-select: none; border-bottom: 2px solid transparent;">Role Flips <span class="sort-indicator">⇅</span></th>
+            <th data-sort="capsChange" style="padding: 8px; font-weight: 500; color: var(--ink-dim); text-transform: uppercase; letter-spacing: 0.12em; font-size: 11px; text-align: right; cursor: pointer; user-select: none; border-bottom: 2px solid transparent;">Caps Chg <span class="sort-indicator">⇅</span></th>
+            <th data-sort="timeShifts" style="padding: 8px; font-weight: 500; color: var(--ink-dim); text-transform: uppercase; letter-spacing: 0.12em; font-size: 11px; text-align: right; cursor: pointer; user-select: none; border-bottom: 2px solid transparent;">Time Shifts <span class="sort-indicator">⇅</span></th>
           </tr>
         </thead>
         <tbody id="stats-tbody"></tbody>
@@ -287,11 +298,12 @@
   </div>
 
   <div class="reviewer-stats-panel" id="reviewer-stats-panel">
-    <div style="padding: 20px; max-width: 900px;">
+    <div style="padding: 20px; max-width: 1200px;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
         <h2 style="margin: 0; font-family: inherit; font-size: 16px; font-weight: 500;">Reviewer Statistics</h2>
         <button class="lock-out" id="btn-close-reviewer-stats">close</button>
       </div>
+      <div class="ct-breakdown" id="ct-breakdown"></div>
       <table id="reviewer-stats-table" style="width: 100%; border-collapse: collapse; font-size: 13px;">
         <thead>
           <tr style="border-bottom: 1px solid var(--line); text-align: left;">
@@ -299,6 +311,9 @@
             <th data-sort="approved" style="padding: 8px; font-weight: 500; color: var(--ink-dim); text-transform: uppercase; letter-spacing: 0.12em; font-size: 11px; text-align: right; cursor: pointer; user-select: none; border-bottom: 2px solid transparent;">Approved <span class="sort-indicator">⇅</span></th>
             <th data-sort="withHistory" style="padding: 8px; font-weight: 500; color: var(--ink-dim); text-transform: uppercase; letter-spacing: 0.12em; font-size: 11px; text-align: right; cursor: pointer; user-select: none; border-bottom: 2px solid transparent;">Has History <span class="sort-indicator">⇅</span></th>
             <th data-sort="avgPct" style="padding: 8px; font-weight: 500; color: var(--ink-dim); text-transform: uppercase; letter-spacing: 0.12em; font-size: 11px; text-align: right; cursor: pointer; user-select: none; border-bottom: 2px solid transparent;">Avg % Changed <span class="sort-indicator">⇅</span></th>
+            <th data-sort="roleFlips" style="padding: 8px; font-weight: 500; color: var(--ink-dim); text-transform: uppercase; letter-spacing: 0.12em; font-size: 11px; text-align: right; cursor: pointer; user-select: none; border-bottom: 2px solid transparent;">Role Flips <span class="sort-indicator">⇅</span></th>
+            <th data-sort="capsChange" style="padding: 8px; font-weight: 500; color: var(--ink-dim); text-transform: uppercase; letter-spacing: 0.12em; font-size: 11px; text-align: right; cursor: pointer; user-select: none; border-bottom: 2px solid transparent;">Caps Chg <span class="sort-indicator">⇅</span></th>
+            <th data-sort="timeShifts" style="padding: 8px; font-weight: 500; color: var(--ink-dim); text-transform: uppercase; letter-spacing: 0.12em; font-size: 11px; text-align: right; cursor: pointer; user-select: none; border-bottom: 2px solid transparent;">Time Shifts <span class="sort-indicator">⇅</span></th>
           </tr>
         </thead>
         <tbody id="reviewer-stats-tbody"></tbody>
@@ -307,7 +322,7 @@
   </div>
 
   <div class="rev-as-labeler-stats-panel" id="rev-as-labeler-stats-panel">
-    <div style="padding: 20px; max-width: 900px;">
+    <div style="padding: 20px; max-width: 1200px;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
         <h2 style="margin: 0; font-family: inherit; font-size: 16px; font-weight: 500;">Labeling Reviewer Statistics</h2>
         <button class="lock-out" id="btn-close-rev-as-labeler-stats">close</button>
@@ -320,6 +335,9 @@
             <th data-sort="approved" style="padding: 8px; font-weight: 500; color: var(--ink-dim); text-transform: uppercase; letter-spacing: 0.12em; font-size: 11px; text-align: right; cursor: pointer; user-select: none; border-bottom: 2px solid transparent;">Approved <span class="sort-indicator">⇅</span></th>
             <th data-sort="withHistory" style="padding: 8px; font-weight: 500; color: var(--ink-dim); text-transform: uppercase; letter-spacing: 0.12em; font-size: 11px; text-align: right; cursor: pointer; user-select: none; border-bottom: 2px solid transparent;">Has History <span class="sort-indicator">⇅</span></th>
             <th data-sort="avgPct" style="padding: 8px; font-weight: 500; color: var(--ink-dim); text-transform: uppercase; letter-spacing: 0.12em; font-size: 11px; text-align: right; cursor: pointer; user-select: none; border-bottom: 2px solid transparent;">Avg % Changed <span class="sort-indicator">⇅</span></th>
+            <th data-sort="roleFlips" style="padding: 8px; font-weight: 500; color: var(--ink-dim); text-transform: uppercase; letter-spacing: 0.12em; font-size: 11px; text-align: right; cursor: pointer; user-select: none; border-bottom: 2px solid transparent;">Role Flips <span class="sort-indicator">⇅</span></th>
+            <th data-sort="capsChange" style="padding: 8px; font-weight: 500; color: var(--ink-dim); text-transform: uppercase; letter-spacing: 0.12em; font-size: 11px; text-align: right; cursor: pointer; user-select: none; border-bottom: 2px solid transparent;">Caps Chg <span class="sort-indicator">⇅</span></th>
+            <th data-sort="timeShifts" style="padding: 8px; font-weight: 500; color: var(--ink-dim); text-transform: uppercase; letter-spacing: 0.12em; font-size: 11px; text-align: right; cursor: pointer; user-select: none; border-bottom: 2px solid transparent;">Time Shifts <span class="sort-indicator">⇅</span></th>
           </tr>
         </thead>
         <tbody id="rev-as-labeler-stats-tbody"></tbody>
@@ -729,6 +747,32 @@ function applyFilters(docs) {
   return d._pct;
 }
 
+function classifyDocEdits(d) {
+  if (!hasRealHistory(d.versions, d)) return { roleFlips: 0, capsChange: 0, timeShifts: 0 };
+  const submitted = [...d.versions].reverse().find(v => !v.reviewed);
+  if (!submitted || !submitted.segments || !submitted.segments.length) return { roleFlips: 0, capsChange: 0, timeShifts: 0 };
+  const { pairs } = matchSegments(submitted.segments, d.segments || []);
+  let roleFlips = 0, capsChange = 0, timeShifts = 0;
+  for (const { old: s, cur } of pairs) {
+    if (!cur) continue;
+    if ((s.role || '') !== (cur.role || '')) roleFlips++;
+    if (Math.round(s.start) !== Math.round(cur.start)) timeShifts++;
+    if (s.text !== cur.text) {
+      if (s.text.toLowerCase() === cur.text.toLowerCase()) {
+        capsChange++;
+      } else {
+        const ow = s.text.split(/\s+/).filter(Boolean);
+        const nw = cur.text.split(/\s+/).filter(Boolean);
+        const len = Math.min(ow.length, nw.length);
+        for (let i = 0; i < len; i++) {
+          if (ow[i] !== nw[i] && ow[i].toLowerCase() === nw[i].toLowerCase()) { capsChange++; break; }
+        }
+      }
+    }
+  }
+  return { roleFlips, capsChange, timeShifts };
+}
+
 function activityTimestamp(d) {
   return d.reviewedAt || d.createdAt || '';
 }
@@ -1076,8 +1120,14 @@ function renderHistory(versions, id, d) {
   if (!submitted) return '';
   const { pct } = wordDiff(submitted.transcript || '', d.transcript || '');
   const pctHtml = pct ? ` · <span style="color:var(--red);opacity:0.75">${pct}% changed</span>` : '';
+  const et = classifyDocEdits(d);
+  const etTags = [
+    et.roleFlips ? `<span class="edit-tag edit-tag-role">${et.roleFlips} role flip${et.roleFlips > 1 ? 's' : ''}</span>` : '',
+    et.capsChange  ? `<span class="edit-tag edit-tag-caps">${et.capsChange} caps chg</span>` : '',
+    et.timeShifts ? `<span class="edit-tag edit-tag-time">${et.timeShifts} time shift${et.timeShifts > 1 ? 's' : ''}</span>` : '',
+  ].filter(Boolean).join('');
   const segs = renderVersionSegs(submitted.segments, d.segments);
-  return `<div class="history-panel" id="hp-${escapeAttr(String(id))}"><div class="version-block prior"><div class="version-block-header"><span class="version-block-date">${escapeHtml(submitted.snapshotDate || '—')}</span><span class="version-block-glyph">⟲</span><span class="version-block-desc">labeler ${escapeHtml(submitted.annotator || '?')}${pctHtml}</span></div>${segs}</div></div>`;
+  return `<div class="history-panel" id="hp-${escapeAttr(String(id))}"><div class="version-block prior"><div class="version-block-header"><span class="version-block-date">${escapeHtml(submitted.snapshotDate || '—')}</span><span class="version-block-glyph">⟲</span><span class="version-block-desc">labeler ${escapeHtml(submitted.annotator || '?')}${pctHtml}${etTags}</span></div>${segs}</div></div>`;
 }
 
 function formatMs(ms) { return ms == null ? '' : (ms / 1000).toFixed(2) + 's'; }
@@ -1457,12 +1507,18 @@ function computeLabelerStats(sortCol, sortDir) {
   for (const d of allDocs) {
     if (!d.annotator || reviewerIds.has(d.annotator)) continue;
     if (!stats.has(d.annotator)) {
-      stats.set(d.annotator, { submitted: 0, approved: 0, pctChanges: [] });
+      stats.set(d.annotator, { submitted: 0, approved: 0, pctChanges: [], roleFlips: 0, capsChange: 0, timeShifts: 0 });
     }
     const s = stats.get(d.annotator);
     s.submitted++;
     if (d.reviewed) s.approved++;
-    if (hasRealHistory(d.versions, d)) s.pctChanges.push(getDocPct(d));
+    if (hasRealHistory(d.versions, d)) {
+      s.pctChanges.push(getDocPct(d));
+      const et = classifyDocEdits(d);
+      s.roleFlips += et.roleFlips;
+      s.capsChange  += et.capsChange;
+      s.timeShifts += et.timeShifts;
+    }
   }
 
   const result = [];
@@ -1498,6 +1554,9 @@ function renderLabelerStats() {
       <td style="text-align: right;">${s.approved}</td>
       <td style="text-align: right;">${s.withHistory}</td>
       <td style="text-align: right; color: var(--amber);">${s.avgPct}</td>
+      <td style="text-align: right; color: ${s.roleFlips ? 'var(--red)' : 'var(--ink-faint)'};">${s.roleFlips || '—'}</td>
+      <td style="text-align: right; color: ${s.capsChange ? 'var(--ink-dim)' : 'var(--ink-faint)'};">${s.capsChange || '—'}</td>
+      <td style="text-align: right; color: ${s.timeShifts ? 'var(--pilot)' : 'var(--ink-faint)'};">${s.timeShifts || '—'}</td>
     </tr>
   `).join('');
   updateSortIndicators('stats-table', labelerSortCol, labelerSortDir);
@@ -1518,17 +1577,35 @@ $('btn-close-stats').addEventListener('click', () => {
 // ====================== Reviewer Stats ======================
 let reviewerSortCol = 'avgPct', reviewerSortDir = 'asc';
 
+function computeChangeTypeBreakdown() {
+  const counts = { 'state-only': 0, 'content-only': 0, 'state-and-content': 0 };
+  for (const d of allDocs) {
+    for (const v of (d.versions || [])) {
+      if (v.changeType && v.changeType !== 'initial' && counts[v.changeType] !== undefined) {
+        counts[v.changeType]++;
+      }
+    }
+  }
+  return counts;
+}
+
 function computeReviewerStats(sortCol, sortDir) {
   const { annotatorIds } = buildRoleSets();
   const stats = new Map();
   for (const d of allDocs) {
     if (!d.reviewed || !d.reviewedBy || annotatorIds.has(d.reviewedBy)) continue;
     if (!stats.has(d.reviewedBy)) {
-      stats.set(d.reviewedBy, { approved: 0, pctChanges: [] });
+      stats.set(d.reviewedBy, { approved: 0, pctChanges: [], roleFlips: 0, capsChange: 0, timeShifts: 0 });
     }
     const s = stats.get(d.reviewedBy);
     s.approved++;
-    if (hasRealHistory(d.versions, d)) s.pctChanges.push(getDocPct(d));
+    if (hasRealHistory(d.versions, d)) {
+      s.pctChanges.push(getDocPct(d));
+      const et = classifyDocEdits(d);
+      s.roleFlips  += et.roleFlips;
+      s.capsChange   += et.capsChange;
+      s.timeShifts += et.timeShifts;
+    }
   }
 
   const result = [];
@@ -1556,6 +1633,14 @@ function computeReviewerStats(sortCol, sortDir) {
 
 function renderReviewerStats() {
   const stats = computeReviewerStats(reviewerSortCol, reviewerSortDir);
+  const ct = computeChangeTypeBreakdown();
+  const total = ct['state-only'] + ct['content-only'] + ct['state-and-content'];
+  $('ct-breakdown').innerHTML = total ? `
+    <span class="ct-label">caught transitions:</span>
+    <span class="ct-pill">state only <b>${ct['state-only']}</b></span>
+    <span class="ct-pill">content only <b>${ct['content-only']}</b></span>
+    <span class="ct-pill">state + content <b>${ct['state-and-content']}</b></span>
+  ` : '';
   const tbody = $('reviewer-stats-tbody');
   tbody.innerHTML = stats.map(s => `
     <tr>
@@ -1563,6 +1648,9 @@ function renderReviewerStats() {
       <td style="text-align: right;">${s.approved}</td>
       <td style="text-align: right;">${s.withHistory}</td>
       <td style="text-align: right; color: var(--amber);">${s.avgPct}</td>
+      <td style="text-align: right; color: ${s.roleFlips ? 'var(--red)' : 'var(--ink-faint)'};">${s.roleFlips || '—'}</td>
+      <td style="text-align: right; color: ${s.capsChange ? 'var(--ink-dim)' : 'var(--ink-faint)'};">${s.capsChange || '—'}</td>
+      <td style="text-align: right; color: ${s.timeShifts ? 'var(--pilot)' : 'var(--ink-faint)'};">${s.timeShifts || '—'}</td>
     </tr>
   `).join('');
   updateSortIndicators('reviewer-stats-table', reviewerSortCol, reviewerSortDir);
@@ -1589,12 +1677,18 @@ function computeRevAsLabelerStats(sortCol, sortDir) {
   for (const d of allDocs) {
     if (!d.annotator || !reviewerIds.has(d.annotator)) continue;
     if (!stats.has(d.annotator)) {
-      stats.set(d.annotator, { submitted: 0, approved: 0, pctChanges: [] });
+      stats.set(d.annotator, { submitted: 0, approved: 0, pctChanges: [], roleFlips: 0, capsChange: 0, timeShifts: 0 });
     }
     const s = stats.get(d.annotator);
     s.submitted++;
     if (d.reviewed) s.approved++;
-    if (hasRealHistory(d.versions, d)) s.pctChanges.push(getDocPct(d));
+    if (hasRealHistory(d.versions, d)) {
+      s.pctChanges.push(getDocPct(d));
+      const et = classifyDocEdits(d);
+      s.roleFlips  += et.roleFlips;
+      s.capsChange   += et.capsChange;
+      s.timeShifts += et.timeShifts;
+    }
   }
 
   const result = [];
@@ -1630,6 +1724,9 @@ function renderRevAsLabelerStats() {
       <td style="text-align: right;">${s.approved}</td>
       <td style="text-align: right;">${s.withHistory}</td>
       <td style="text-align: right; color: var(--amber);">${s.avgPct}</td>
+      <td style="text-align: right; color: ${s.roleFlips ? 'var(--red)' : 'var(--ink-faint)'};">${s.roleFlips || '—'}</td>
+      <td style="text-align: right; color: ${s.capsChange ? 'var(--ink-dim)' : 'var(--ink-faint)'};">${s.capsChange || '—'}</td>
+      <td style="text-align: right; color: ${s.timeShifts ? 'var(--pilot)' : 'var(--ink-faint)'};">${s.timeShifts || '—'}</td>
     </tr>
   `).join('');
   updateSortIndicators('rev-as-labeler-stats-table', revAsLabelerSortCol, revAsLabelerSortDir);
