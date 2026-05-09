@@ -50,7 +50,8 @@
       "PowerShell(Write-Host \"Current directory:\" \\(Get-Location\\).Path; Write-Host \"---\"; Get-ChildItem . | Select-Object -ExpandProperty Name)",
       "Bash(Select-Object -First 50)",
       "Bash(Format-Table FullName)",
-      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\ghosh\\\\OneDrive\\\\Desktop\\\\atc-search\" -Directory | Where-Object { $_.Name -notmatch 'node_modules|\\\\.git' })"
+      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\ghosh\\\\OneDrive\\\\Desktop\\\\atc-search\" -Directory | Where-Object { $_.Name -notmatch 'node_modules|\\\\.git' })",
+      "Bash(powershell *)"
     ]
   }
 }
