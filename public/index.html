@@ -1685,7 +1685,9 @@ function concernColor(score, max) {
   return 'var(--pilot)';
 }
 
-function toggleLabelerExclusion(cb) {
+$('stats-tbody').addEventListener('change', e => {
+  const cb = e.target.closest('.labeler-excl-cb');
+  if (!cb) return;
   const name = cb.dataset.labeler;
   if (cb.checked) excludedLabelers.add(name);
   else excludedLabelers.delete(name);
@@ -1694,7 +1696,7 @@ function toggleLabelerExclusion(cb) {
   const count = excludedLabelers.size;
   $('excluded-count').textContent = count ? `— ${count} excluded` : '';
   rerun();
-}
+});
 
 function renderLabelerStats() {
   const stats = computeLabelerStats(labelerSortCol, labelerSortDir);
@@ -1708,7 +1710,7 @@ function renderLabelerStats() {
         data-roleflips="${s.roleFlips}" data-capschg="${s.capsChange}" data-timeshifts="${s.timeShifts}">
       <td onclick="event.stopPropagation()" style="padding: 8px 4px; text-align: center;">
         <input type="checkbox" class="labeler-excl-cb" data-labeler="${escapeAttr(s.annotator)}"
-               ${excl ? 'checked' : ''} onchange="toggleLabelerExclusion(this)"
+               ${excl ? 'checked' : ''}
                style="cursor:pointer; accent-color: var(--amber);">
       </td>
       <td><span class="copy-id" data-copy="${escapeAttr(s.annotator)}" title="click to copy" onclick="copyId(event,this)">${escapeHtml(s.annotator)}</span></td>
