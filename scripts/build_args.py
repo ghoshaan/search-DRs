@@ -37,6 +37,10 @@ def _extract_date(filename):
     return None
 
 DIR = 'ndjson'
+# Support a "Cleaned" subfolder for temporary testing
+if os.path.isdir(os.path.join(DIR, 'Cleaned')):
+    DIR = os.path.join(DIR, 'Cleaned')
+
 args = []
 seen = set()
 
@@ -51,7 +55,7 @@ for path in sorted(glob.glob(os.path.join(DIR, 'batch-*.ndjson'))):
     seen.add(os.path.basename(path))
 
 # --- manifest entries: exact filenames or glob patterns ---
-manifest_path = os.path.join(DIR, 'manifest.json')
+manifest_path = os.path.join('ndjson', 'manifest.json')
 if os.path.exists(manifest_path):
     with open(manifest_path, encoding='utf-8') as f:
         manifest = json.load(f)
