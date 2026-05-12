@@ -41,22 +41,21 @@
       repeating-linear-gradient(0deg, rgba(255,255,255,0.012) 0 1px, transparent 1px 3px);
   }
 
-  /* Lock screen */
-  .lock { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
-  .lock-card { width: 100%; max-width: 420px; border: 1px solid var(--line-2); background: var(--panel); padding: 36px 32px; }
-  .lock-glyph { width: 120px; height: 120px; margin-bottom: 24px; display: block; }
-  .lock-glyph img { width: 100%; height: 100%; object-fit: contain; }
-  .lock-title { font-family: 'Fraunces', serif; font-weight: 300; font-size: 23px; margin: 0 0 6px; }
-  .lock-title em { font-style: italic; color: var(--amber); font-weight: 600; }
-  .lock-sub { color: var(--ink-dim); font-size: 13px; text-transform: uppercase; letter-spacing: 0.14em; margin-bottom: 24px; }
-  .lock-form { display: flex; flex-direction: column; gap: 10px; }
-  .lock-form input { background: var(--bg); border: 1px solid var(--line-2); color: var(--ink); font-family: inherit; font-size: 16px; padding: 12px 14px; outline: none; border-radius: 0; }
-  .lock-form input:focus { border-color: var(--amber); box-shadow: 0 0 0 1px var(--amber); }
-  .lock-form button { background: var(--amber); color: var(--bg); border: 1px solid var(--amber); font-family: inherit; font-size: 13px; text-transform: uppercase; letter-spacing: 0.16em; padding: 12px; cursor: pointer; font-weight: 700; }
-  .lock-form button:disabled { opacity: 0.5; cursor: progress; }
-  .lock-error { color: var(--red); font-size: 13px; text-transform: uppercase; letter-spacing: 0.12em; min-height: 14px; margin-top: 4px; }
-  .lock-hint { color: var(--ink-dim); font-size: 13px; line-height: 1.5; margin-top: 6px; }
-  .lock-foot { color: var(--ink-faint); font-size: 11px; text-transform: uppercase; letter-spacing: 0.16em; margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--line); }
+  /* Upload screen */
+  .upload-view { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+  .upload-card { width: 100%; max-width: 480px; border: 1px solid var(--line-2); background: var(--panel); padding: 36px 32px; }
+  .upload-title { font-family: 'Fraunces', serif; font-weight: 300; font-size: 23px; margin: 0 0 6px; }
+  .upload-title em { font-style: italic; color: var(--amber); font-weight: 600; }
+  .upload-sub { color: var(--ink-dim); font-size: 13px; text-transform: uppercase; letter-spacing: 0.14em; margin-bottom: 24px; }
+  .upload-form { display: flex; flex-direction: column; gap: 20px; }
+  .file-input-group { display: flex; flex-direction: column; gap: 8px; }
+  .file-input-group label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--ink-faint); }
+  .file-input-group input { background: var(--bg); border: 1px solid var(--line-2); color: var(--ink); font-family: inherit; font-size: 14px; padding: 10px; outline: none; width: 100%; }
+  .file-input-group input::file-selector-button { background: var(--line-2); color: var(--ink); border: none; padding: 6px 10px; margin-right: 12px; cursor: pointer; font-family: inherit; font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; }
+  .file-input-group input::file-selector-button:hover { background: var(--ink-faint); }
+  .upload-btn { background: var(--amber); color: var(--bg); border: 1px solid var(--amber); font-family: inherit; font-size: 13px; text-transform: uppercase; letter-spacing: 0.16em; padding: 14px; cursor: pointer; font-weight: 700; margin-top: 10px; }
+  .upload-btn:disabled { opacity: 0.5; cursor: progress; }
+  .upload-status { font-size: 13px; color: var(--ink-dim); min-height: 1.5em; text-align: center; }
 
   /* App */
   .app { display: none; }
@@ -64,52 +63,18 @@
   header { border-bottom: 1px solid var(--line); padding: 28px 32px 22px; display: flex; align-items: baseline; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
   h1 { font-family: 'Fraunces', serif; font-weight: 300; font-size: 29px; margin: 0; letter-spacing: -0.01em; }
   h1 em { font-style: italic; color: var(--amber); font-weight: 600; }
-  .meta { display: flex; gap: 24px; font-size: 13px; color: var(--ink-dim); text-transform: uppercase; letter-spacing: 0.12em; align-items: center; }
+  .meta { display: flex; gap: 16px; font-size: 13px; color: var(--ink-dim); text-transform: uppercase; letter-spacing: 0.12em; align-items: center; }
   .meta b { color: var(--ink); font-weight: 500; letter-spacing: 0; text-transform: none; }
-  .lock-out { color: var(--ink-faint); background: transparent; border: 1px solid var(--line-2); font-family: inherit; font-size: 11px; text-transform: uppercase; letter-spacing: 0.14em; padding: 4px 10px; cursor: pointer; }
-  .lock-out:hover { color: var(--amber); border-color: var(--amber); }
 
-  .search-wrap { padding: 24px 32px 12px; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--bg); z-index: 10; }
-  .search-row { display: flex; gap: 12px; align-items: center; }
-  .search-input { flex: 1; background: var(--panel); border: 1px solid var(--line-2); color: var(--ink); font-family: inherit; font-size: 16px; padding: 12px 16px; outline: none; border-radius: 0; transition: border-color 0.15s; }
-  .search-input::placeholder { color: var(--ink-faint); }
-  .search-input:focus { border-color: var(--amber); box-shadow: 0 0 0 1px var(--amber); }
-
-  .pill { border: 1px solid var(--line-2); color: var(--ink-dim); padding: 6px 12px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.12em; cursor: pointer; user-select: none; background: transparent; font-family: inherit; transition: all 0.15s; }
-  .pill:hover { color: var(--ink); border-color: var(--ink-dim); }
-  .pill.active { color: var(--bg); background: var(--amber); border-color: var(--amber); }
-
-  .filters { display: flex; gap: 14px; margin-top: 14px; align-items: center; flex-wrap: wrap; }
-  .filters .group { display: flex; gap: 8px; align-items: center; }
-  .filters .sep { color: var(--ink-faint); font-size: 13px; text-transform: uppercase; letter-spacing: 0.12em; }
-
-  .facet-select, .facet-input {
-    background: var(--panel); color: var(--ink); border: 1px solid var(--line-2);
-    font-family: inherit; font-size: 13px; padding: 6px 10px;
-    border-radius: 0; cursor: pointer; min-width: 110px;
-  }
-  .facet-input { cursor: text; }
-  .facet-input.annotator { min-width: 200px; } /* longer values */
-  .facet-select:focus, .facet-input:focus { outline: none; border-color: var(--amber); }
-  .facet-clear { background: transparent; border: none; color: var(--ink-faint); font-size: 16px; padding: 0 4px; cursor: pointer; font-family: inherit; }
-  .facet-clear:hover { color: var(--amber); }
-
-  .ac-wrap { position: relative; }
-  .ac-drop { position: absolute; top: 100%; left: 0; z-index: 200; background: var(--panel); border: 1px solid var(--line-2); border-top: none; max-height: 260px; overflow-y: auto; display: none; min-width: 100%; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
-  .ac-drop.open { display: block; }
-  .ac-opt { padding: 7px 10px; cursor: pointer; font-size: 13px; font-family: inherit; color: var(--ink); white-space: nowrap; display: flex; justify-content: space-between; gap: 12px; }
-  .ac-opt:hover, .ac-opt.ac-active { background: rgba(255,179,71,0.1); }
-  .ac-opt mark { background: transparent; color: var(--amber); font-weight: 600; font-style: normal; }
-  .ac-count { color: var(--ink-faint); font-size: 11px; }
+  .version-badge { font-size: 11px; color: var(--ink-dim); cursor: pointer; border: 1px solid var(--line-2); padding: 4px 10px; user-select: none; transition: color 0.15s, border-color 0.15s; background: transparent; font-family: inherit; }
+  .version-badge:hover { color: var(--amber); border-color: rgba(255,179,71,0.4); }
+  .version-badge.open { color: var(--amber); border-color: rgba(255,179,71,0.4); }
 
   .status { padding: 10px 32px; font-size: 13px; color: var(--ink-dim); text-transform: uppercase; letter-spacing: 0.14em; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; gap: 12px; }
-  .status .blink::after { content: '_'; animation: blink 1.1s steps(2) infinite; color: var(--amber); }
-  @keyframes blink { 50% { opacity: 0; } }
 
   main { padding: 8px 0 80px; }
   .result { border-bottom: 1px solid var(--line); padding: 18px 32px; transition: background 0.1s; }
   .result:hover { background: rgba(255,179,71,0.025); }
-  .result.is-read .result-key { opacity: 0.5; }
   .result-head { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; margin-bottom: 10px; flex-wrap: wrap; }
   .result-key { color: var(--ink); font-size: 13px; font-weight: 500; word-break: break-all; }
   a.result-key { text-decoration: none; }
@@ -122,8 +87,9 @@
   .tag-batch { color: var(--amber); border-color: rgba(255,179,71,0.4); }
   .tag-dur { color: var(--ink-dim); border: none; padding-left: 4px; }
   .tag-reviewed { color: var(--pilot); border-color: rgba(111,207,151,0.4); cursor: help; }
-  .tag-unreviewed { color: var(--ink-faint); border-color: var(--line-2); }
+  .tag-unapproved { color: var(--red); border-color: rgba(229,115,115,0.4); opacity: 0.8; }
   .segments { display: grid; gap: 4px; margin-top: 8px; }
+
   .seg { display: grid; grid-template-columns: 56px auto 1fr; gap: 12px; align-items: baseline; padding: 4px 0; }
   .seg-time { color: var(--ink-faint); font-size: 13px; font-variant-numeric: tabular-nums; }
   .seg-role { font-size: 11px; text-transform: uppercase; letter-spacing: 0.14em; white-space: nowrap; padding-right: 4px; }
@@ -131,7 +97,10 @@
   .seg-role.atc { color: var(--atc); }
   .seg-role.unknown { color: var(--ink-faint); }
   .seg-text { color: var(--ink); }
-  .seg-text mark, .result-key mark { background: var(--hl-bg); color: var(--hl-fg); padding: 0 2px; border-radius: 1px; }
+  mark.diff-del { background: transparent; color: var(--red); text-decoration: line-through; border-radius: 0; padding: 0; font-style: normal; }
+  mark.diff-add { background: rgba(102,187,106,0.25); color: var(--green); border-radius: 1px; padding: 0; font-style: normal; }
+  .seg.seg-removed { border-left: 2px solid var(--red); padding-left: 6px; opacity: 0.8; }
+  .seg.seg-added   { border-left: 2px solid var(--green); padding-left: 6px; opacity: 0.8; }
 
   .annotator-line { font-size: 11px; color: var(--ink-faint); margin-top: 6px; text-transform: uppercase; letter-spacing: 0.12em; }
   .annotator-line b { color: var(--ink-dim); font-weight: 400; text-transform: none; letter-spacing: 0; }
@@ -145,45 +114,20 @@
   .copy-id:hover { color: var(--amber); border-color: rgba(255,179,71,0.4); }
   .copy-id.copied { color: var(--pilot); border-color: rgba(111,207,151,0.4); }
 
-  .version-badge { font-size: 11px; color: var(--ink-dim); cursor: pointer; border: 1px solid var(--line-2); padding: 2px 7px; user-select: none; transition: color 0.15s, border-color 0.15s; background: transparent; font-family: inherit; }
-  .version-badge:hover { color: var(--amber); border-color: rgba(255,179,71,0.4); }
-  .version-badge.open { color: var(--amber); border-color: rgba(255,179,71,0.4); }
   .history-panel { display: none; margin-top: 10px; border-left: 2px solid var(--line-2); padding-left: 14px; }
   .history-panel.open { display: block; }
   .version-block { padding: 6px 0 8px; }
-  .version-block + .version-block { border-top: 1px solid var(--line-2); padding-top: 10px; margin-top: 2px; }
   .version-block-header { display: flex; gap: 10px; align-items: baseline; font-size: 13px; margin-bottom: 5px; }
   .version-block-date { color: var(--ink-faint); font-variant-numeric: tabular-nums; min-width: 100px; }
   .version-block-glyph { color: var(--amber); min-width: 16px; text-align: center; }
   .version-block-desc { color: var(--ink-dim); }
-  .version-block.current .version-block-date { color: var(--amber); }
-  .version-block.current .version-block-desc { color: var(--ink); }
   .version-block.prior { background: rgba(229,115,115,0.05); padding: 8px 10px; border-radius: 2px; margin: 4px -4px; }
-  mark.diff-del { background: transparent; color: var(--red); text-decoration: line-through; border-radius: 0; padding: 0; font-style: normal; }
-  mark.diff-add { background: rgba(102,187,106,0.25); color: var(--green); border-radius: 1px; padding: 0; font-style: normal; }
-  .seg.seg-removed { border-left: 2px solid var(--red); padding-left: 6px; opacity: 0.8; }
-  .seg.seg-added   { border-left: 2px solid var(--green); padding-left: 6px; opacity: 0.8; }
-  .seg-role mark.diff-del, .seg-role mark.diff-add { font-size: inherit; text-transform: uppercase; letter-spacing: 0.05em; }
-  .seg-time mark.diff-del, .seg-time mark.diff-add { font-size: inherit; font-family: inherit; font-variant-numeric: tabular-nums; }
+
   .diff-aligned { display: inline-grid; column-gap: 0.35em; row-gap: 1px; align-items: baseline; }
   .da-eq  { color: var(--ink-faint); }
   .da-del { color: var(--red); text-decoration: line-through; }
   .da-ins { color: var(--green); }
   .time-diff { display: flex; flex-direction: column; gap: 1px; }
-  .edit-tag { display: inline-block; font-size: 10px; padding: 0 5px; border: 1px solid; margin-left: 5px; vertical-align: middle; text-transform: uppercase; letter-spacing: 0.1em; line-height: 1.6; }
-  .edit-tag-role { color: var(--red); border-color: rgba(229,115,115,0.35); }
-  .edit-tag-caps { color: var(--ink-faint); border-color: var(--line-2); }
-  .edit-tag-time { color: var(--pilot); border-color: rgba(111,207,151,0.3); }
-  .ct-breakdown { font-size: 12px; color: var(--ink-dim); margin-bottom: 14px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-  .ct-label { text-transform: uppercase; letter-spacing: 0.1em; font-size: 11px; margin-right: 2px; }
-  .ct-pill { padding: 3px 9px; border: 1px solid var(--line-2); }
-  .ct-pill b { color: var(--ink); font-weight: 500; }
-  .stats-detail-row td { padding: 6px 8px 12px; background: rgba(255,179,71,0.03); }
-  .stats-detail { display: flex; gap: 18px; flex-wrap: wrap; font-size: 12px; color: var(--ink-dim); }
-  .stats-detail span b { font-weight: 500; }
-  .stats-row { cursor: pointer; }
-  .stats-row.expanded { background: rgba(255,179,71,0.04); }
-  .stats-row.excluded-labeler td:not(:first-child) { opacity: 0.35; text-decoration: line-through; }
 
   .empty { padding: 80px 32px; text-align: center; color: var(--ink-faint); }
   .empty .glyph { font-family: 'Fraunces', serif; font-size: 65px; font-style: italic; color: var(--line-2); margin-bottom: 12px; }
@@ -226,21 +170,8 @@
 
   footer { border-top: 1px solid var(--line); padding: 16px 32px; font-size: 11px; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.16em; text-align: center; }
 
-  .stats-panel { display: none; border-bottom: 1px solid var(--line); background: var(--panel); }
-  .stats-panel.open { display: block; }
-  .stats-panel tbody tr { border-bottom: 1px solid var(--line-2); }
-  .stats-panel tbody tr:hover { background: rgba(255,179,71,0.05); }
-  .stats-panel td { padding: 10px 8px; }
-  .stats-panel th { transition: all 0.15s; }
-  .stats-panel th:hover { color: var(--amber); }
-  .stats-panel th[data-active] { border-bottom-color: var(--amber); color: var(--amber); }
-  .stats-panel th .sort-indicator { opacity: 0.4; display: inline-block; }
-  .stats-panel th[data-active] .sort-indicator { opacity: 1; }
-  .stats-panel th[data-active="asc"] .sort-indicator::after { content: "↑"; }
-  .stats-panel th[data-active="desc"] .sort-indicator::after { content: "↓"; }
-
   @media (max-width: 640px) {
-    header, .search-wrap, .status, .result, footer { padding-left: 16px; padding-right: 16px; }
+    header, .status, .result, footer { padding-left: 16px; padding-right: 16px; }
     .seg { grid-template-columns: 48px 40px 1fr; gap: 8px; }
     h1 { font-size: 23px; }
   }
@@ -255,24 +186,58 @@
   .page-btn:hover:not(:disabled) { border-color: var(--amber); color: var(--amber); }
   .page-btn:disabled { opacity: 0.3; cursor: not-allowed; }
   .page-info { font-size: 13px; color: var(--ink-dim); text-transform: uppercase; letter-spacing: 0.14em; }
+  @media print {
+    .upload-view, .selection-bar, header, .status, .pagination, footer, .comment-wrap, .version-badge { display: none !important; }
+    body { background: white; color: black; background-image: none; }
+    .app { display: block !important; }
+    main { padding-bottom: 0; }
+    .result { border-bottom: 1px solid #ddd; page-break-inside: avoid; break-inside: avoid; }
+    .result:hover { background: none; }
+    .seg-text { color: black; }
+    .seg-time, .annotator-line { color: #666; }
+    .copy-id { border-color: #ddd; }
+  }
+
+  /* PDF Export Styles */
+  .export-body { font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif; color: #111; font-size: 10.5pt; line-height: 1.5; margin: 0; padding: 0.6in; }
+  .export-h1 { font-size: 16pt; margin: 0 0 4pt; font-weight: 600; font-family: 'Fraunces', serif; }
+  .export-meta { font-size: 9pt; color: #666; margin-bottom: 18pt; padding-bottom: 10pt; border-bottom: 1px solid #ccc; text-transform: uppercase; letter-spacing: 0.1em; }
+  .export-row { page-break-inside: avoid; break-inside: avoid; margin-bottom: 18pt; padding-bottom: 14pt; border-bottom: 1px solid #ddd; }
+  .export-row:last-child { border-bottom: none; }
+  .export-key { font-family: 'JetBrains Mono', monospace; font-size: 11pt; font-weight: 600; word-break: break-all; margin-bottom: 4pt; }
+  .export-tags { font-size: 9pt; color: #555; margin-bottom: 10pt; display: flex; gap: 12pt; flex-wrap: wrap; }
+  .export-tag { display: inline-block; }
+  .export-tag.reviewed { color: #2a7a3a; font-weight: 600; }
+  .export-tag.unapproved { color: #999; }
+  .export-segs { margin: 6pt 0; display: grid; gap: 4px; }
+  .export-seg { display: grid; grid-template-columns: 56pt 44pt 1fr; gap: 8pt; padding: 2pt 0; font-size: 10pt; align-items: baseline; }
+  .export-seg-time { color: #888; font-variant-numeric: tabular-nums; font-family: 'JetBrains Mono', monospace; font-size: 9pt; }
+  .export-seg-role { font-size: 8pt; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
+  .export-seg-role.pilot { color: #2a7a3a; }
+  .export-seg-role.atc { color: #b86b00; }
+  .export-seg-text { color: #111; }
+  .export-versions-h { font-size: 9pt; font-weight: 600; margin: 14pt 0 4pt; color: #555; text-transform: uppercase; letter-spacing: 0.06em; }
+  .export-ver { border-left: 2pt solid #ccc; padding: 4pt 0 4pt 10pt; margin: 6pt 0; page-break-inside: avoid; break-inside: avoid; }
+  .export-ver-h { font-size: 9pt; color: #666; margin-bottom: 4pt; }
+  .export-ver-h b { color: #111; font-weight: 600; }
+  .export-comment { background: #fdfaf5; border-left: 2pt solid #ffb347; padding: 6pt 10pt; margin-top: 8pt; font-size: 9.5pt; color: #333; }
 </style>
 </head>
 <body>
 
-<div class="lock" id="lock">
-  <div class="lock-card">
-    <div class="lock-glyph">
-      <img src="favicon.svg" alt="logo">
-    </div>
-    <h1 class="lock-title">lazy<em>-detective</em></h1>
-    <div class="lock-sub">restricted · enter passphrase</div>
-    <form class="lock-form" id="lock-form">
-      <input id="pw" type="password" placeholder="passphrase" autocomplete="current-password" autofocus>
-      <button id="pw-go" type="submit">unlock</button>
-      <div class="lock-error" id="lock-err"></div>
-      <div class="lock-hint" id="lock-hint"></div>
+
+<div class="upload-view" id="upload-view">
+  <div class="upload-card">
+    <h1 class="upload-title">lazy<em>-detective</em></h1>
+    <div class="upload-sub">upload one or more snapshots to view</div>
+    <form class="upload-form" id="upload-form">
+      <div class="file-input-group">
+        <label for="file-inputs">NDJSON Snapshots</label>
+        <input type="file" id="file-inputs" accept=".ndjson" multiple required>
+      </div>
+      <button class="upload-btn" id="upload-go" type="submit">Load Snapshots</button>
+      <div class="upload-status" id="upload-status"></div>
     </form>
-    <div class="lock-foot">aes-256-gcm · pbkdf2-sha256 · <a href="preview.html" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px;">preview interface</a></div>
   </div>
 </div>
 
@@ -281,109 +246,14 @@
     <h1>lazy<em>-detective</em></h1>
     <div class="meta">
       <span><b id="m-docs">—</b> recordings</span>
-      <span><b id="m-hours">—</b> hours</span>
-      <button class="lock-out" id="btn-stats">labelers</button>
-      <button class="lock-out" id="btn-lock">lock</button>
+      <select id="view-mode" class="version-badge" style="height: auto;">
+        <option value="compare">Comparison</option>
+        <option value="snapshot">Single Snapshot</option>
+      </select>
+      <select id="snapshot-select" class="version-badge" style="height: auto; display: none;">
+      </select>
     </div>
   </header>
-
-  <div class="stats-panel" id="stats-panel">
-    <div style="padding: 20px; max-width: 1200px;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-        <h2 style="margin: 0; font-family: inherit; font-size: 16px; font-weight: 500;">Labeler Statistics <span id="excluded-count" style="font-size: 12px; color: var(--ink-faint); font-weight: 400;"></span></h2>
-        <button class="lock-out" id="btn-close-stats">close</button>
-      </div>
-      <table id="stats-table" style="width: 100%; border-collapse: collapse; font-size: 13px;">
-        <thead>
-          <tr style="border-bottom: 1px solid var(--line); text-align: left;">
-            <th style="padding: 8px; width: 32px; font-weight: 500; color: var(--ink-dim); text-transform: uppercase; letter-spacing: 0.12em; font-size: 11px; border-bottom: 2px solid transparent;" title="exclude from search results">excl</th>
-            <th data-sort="annotator" style="padding: 8px; font-weight: 500; color: var(--ink-dim); text-transform: uppercase; letter-spacing: 0.12em; font-size: 11px; cursor: pointer; user-select: none; border-bottom: 2px solid transparent;">Labeler <span class="sort-indicator">⇅</span></th>
-            <th data-sort="avgPct" style="padding: 8px; font-weight: 500; color: var(--ink-dim); text-transform: uppercase; letter-spacing: 0.12em; font-size: 11px; text-align: right; cursor: pointer; user-select: none; border-bottom: 2px solid transparent;">Avg % Chg <span class="sort-indicator">⇅</span></th>
-            <th data-sort="withHistory" style="padding: 8px; font-weight: 500; color: var(--ink-dim); text-transform: uppercase; letter-spacing: 0.12em; font-size: 11px; text-align: right; cursor: pointer; user-select: none; border-bottom: 2px solid transparent;">Has History <span class="sort-indicator">⇅</span></th>
-          </tr>
-        </thead>
-        <tbody id="stats-tbody"></tbody>
-      </table>
-    </div>
-  </div>
-
-
-  <div class="search-wrap">
-    <div class="search-row">
-      <input id="q" class="search-input" type="search" autocomplete="off"
-             placeholder="search transcripts, filenames, or DR ids… try “qantas thirty four”, “flight level one eight zero”, or paste a DR id">
-    </div>
-    <div class="filters">
-      <div class="group">
-        <span class="sep">role</span>
-        <button class="pill active" data-filter="all">all</button>
-        <button class="pill" data-filter="pilot">pilot</button>
-        <button class="pill" data-filter="atc">atc</button>
-      </div>
-      <div class="group">
-        <span class="sep">review</span>
-        <button class="pill active" data-review="all">all</button>
-        <button class="pill" data-review="reviewed">approved</button>
-        <button class="pill" data-review="unreviewed">straight-to-done</button>
-      </div>
-      <div class="group">
-        <span class="sep">history</span>
-        <button class="pill active" data-history="all">all</button>
-        <button class="pill" data-history="edited">has history</button>
-      </div>
-      <div class="group">
-        <span class="sep">match</span>
-        <button class="pill active" data-match="any">any</button>
-        <button class="pill" data-match="word">whole word</button>
-      </div>
-      <div class="group">
-        <span class="sep">batch</span>
-        <select class="facet-select" id="f-batch"></select>
-        <button class="facet-clear" data-clear="batch" title="clear">×</button>
-      </div>
-      <div class="group">
-        <span class="sep">labeler</span>
-        <div class="ac-wrap">
-          <input class="facet-input annotator" id="f-annotator" type="text" placeholder="any" autocomplete="off">
-          <datalist id="d-annotator"></datalist>
-        </div>
-        <button class="facet-clear" data-clear="annotator" title="clear">×</button>
-      </div>
-      <div class="group">
-        <span class="sep">reviewer</span>
-        <div class="ac-wrap">
-          <input class="facet-input annotator" id="f-reviewer" type="text" placeholder="any" autocomplete="off">
-          <datalist id="d-reviewer"></datalist>
-        </div>
-        <button class="facet-clear" data-clear="reviewer" title="clear">×</button>
-      </div>
-      <div class="group">
-        <span class="sep">sort</span>
-        <select class="facet-select" id="f-sort">
-          <option value="relevance">relevance</option>
-          <option value="newest">newest first</option>
-          <option value="oldest">oldest first</option>
-          <option value="pct-desc">most changed (%)</option>
-          <option value="pct-asc">least changed (%)</option>
-        </select>
-      </div>
-      <div class="group">
-        <span class="sep">snapshot</span>
-        <select class="facet-select" id="f-snapshot"></select>
-        <button class="facet-clear" data-clear="snapshot" title="clear">×</button>
-      </div>
-      <div class="group">
-        <span class="sep">changed</span>
-        <select class="facet-select" id="f-pct-min">
-          <option value="0">any</option>
-          <option value="5">≥ 5%</option>
-          <option value="10">≥ 10%</option>
-          <option value="20">≥ 20%</option>
-          <option value="50">≥ 50%</option>
-        </select>
-      </div>
-    </div>
-  </div>
 
   <div class="status">
     <span id="status-l"></span>
@@ -391,7 +261,7 @@
   </div>
 
   <main id="results"></main>
-  <div class="pagination" id="pagination"></div> <!-- ADD THIS LINE -->
+  <div class="pagination" id="pagination"></div>
 
   <div class="selection-bar" id="selection-bar">
     <span class="selection-bar-count"><b id="sel-count">0</b> selected</span>
@@ -401,40 +271,29 @@
     </div>
   </div>
 
-  <footer>built with minisearch · client-side encrypted · no tracking</footer>
+  <footer>built for atc · client-side processing · no tracking</footer>
 </div>
 
 <script type="module">
-import MiniSearch from 'https://cdn.jsdelivr.net/npm/minisearch@7.1.0/+esm';
-
 const $ = id => document.getElementById(id);
 
-const lock = $('lock');
-const lockForm = $('lock-form');
-const lockErr = $('lock-err');
-const pwInput = $('pw');
-const pwBtn = $('pw-go');
+const uploadView = $('upload-view');
+const uploadForm = $('upload-form');
+const uploadStatus = $('upload-status');
+const fileInputs = $('file-inputs');
 
 const app = $('app');
 const results = $('results');
-const q = $('q');
 const statusL = $('status-l');
 const statusR = $('status-r');
+const viewMode = $('view-mode');
+const snapshotSelect = $('snapshot-select');
 
-let ms = null;
-let docMap = new Map(); // Fast lookup by ID
 let allDocs = [];
-let meta = null;
-let activeFilter = 'all';
-let activeReview = 'all';
-let activeHistory = 'all';
-let activeSort = 'relevance'; // <-- ADD THIS
-let activeSnapshotDate = '';
-let activePctMin = 0;
-let wholeWord = false;
-const facetSel = { batch: '', annotator: '', reviewer: '' };
-let currentResults = null; // <-- ADD THIS BACK
-const SESSION_KEY = 'atc-search-key-v1';
+let snapshots = []; 
+let activeViewMode = 'compare'; 
+let activeSnapshot = ''; 
+
 const SELECTION_KEY = 'atc-search-selection-v1';
 let selection = new Set();
 const READ_KEY = 'atc-search-read-v1';
@@ -443,16 +302,7 @@ function loadReadSet() {
   try { readSet = new Set(JSON.parse(localStorage.getItem(READ_KEY) || '[]')); } catch { readSet = new Set(); }
 }
 function saveReadSet() { localStorage.setItem(READ_KEY, JSON.stringify([...readSet])); }
-function markRead(id) { if (id && !readSet.has(id)) { readSet.add(id); saveReadSet(); } }
 
-const EXCLUDED_LABELERS_KEY = 'atc-search-excluded-labelers-v1';
-let excludedLabelers = new Set();
-function loadExcludedLabelers() {
-  try { excludedLabelers = new Set(JSON.parse(localStorage.getItem(EXCLUDED_LABELERS_KEY) || '[]')); } catch { excludedLabelers = new Set(); }
-}
-function saveExcludedLabelers() { localStorage.setItem(EXCLUDED_LABELERS_KEY, JSON.stringify([...excludedLabelers])); }
-
-// --- ADD THESE NEW VARIABLES ---
 const COMMENTS_KEY = 'atc-search-comments-v1';
 let commentsMap = new Map();
 let currentPage = 1;
@@ -468,246 +318,271 @@ function loadComments() {
 function saveComments() {
   localStorage.setItem(COMMENTS_KEY, JSON.stringify([...commentsMap]));
 }
-// -------------------------------
 
-// ====================== Crypto ======================
-async function deriveKey(password, saltBytes, iterations) {
-  const enc = new TextEncoder();
-  const baseKey = await crypto.subtle.importKey(
-    'raw', enc.encode(password), { name: 'PBKDF2' }, false, ['deriveKey']
-  );
-  return crypto.subtle.deriveKey(
-    { name: 'PBKDF2', salt: saltBytes, iterations, hash: 'SHA-256' },
-    baseKey, { name: 'AES-GCM', length: 256 }, true, ['decrypt']
-  );
+// ====================== Data Processing ======================
+
+const KEY_RE = /^([A-Z0-9]+)-([A-Za-z]+)-([A-Za-z]+-\d+-\d+)-(\d+Z)_/;
+function parseKey(key) {
+  if (!key) return {};
+  const m = String(key).match(KEY_RE);
+  if (!m) return { airport: null, position: null, date: null, time: null };
+  return { airport: m[1], position: m[2], date: m[3], time: m[4] };
 }
 
-async function decryptBlob(buffer, cryptoKey) {
-  const iv = buffer.slice(0, 12);
-  const rest = buffer.slice(12);
-  const tag = new Uint8Array(rest.slice(0, 16));
-  const ct  = new Uint8Array(rest.slice(16));
-  const ciphertextWithTag = new Uint8Array(ct.length + tag.length);
-  ciphertextWithTag.set(ct, 0);
-  ciphertextWithTag.set(tag, ct.length);
-  const plain = await crypto.subtle.decrypt(
-    { name: 'AES-GCM', iv: new Uint8Array(iv) }, cryptoKey, ciphertextWithTag
-  );
-  return plain;
+const ANNOTATOR_RE = /^usr\.email\.([^@]+)@/;
+function parseAnnotator(createdBy) {
+  if (!createdBy) return null;
+  const m = String(createdBy).match(ANNOTATOR_RE);
+  return m ? m[1] : String(createdBy);
 }
 
-async function decompress(buffer) {
-  const ds = new DecompressionStream('gzip');
-  const writer = ds.writable.getWriter();
-  writer.write(buffer);
-  writer.close();
-  const response = new Response(ds.readable);
-  return response.text();
-}
-
-function b64ToBytes(b64) {
-  const bin = atob(b64);
-  const out = new Uint8Array(bin.length);
-  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
-  return out;
-}
-async function exportKey(k) {
-  const raw = await crypto.subtle.exportKey('raw', k);
-  return btoa(String.fromCharCode(...new Uint8Array(raw)));
-}
-async function importKey(b64) {
-  return crypto.subtle.importKey('raw', b64ToBytes(b64), { name: 'AES-GCM' }, true, ['decrypt']);
-}
-
-// ====================== Boot ======================
-async function fetchMeta() {
-  const r = await fetch('meta.json', { cache: 'no-cache' });
-  if (!r.ok) throw new Error('meta.json not found');
-  return r.json();
-}
-async function fetchEncrypted(p) {
-  const r = await fetch(p, { cache: 'no-cache' });
-  if (!r.ok) throw new Error(`${p} not found`);
-  return r.arrayBuffer();
-}
-
-async function tryUnlockFromSession() {
-  const cached = sessionStorage.getItem(SESSION_KEY);
-  if (!cached) return false;
-  try {
-    await loadEncryptedData(await importKey(cached));
-    return true;
-  } catch {
-    sessionStorage.removeItem(SESSION_KEY);
-    return false;
+function parseReview(workflowHistory) {
+  if (!Array.isArray(workflowHistory)) {
+    return { reviewed: false, reviewedBy: null, reviewedAt: null };
   }
+  const approvals = workflowHistory
+    .filter(e => e?.action === 'Approve')
+    .sort((a, b) => String(b?.created_at).localeCompare(String(a?.created_at)));
+  if (approvals.length === 0) {
+    return { reviewed: false, reviewedBy: null, reviewedAt: null };
+  }
+  const latest = approvals[0];
+  return {
+    reviewed: true,
+    reviewedBy: parseAnnotator(latest.created_by) ?? latest.created_by ?? null,
+    reviewedAt: latest.created_at ?? null,
+  };
 }
 
-async function attemptUnlock(password) {
-  if (!meta) meta = await fetchMeta();
-  const key = await deriveKey(password, b64ToBytes(meta.kdf.salt), meta.kdf.iterations);
-  await loadEncryptedData(key);
-  sessionStorage.setItem(SESSION_KEY, await exportKey(key));
-}
+function flatten(row, batchName, snapshotDate) {
+  const id = row?.data_row?.id;
+  const key = row?.data_row?.global_key;
+  const duration = row?.media_attributes?.duration ?? null;
 
-async function loadEncryptedData(cryptoKey) {
-  if (!meta) meta = await fetchMeta();
-  const [dataBuf, indexBuf] = await Promise.all([
-    fetchEncrypted('data.enc'), fetchEncrypted('index.enc'),
-  ]);
-  let [dataRaw, indexRaw] = await Promise.all([
-    decryptBlob(dataBuf, cryptoKey), decryptBlob(indexBuf, cryptoKey),
-  ]);
+  const projects = row?.projects ?? {};
+  const projectEntries = Object.entries(projects);
+  const projectId = projectEntries[0]?.[0] ?? null;
+  const firstProject = projectEntries[0]?.[1];
+  const label = firstProject?.labels?.[0];
+  const review = parseReview(firstProject?.project_details?.workflow_history);
+  const facets = parseKey(key);
+  const annotator = parseAnnotator(label?.label_details?.created_by);
+  const createdAt = label?.label_details?.created_at ?? null;
 
-  if (meta.compression === 'gzip') {
-    dataRaw = await decompress(dataRaw);
-    indexRaw = await decompress(indexRaw);
-  } else {
-    dataRaw = new TextDecoder().decode(dataRaw);
-    indexRaw = new TextDecoder().decode(indexRaw);
+  if (!label) {
+    return {
+      id, key, duration, projectId, ...facets,
+      batch: batchName, snapshotDate, annotator, createdAt, ...review,
+      speakers: 0, roles: [], segments: [], transcript: '',
+    };
   }
 
-  allDocs = JSON.parse(dataRaw);
-  docMap = new Map(allDocs.map(d => [d.id, d]));
-  ms = MiniSearch.loadJS(JSON.parse(indexRaw), {
-    fields: ['transcript', 'key', 'drId'],
-    storeFields: ['id', 'key', 'drId'],
-    searchOptions: { boost: { key: 2 }, fuzzy: 0.2, prefix: true },
-    tokenize: (text) => text.split(/[\s,.;:!?()[\]{}"<>|/\\-]+/).filter(Boolean),
-  });
+  const speakerRoles = {};
+  for (const c of label?.annotations?.classifications ?? []) {
+    if (c?.value === 'how_many_speakers_are_there') {
+      for (const sub of c?.radio_answer?.classifications ?? []) {
+        const m = sub?.value?.match(/speaker_(\d+)$/);
+        if (!m) continue;
+        const speakerLabel = `Speaker ${m[1]}`;
+        const role = sub?.radio_answer?.value ?? sub?.radio_answer?.name ?? 'unknown';
+        speakerRoles[speakerLabel] = String(role).toLowerCase();
+      }
+    }
+  }
+
+  const segmentsBlock = label?.annotations?.segments ?? {};
+  const timestampBlock = label?.annotations?.timestamp ?? {};
+
+  const featureToSpeaker = {};
+  for (const tsEntry of Object.values(timestampBlock)) {
+    for (const cls of tsEntry?.classifications ?? []) {
+      const fid = cls?.feature_id;
+      const sp = cls?.name;
+      if (fid && sp && !featureToSpeaker[fid]) featureToSpeaker[fid] = sp;
+    }
+  }
+
+  const featureTextByStart = {};
+  for (const [tsKey, tsEntry] of Object.entries(timestampBlock)) {
+    const startMs = Number(tsKey);
+    for (const cls of tsEntry?.classifications ?? []) {
+      const fid = cls?.feature_id;
+      const text = cls?.text_answer?.content;
+      if (!fid || text == null) continue;
+      featureTextByStart[fid] ??= {};
+      if (featureTextByStart[fid][startMs] == null) {
+        featureTextByStart[fid][startMs] = text;
+      }
+    }
+  }
+
+  const segments = [];
+  for (const [fid, ranges] of Object.entries(segmentsBlock)) {
+    const speakerLabel = featureToSpeaker[fid] ?? 'Speaker ?';
+    const role = speakerRoles[speakerLabel] ?? 'unknown';
+    for (const [start, end] of ranges) {
+      const texts = featureTextByStart[fid] ?? {};
+      let text = texts[start] ?? texts[end];
+      if (text == null) {
+        const uniq = [...new Set(Object.values(texts))];
+        text = uniq[0] ?? '';
+      }
+      segments.push({ role, start, end, text: String(text).trim() });
+    }
+  }
+  segments.sort((a, b) => a.start - b.start);
+
+  const dedupedSegments = [];
+  for (const s of segments) {
+    const prev = dedupedSegments[dedupedSegments.length - 1];
+    if (prev && prev.text === s.text && prev.role === s.role) continue;
+    dedupedSegments.push(s);
+  }
+
+  const transcript = dedupedSegments.map(s => s.text).filter(Boolean).join(' \u2022 ');
+  const roles = Object.keys(speakerRoles).sort().map(k => speakerRoles[k]);
+
+  return {
+    id, key, duration, projectId, ...facets,
+    batch: batchName, snapshotDate, annotator, createdAt, ...review,
+    speakers: roles.length,
+    roles, segments: dedupedSegments, transcript,
+  };
+}
+
+function sameSnapshot(a, b) {
+  return (a.transcript || '') === (b.transcript || '') &&
+         a.reviewed === b.reviewed &&
+         (a.annotator || null) === (b.annotator || null);
+}
+
+// ====================== File Handling ======================
+
+async function readNDJSON(file, batchName, snapshotDate) {
+  const text = await file.text();
+  const lines = text.split('\n');
+  const results = [];
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line) continue;
+    try {
+      const flat = flatten(JSON.parse(line), batchName, snapshotDate);
+      if (flat.transcript) results.push(flat);
+    } catch (e) {
+      console.warn(`Error parsing line ${i + 1} of ${file.name}:`, e);
+    }
+  }
+  return results;
+}
+
+async function processSnapshots(files) {
+  uploadStatus.textContent = 'Reading files...';
+  
+  const snapshotReads = await Promise.all([...files].map((file, idx) => {
+    const date = (idx + 1).toString().padStart(2, '0');
+    return readNDJSON(file, file.name, date);
+  }));
+
+  snapshots = [...files].map((file, idx) => ({
+    id: (idx + 1).toString().padStart(2, '0'),
+    name: file.name
+  }));
+
+  uploadStatus.textContent = 'Versioning and indexing...';
+  const allOccurrences = snapshotReads.flat();
+  const grouped = new Map();
+  for (const occ of allOccurrences) {
+    if (!occ.id) continue;
+    if (!grouped.has(occ.id)) grouped.set(occ.id, []);
+    grouped.get(occ.id).push(occ);
+  }
+
+  const processedRows = [];
+  for (const occurrences of grouped.values()) {
+    occurrences.sort((a, b) => String(a.snapshotDate).localeCompare(String(b.snapshotDate)));
+
+    const collapsed = [];
+    for (const occ of occurrences) {
+      const last = collapsed[collapsed.length - 1];
+      if (last && sameSnapshot(last, occ)) {
+        collapsed[collapsed.length - 1] = occ;
+        continue;
+      }
+      collapsed.push(occ);
+    }
+
+    const primary = collapsed[collapsed.length - 1];
+    const versions = collapsed.slice(0, -1);
+
+    const snapshotStates = new Map();
+    for (const occ of occurrences) {
+      snapshotStates.set(occ.snapshotDate, occ);
+    }
+
+    processedRows.push({ ...primary, versions, snapshotStates });
+  }
+
+  allDocs = processedRows;
+  allDocs.sort((a, b) => String(a.key || '').localeCompare(String(b.key || '')));
 
   showApp();
-  populateFacets();
-  loadSelection();
+  populateSnapshotSelect();
   loadReadSet();
-  loadExcludedLabelers();
-  $('m-docs').textContent = meta.count.toLocaleString();
-  $('m-hours').textContent = ((meta.totalSeconds || 0) / 3600).toFixed(1);
-  statusL.textContent = `ready · ${meta.count.toLocaleString()} recordings`;
+  loadComments();
+  $('m-docs').textContent = allDocs.length.toLocaleString();
+  statusL.textContent = `ready · ${allDocs.length.toLocaleString()} recordings`;
   rerun();
 }
 
-function showApp() { lock.style.display = 'none'; app.classList.add('unlocked'); q.focus(); }
-function showLock(msg, hint) {
-  app.classList.remove('unlocked');
-  lock.style.display = 'flex';
-  pwInput.value = ''; pwInput.focus();
-  lockErr.textContent = msg || '';
-  $('lock-hint').textContent = hint || '';
-  pwBtn.disabled = false; pwBtn.textContent = 'unlock';
+function populateSnapshotSelect() {
+  snapshotSelect.innerHTML = snapshots.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('');
+  if (snapshots.length > 0) activeSnapshot = snapshots[0].id;
 }
 
-lockForm.addEventListener('submit', async (e) => {
+uploadForm.addEventListener('submit', async (e) => {
   e.preventDefault();
-  const pw = pwInput.value;
-  if (!pw) return;
-  pwBtn.disabled = true; pwBtn.textContent = 'deriving key…'; lockErr.textContent = '';
-  try { await attemptUnlock(pw); }
-  catch (err) {
+  const files = fileInputs.files;
+  if (!files.length) return;
+  $('upload-go').disabled = true;
+  try {
+    await processSnapshots(files);
+  } catch (err) {
     console.error(err);
-    const isDecryptErr = err instanceof DOMException && err.name === 'OperationError';
-    const hint = isDecryptErr
-      ? 'If your passphrase is correct, the site may have been rebuilt since your last visit. Press Ctrl+Shift+R (Cmd+Shift+R on Mac) to force a fresh load.'
-      : '';
-    showLock('wrong passphrase', hint);
+    uploadStatus.textContent = 'Error processing files: ' + err.message;
+    $('upload-go').disabled = false;
   }
 });
 
-$('btn-lock').addEventListener('click', () => {
-  sessionStorage.removeItem(SESSION_KEY);
-  location.reload();
+function showApp() { uploadView.style.display = 'none'; app.classList.add('unlocked'); }
+
+viewMode.addEventListener('change', () => {
+  activeViewMode = viewMode.value;
+  snapshotSelect.style.display = activeViewMode === 'snapshot' ? 'inline-block' : 'none';
+  rerun();
 });
-// ====================== Facets ======================
-function populateFacets() {
-  // Dropdowns: batch
-  for (const f of ['batch']) {
-    const sel = $(`f-${f}`);
-    if (!sel) continue; // Safety check
-    const list = meta.facets[f] || [];
-    const total = list.reduce((a, x) => a + x.count, 0);
-    sel.innerHTML =
-      `<option value="">all (${total.toLocaleString()})</option>` +
-      list.map(x => `<option value="${escapeAttr(x.value)}">${escapeHtml(x.value)} (${x.count})</option>`).join('');
-    sel.addEventListener('change', () => { facetSel[f] = sel.value; rerun(); });
-  }
 
-  // Text inputs with substring autocomplete: annotator, reviewer
-  for (const f of ['annotator', 'reviewer']) {
-    const list = meta.facets[f] || [];
-    const dl = $(`d-${f}`);
-    if (dl) dl.innerHTML = list.map(x => `<option value="${escapeAttr(x.value)}">${x.count}</option>`).join('');
-    setupFacetAutocomplete(`f-${f}`, f, list);
-  }
+snapshotSelect.addEventListener('change', () => {
+  activeSnapshot = snapshotSelect.value;
+  rerun();
+});
 
-  // Snapshot date dropdown — built from allDocs
-  const snapshotSel = $('f-snapshot');
-  if (snapshotSel) {
-    const dateCounts = new Map();
-    for (const d of allDocs) {
-      const ts = activityTimestamp(d);
-      if (!ts) continue;
-      const day = ts.slice(0, 10);
-      dateCounts.set(day, (dateCounts.get(day) || 0) + 1);
-    }
-    const sortedDates = [...dateCounts.entries()].sort((a, b) => b[0].localeCompare(a[0]));
-    snapshotSel.innerHTML =
-      `<option value="">any</option>` +
-      sortedDates.map(([d, c]) => `<option value="${escapeAttr(d)}">${escapeHtml(d)} (${c})</option>`).join('');
-    snapshotSel.addEventListener('change', () => { activeSnapshotDate = snapshotSel.value; rerun(); });
-  }
-
-  // Pct min dropdown
-  const pctSel = $('f-pct-min');
-  if (pctSel) {
-    pctSel.addEventListener('change', () => { activePctMin = +pctSel.value; rerun(); });
-  }
-
-  // Clear buttons
-  document.querySelectorAll('.facet-clear').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const f = btn.dataset.clear;
-      if (f === 'snapshot') {
-        activeSnapshotDate = '';
-        const el = $('f-snapshot');
-        if (el) el.value = '';
-        rerun();
-        return;
-      }
-      facetSel[f] = '';
-      const el = $(`f-${f}`);
-      if (el) el.value = '';
-      rerun();
-    });
-  });
-}
-// ====================== Search ======================
 function rerun() {
-  currentPage = 1; // Reset to page 1 on new search/filter
-  const query = q.value.trim();
-  
-  if (!query) {
-    currentResults = null;
-    filteredDocs = applySort(applyFilters(allDocs));
-  } else {
-    const t0 = performance.now();
-    const hits = ms.search(query, { combineWith: 'AND' });
-    currentResults = hits;
-    // Map hits back to full documents from our docMap
-    const fullHits = hits.map(h => docMap.get(h.id)).filter(Boolean);
-    filteredDocs = applySort(applyFilters(fullHits));
-    statusR.textContent = `${filteredDocs.length.toLocaleString()} of ${hits.length.toLocaleString()} hits · ${(performance.now() - t0).toFixed(1)}ms`;
-  }
-  
-  updateDatalists(filteredDocs);
+  currentPage = 1;
+  filteredDocs = allDocs.filter(d => {
+    if (activeViewMode === 'snapshot') {
+      return d.snapshotStates.has(activeSnapshot);
+    }
+    return true;
+  });
   renderPage();
 }
 
 function renderPage() {
   const pag = $('pagination');
   if (!filteredDocs.length) {
-    results.innerHTML = `<div class="empty"><div class="glyph">∅</div>no transcripts matched.</div>`;
+    results.innerHTML = `<div class="empty"><div class="glyph">∅</div>no recordings found.</div>`;
     pag.innerHTML = '';
-    if (!currentResults) statusR.textContent = `showing 0 docs`;
+    statusR.textContent = `showing 0 docs`;
     return;
   }
 
@@ -718,11 +593,8 @@ function renderPage() {
   const end = start + PAGE_SIZE;
   const slice = filteredDocs.slice(start, end);
 
-  if (!currentResults) {
-    statusR.textContent = `showing ${start + 1}-${Math.min(end, filteredDocs.length)} of ${filteredDocs.length.toLocaleString()}`;
-  }
-
-  results.innerHTML = slice.map(h => renderDoc(h, currentResults ? Object.keys(h.match || {}) : [])).join('');
+  statusR.textContent = `showing ${start + 1}-${Math.min(end, filteredDocs.length)} of ${filteredDocs.length.toLocaleString()}`;
+  results.innerHTML = slice.map(d => renderDoc(d)).join('');
   renderPagination(totalPages);
 }
 
@@ -739,146 +611,53 @@ function renderPagination(totalPages) {
   $('page-prev')?.addEventListener('click', () => { currentPage--; renderPage(); window.scrollTo(0, 0); });
   $('page-next')?.addEventListener('click', () => { currentPage++; renderPage(); window.scrollTo(0, 0); });
 }
-function applyFilters(docs) {
-  return docs.filter(d => {
-    if (activeFilter !== 'all' && !(d.roles || []).includes(activeFilter)) return false;
-    if (d.annotator && excludedLabelers.has(d.annotator)) return false;
-    if (activeReview === 'reviewed' && !d.reviewed) return false;
-    if (activeReview === 'unreviewed' && d.reviewed) return false;
-    if (facetSel.batch && d.batch !== facetSel.batch) return false;
-    if (facetSel.annotator && d.annotator !== facetSel.annotator) return false;
-    if (facetSel.reviewer && d.reviewedBy !== facetSel.reviewer) return false;
-    if (activeHistory === 'edited' && !hasRealHistory(d.versions, d)) return false;
-    if (activeSnapshotDate) {
-      const ts = activityTimestamp(d);
-      const docDate = ts ? ts.slice(0, 10) : '';
-      if (docDate !== activeSnapshotDate) return false;
-    }
-    if (activePctMin > 0 && getDocPct(d) < activePctMin) return false;
-    return true;
-  });
-}function getDocPct(d) {
-  // Return cached percentage if already calculated
-  if (d._pct !== undefined) return d._pct;
-  
-  // If there's no history, percentage changed is 0
-  if (!d.versions || !d.versions.length) { 
-    d._pct = 0; 
-    return 0; 
+
+function renderDoc(d) {
+  let displayDoc = d;
+  let showHistory = activeViewMode === 'compare';
+
+  if (activeViewMode === 'snapshot') {
+    displayDoc = d.snapshotStates.get(activeSnapshot);
   }
-  
-  // Compare the chronologically first version to the final transcript
-  const initialVer = d.versions[0];
-  const diff = wordDiff(initialVer.transcript || '', d.transcript || '');
-  
-  // Save to cache (fallback to 0 if transcript was too large to diff)
-  d._pct = diff.pct || 0; 
-  return d._pct;
-}
 
-function classifyDocEdits(d) {
-  if (!hasRealHistory(d.versions, d)) return { roleFlips: 0, capsChange: 0, timeShifts: 0 };
-  const submitted = [...d.versions].reverse().find(v => !v.reviewed);
-  if (!submitted || !submitted.segments || !submitted.segments.length) return { roleFlips: 0, capsChange: 0, timeShifts: 0 };
-  const { pairs } = matchSegments(submitted.segments, d.segments || []);
-  let roleFlips = 0, capsChange = 0, timeShifts = 0;
-  for (const { old: s, cur } of pairs) {
-    if (!cur) continue;
-    if ((s.role || '') !== (cur.role || '')) roleFlips++;
-    if (Math.round(s.start) !== Math.round(cur.start)) timeShifts++;
-    if (s.text !== cur.text) {
-      if (s.text.toLowerCase() === cur.text.toLowerCase()) {
-        capsChange++;
-      } else {
-        const ow = s.text.split(/\s+/).filter(Boolean);
-        const nw = cur.text.split(/\s+/).filter(Boolean);
-        const len = Math.min(ow.length, nw.length);
-        for (let i = 0; i < len; i++) {
-          if (ow[i] !== nw[i] && ow[i].toLowerCase() === nw[i].toLowerCase()) { capsChange++; break; }
-        }
-      }
-    }
-  }
-  return { roleFlips, capsChange, timeShifts };
-}
-
-function activityTimestamp(d) {
-  return d.reviewedAt || d.createdAt || '';
-}
-
-function applySort(docs) {
-  if (activeSort === 'relevance') return docs;
-  return [...docs].sort((a, b) => {
-    const dateA = activityTimestamp(a);
-    const dateB = activityTimestamp(b);
-
-    if (activeSort === 'newest') return String(dateB).localeCompare(String(dateA));
-    if (activeSort === 'oldest') return String(dateA).localeCompare(String(dateB));
-    
-    // Sort by percentage changed (highest to lowest, or lowest to highest)
-    if (activeSort === 'pct-desc') return getDocPct(b) - getDocPct(a);
-    if (activeSort === 'pct-asc') return getDocPct(a) - getDocPct(b);
-    
-    return 0;
-  });
-}
-// ====================== Render ======================
-function updateDatalists(docs) {
-  const annMap = new Map(), revMap = new Map();
-  for (const d of docs) {
-    if (d.annotator) annMap.set(d.annotator, (annMap.get(d.annotator) || 0) + 1);
-    if (d.reviewedBy) revMap.set(d.reviewedBy, (revMap.get(d.reviewedBy) || 0) + 1);
-  }
-  
-  const buildHtml = (map) => [...map.entries()]
-    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
-    .map(([val, count]) => `<option value="${escapeAttr(val)}">${count}</option>`)
-    .join('');
-
-  $('d-annotator').innerHTML = buildHtml(annMap);
-  $('d-reviewer').innerHTML = buildHtml(revMap);
-}
-
-function renderDoc(d, terms) {
-  const dur = d.duration ? `${d.duration.toFixed(1)}s` : '—';
-  const roleTags = (d.roles || []).map(r => `<span class="tag tag-role ${r}">${escapeHtml(r)}</span>`).join('');
+  const dur = displayDoc.duration ? `${displayDoc.duration.toFixed(1)}s` : '—';
+  const roleTags = (displayDoc.roles || []).map(r => `<span class="tag tag-role ${r}">${escapeHtml(r)}</span>`).join('');
   const facetTags = ['airport', 'position', 'date'].map(f =>
-    d[f] ? `<span class="tag tag-facet">${escapeHtml(d[f])}</span>` : ''
+    displayDoc[f] ? `<span class="tag tag-facet">${escapeHtml(displayDoc[f])}</span>` : ''
   ).join('');
-  const batchTag = d.batch ? `<span class="tag tag-batch">${escapeHtml(d.batch)}</span>` : '';
-  const reviewedAtFmt = d.reviewedAt ? new Date(d.reviewedAt).toISOString().slice(0, 10) : '';
-  const reviewTag = d.reviewed
-    ? `<span class="tag tag-reviewed" title="approved by ${escapeAttr(d.reviewedBy || '?')}${reviewedAtFmt ? ' on ' + reviewedAtFmt : ''}">✓ approved</span>`
-    : `<span class="tag tag-unreviewed">straight-to-done</span>`;
-  const versions = d.versions || [];
-  const vBadge = hasRealHistory(versions, d)
-    ? `<button class="version-badge" data-vid="${escapeAttr(String(d.id))}">&#x1F4DC; ${versions.length}</button>`
+  const batchTag = displayDoc.batch ? `<span class="tag tag-batch">${escapeHtml(displayDoc.batch)}</span>` : '';
+  
+  const reviewTag = displayDoc.reviewed
+    ? `<span class="tag tag-reviewed">✓ approved</span>`
+    : `<span class="tag tag-unapproved">unapproved</span>`;
+  
+  const vBadge = (showHistory && d.versions.length > 0)
+    ? `<button class="version-badge" data-vid="${escapeAttr(String(d.id))}">&#x1F4DC; ${d.versions.length}</button>`
     : '';
-  const segs = (d.segments || []).map(s => `
+
+  const segs = (displayDoc.segments || []).map(s => `
     <div class="seg">
       <span class="seg-time">${formatMs(s.start)}</span>
       <span class="seg-role ${s.role || 'unknown'}">${escapeHtml(s.role || '?')}</span>
-      <span class="seg-text">${highlight(s.text, terms)}</span>
+      <span class="seg-text">${escapeHtml(s.text)}</span>
     </div>
   `).join('');
-  const reviewedAtShort = d.reviewedAt ? new Date(d.reviewedAt).toISOString().slice(0, 10) : '';
-  const annotatorLine = d.annotator ? `<div class="annotator-line">labeler <span class="copy-id" data-copy="${escapeAttr(d.annotator)}" title="click to copy">${escapeHtml(d.annotator)}</span></div>` : '';
-  const reviewerLine = d.reviewed && d.reviewedBy ? `<div class="annotator-line">reviewer <span class="copy-id" data-copy="${escapeAttr(d.reviewedBy)}" title="click to copy">${escapeHtml(d.reviewedBy)}</span>${reviewedAtShort ? ` <span style="color:var(--ink-faint)">· ${reviewedAtShort}</span>` : ''}</div>` : '';
-  const idLine = d.id ? `<div class="annotator-line">id <span class="copy-id" data-copy="${escapeAttr(String(d.id))}" title="click to copy">${escapeHtml(String(d.id))}</span></div>` : '';
+
+  const annotatorLine = displayDoc.annotator ? `<div class="annotator-line">labeler <span class="copy-id" data-copy="${escapeAttr(displayDoc.annotator)}">${escapeHtml(displayDoc.annotator)}</span></div>` : '';
+  const idLine = displayDoc.id ? `<div class="annotator-line">id <span class="copy-id" data-copy="${escapeAttr(String(displayDoc.id))}">${escapeHtml(String(displayDoc.id))}</span></div>` : '';
   
-  // --- ADD THIS ---
   const savedComment = commentsMap.get(String(d.id)) || '';
-  const commentUI = `<div class="comment-wrap"><textarea class="comment-input" data-cid="${escapeAttr(String(d.id))}" placeholder="Add a comment for export...">${escapeHtml(savedComment)}</textarea></div>`;
-  // ----------------
-  const keyHtml = highlight(d.key, terms);
-  const keyEl = (d.projectId && d.id)
-    ? `<a class="result-key" href="https://app.labelbox.com/projects/${escapeAttr(d.projectId)}/data-rows/${escapeAttr(d.id)}" target="_blank" rel="noopener noreferrer">${keyHtml}</a>`
-    : `<div class="result-key">${keyHtml}</div>`;
+  const commentUI = `<div class="comment-wrap"><textarea class="comment-input" data-cid="${escapeAttr(String(d.id))}" placeholder="Add a comment...">${escapeHtml(savedComment)}</textarea></div>`;
+
+  const keyEl = (displayDoc.projectId && displayDoc.id)
+    ? `<a class="result-key" href="https://app.labelbox.com/projects/${escapeAttr(displayDoc.projectId)}/data-rows/${escapeAttr(displayDoc.id)}" target="_blank">${escapeHtml(displayDoc.key)}</a>`
+    : `<div class="result-key">${escapeHtml(displayDoc.key)}</div>`;
+  
   const isSel = selection.has(d.id) ? 'checked' : '';
-  const cbEl = `<input type="checkbox" class="select-cb" data-sel="${escapeAttr(String(d.id))}" ${isSel} title="add to selection">`;
+  const cbEl = `<input type="checkbox" class="select-cb" data-sel="${escapeAttr(String(d.id))}" ${isSel}>`;
 
   return `
-    <article class="result${readSet.has(d.id) ? ' is-read' : ''}" data-docid="${escapeAttr(String(d.id))}">
+    <article class="result" data-docid="${escapeAttr(String(d.id))}">
       <header class="result-head">
         <div class="result-key-wrap">${cbEl}${keyEl}</div>
        <div class="result-tags">
@@ -890,121 +669,59 @@ function renderDoc(d, terms) {
           <span class="tag-dur">${dur}</span>
         </div>
       </header>
-<div class="segments">${segs}</div>
+      <div class="segments">${segs}</div>
       ${annotatorLine}
-      ${reviewerLine}
       ${idLine}
-      ${renderHistory(versions, d.id, d)}
-      ${commentUI} <!-- ADD THIS HERE -->
+      ${showHistory ? renderHistory(d) : ''}
+      ${commentUI}
     </article>
   `;
 }
 
-function versionGlyph(v, prevV) {
-  if (v.changeType === 'initial') return '—';
-  if (v.changeType === 'content-only') return '⟲';
-  const approved = v.reviewed && !(prevV && prevV.reviewed);
-  if (approved) return '✓';
-  if (v.changeType === 'state-and-content') return '⟲';
-  return '·';
-}
-function versionDesc(v) {
-  if (v.changeType === 'initial') return `initial · labeler ${escapeHtml(v.annotator || '?')}`;
-  if (v.changeType === 'content-only') return 'transcript revised';
-  if (v.changeType === 'state-only') return v.reviewed ? `approved by ${escapeHtml(v.reviewedBy || '?')}` : 'review status changed';
-  if (v.changeType === 'state-and-content') return v.reviewed ? `approved · transcript revised` : 'transcript revised · status changed';
-  return escapeHtml(v.changeType || '?');
-}
+// ====================== Diff Logic ======================
+
+const normWord = w => w.replace(/^[^a-zA-Z0-9]+|[^a-zA-Z0-9]+$/g, '');
 function lcsWords(a, b) {
   const m = a.length, n = b.length;
-  if (m * n > 60000) return null; // skip diff for very long transcripts
+  if (m * n > 60000) return null;
   const dp = Array.from({ length: m + 1 }, () => new Uint16Array(n + 1));
   for (let i = 1; i <= m; i++)
     for (let j = 1; j <= n; j++)
       dp[i][j] = a[i-1] === b[j-1] ? dp[i-1][j-1] + 1 : Math.max(dp[i-1][j], dp[i][j-1]);
   return dp;
 }
-const normWord = w => w.replace(/^[^a-zA-Z0-9]+|[^a-zA-Z0-9]+$/g, '');
-// Similarity score [0,1] between two normalised word strings using LCS length.
-function wordSim(a, b) {
-  if (!a.length || !b.length) return 0;
-  if (a === b) return 1;
-  if (a.toLowerCase() === b.toLowerCase()) return 0.9; // case-only difference — always pair
-  const m = a.length, n = b.length;
-  if (m * n > 10000) return 0;
-  let prev = new Uint16Array(n + 1), curr = new Uint16Array(n + 1);
-  for (let ii = 1; ii <= m; ii++) {
-    for (let jj = 1; jj <= n; jj++)
-      curr[jj] = a[ii-1] === b[jj-1] ? prev[jj-1] + 1 : Math.max(prev[jj], curr[jj-1]);
-    [prev, curr] = [curr, prev]; curr.fill(0);
-  }
-  return 2 * prev[n] / (m + n);
-}
-// Given a run of deleted and inserted words, pair similar ones for charDiff;
-// dissimilar or unpaired words are shown as full del/add marks.
-const SIM_THRESHOLD = 0.35;
-function pairDelIns(dels, ins) {
-  if (!dels.length) return ins.map(w => `<mark class="diff-add">${escapeHtml(w)}</mark>`);
-  if (!ins.length) return dels.map(w => `<mark class="diff-del">${escapeHtml(w)}</mark>`);
-  const nd = dels.map(normWord), ni = ins.map(normWord);
-  const usedI = new Set();
-  const pairMap = new Map();
-  for (let di = 0; di < dels.length; di++) {
-    let bestJ = -1, bestSim = SIM_THRESHOLD;
-    for (let ii = 0; ii < ins.length; ii++) {
-      if (usedI.has(ii)) continue;
-      const s = wordSim(nd[di], ni[ii]);
-      if (s > bestSim) { bestSim = s; bestJ = ii; }
-    }
-    if (bestJ !== -1) { pairMap.set(di, bestJ); usedI.add(bestJ); }
-  }
-  const result = [];
-  for (let di = 0; di < dels.length; di++) {
-    if (pairMap.has(di)) {
-      const ins_word = ins[pairMap.get(di)];
-      result.push(`<mark class="diff-del">${escapeHtml(dels[di])}</mark><mark class="diff-add">${escapeHtml(ins_word)}</mark>`);
-    } else {
-      result.push(`<mark class="diff-del">${escapeHtml(dels[di])}</mark>`);
-    }
-  }
-  for (let ii = 0; ii < ins.length; ii++) {
-    if (!usedI.has(ii)) result.push(`<mark class="diff-add">${escapeHtml(ins[ii])}</mark>`);
-  }
-  return result;
-}
+
 function alignedWordDiff(oldText, newText) {
   const ow = (oldText || '').split(/\s+/).filter(Boolean);
   const nw = (newText || '').split(/\s+/).filter(Boolean);
   if (!ow.length && !nw.length) return [];
-  if (!ow.length) return nw.map(w => ({ type: 'ins', word: w }));
-  if (!nw.length) return ow.map(w => ({ type: 'del', word: w }));
   const on = ow.map(normWord), nn = nw.map(normWord);
   const dp = lcsWords(on, nn);
+  const slots = [];
   if (!dp) {
     const len = Math.max(ow.length, nw.length);
-    return Array.from({ length: len }, (_, i) => {
-      if (i < ow.length && i < nw.length) return { type: 'pair', oldWord: ow[i], newWord: nw[i] };
-      if (i < ow.length) return { type: 'del', word: ow[i] };
-      return { type: 'ins', word: nw[i] };
-    });
+    for (let i = 0; i < len; i++) {
+      if (i < ow.length && i < nw.length) slots.push({ type: 'pair', oldWord: ow[i], newWord: nw[i] });
+      else if (i < ow.length) slots.push({ type: 'del', word: ow[i] });
+      else slots.push({ type: 'ins', word: nw[i] });
+    }
+    return slots;
   }
-  const ops = [];
   let i = on.length, j = nn.length;
+  const ops = [];
   while (i > 0 || j > 0) {
     if (i > 0 && j > 0 && on[i-1] === nn[j-1]) { ops.push({ type: 'eq', oi: i-1, ni: j-1 }); i--; j--; }
     else if (j > 0 && (i === 0 || dp[i][j-1] > dp[i-1][j])) { ops.push({ type: 'ins', ni: j-1 }); j--; }
     else { ops.push({ type: 'del', oi: i-1 }); i--; }
   }
   ops.reverse();
-  const slots = [];
   let k = 0;
   while (k < ops.length) {
     if (ops[k].type === 'eq') { slots.push({ type: 'eq', word: ow[ops[k].oi] }); k++; }
     else {
       const dels = [], ins = [];
       while (k < ops.length && ops[k].type !== 'eq') {
-        if (ops[k].type === 'del') dels.push(ow[ops[k].oi]);
-        else ins.push(nw[ops[k].ni]);
+        if (ops[k].type === 'del') dels.push(ow[ops[k].oi]); else ins.push(nw[ops[k].ni]);
         k++;
       }
       const minLen = Math.min(dels.length, ins.length);
@@ -1015,8 +732,8 @@ function alignedWordDiff(oldText, newText) {
   }
   return slots;
 }
+
 function renderAlignedDiff(slots) {
-  if (!slots.length) return '';
   if (!slots.some(s => s.type !== 'eq')) return slots.map(s => escapeHtml(s.word)).join(' ');
   const n = slots.length;
   let top = '', bot = '';
@@ -1037,45 +754,19 @@ function renderAlignedDiff(slots) {
   }
   return `<span class="diff-aligned" style="grid-template-columns:repeat(${n},max-content)">${top}${bot}</span>`;
 }
+
 function wordDiff(oldText, newText) {
   const ow = (oldText || '').split(/\s+/).filter(Boolean);
   const nw = (newText || '').split(/\s+/).filter(Boolean);
-  if (!ow.length && !nw.length) return { html: '', pct: null };
-  if (!ow.length) return { html: nw.map(w => `<mark class="diff-add">${escapeHtml(w)}</mark>`).join(' '), pct: null };
-  if (!nw.length) return { html: ow.map(w => `<mark class="diff-del">${escapeHtml(w)}</mark>`).join(' '), pct: 100 };
-  const on = ow.map(normWord);
-  const nn = nw.map(normWord);
+  if (!ow.length && !nw.length) return { pct: 0 };
+  const on = ow.map(normWord), nn = nw.map(normWord);
   const dp = lcsWords(on, nn);
-  if (!dp) return { html: escapeHtml(oldText), pct: null };
+  if (!dp) return { pct: 100 };
   const lcsLen = dp[on.length][nn.length];
   const changed = on.length - lcsLen;
-  const pct = changed > 0 ? Math.max(1, Math.round(changed / on.length * 100)) : 0;
-  // Build full edit op sequence by backtracking the LCS table.
-  const ops = [];
-  let i = on.length, j = nn.length;
-  while (i > 0 || j > 0) {
-    if (i > 0 && j > 0 && on[i-1] === nn[j-1]) { ops.push({ type: 'eq', oi: i-1, ni: j-1 }); i--; j--; }
-    else if (j > 0 && (i === 0 || dp[i][j-1] > dp[i-1][j])) { ops.push({ type: 'ins', ni: j-1 }); j--; }
-    else { ops.push({ type: 'del', oi: i-1 }); i--; }
-  }
-  ops.reverse();
-  // Render: group consecutive del/ins runs, pair similar words within each run.
-  const parts = [];
-  let k = 0;
-  while (k < ops.length) {
-    if (ops[k].type === 'eq') { parts.push(escapeHtml(ow[ops[k].oi])); k++; }
-    else {
-      const dels = [], ins = [];
-      while (k < ops.length && ops[k].type !== 'eq') {
-        if (ops[k].type === 'del') dels.push(ow[ops[k].oi]);
-        else ins.push(nw[ops[k].ni]);
-        k++;
-      }
-      parts.push(...pairDelIns(dels, ins));
-    }
-  }
-  return { html: parts.join(' '), pct };
+  return { pct: Math.round(changed / on.length * 100) };
 }
+
 function matchSegments(oldSegs, newSegs) {
   const newByStart = new Map(newSegs.map(s => [Math.round(s.start), s]));
   const matchedNew = new Set();
@@ -1084,385 +775,52 @@ function matchSegments(oldSegs, newSegs) {
     if (m && !matchedNew.has(m)) { matchedNew.add(m); return { old: s, cur: m }; }
     return { old: s, cur: null };
   });
-  if (oldSegs.length === newSegs.length) {
-    pairs.forEach((p, idx) => {
-      if (!p.cur) {
-        const c = newSegs[idx];
-        if (c && !matchedNew.has(c)) { p.cur = c; matchedNew.add(c); }
-      }
-    });
-  }
   return { pairs, inserted: newSegs.filter(s => !matchedNew.has(s)) };
 }
+
 function renderVersionSegs(segments, currentSegments) {
-  if (!segments || !segments.length) return '';
   const { pairs, inserted } = matchSegments(segments, currentSegments || []);
-  const sorted = [...inserted].sort((a, b) => a.start - b.start);
+  const sortedInserted = [...inserted].sort((a,b) => a.start - b.start);
   let ii = 0;
   const parts = [];
   for (const { old: s, cur } of pairs) {
-    while (ii < sorted.length && sorted[ii].start < s.start) {
-      const n = sorted[ii++];
-      parts.push(`<div class="seg seg-added"><span class="seg-time">${formatMs(n.start)}</span><span class="seg-role ${n.role || 'unknown'}">${escapeHtml(n.role || '?')}</span><span class="seg-text"><mark class="diff-add">${escapeHtml(n.text)}</mark></span></div>`);
+    while (ii < sortedInserted.length && sortedInserted[ii].start < s.start) {
+      const n = sortedInserted[ii++];
+      parts.push(`<div class="seg seg-added"><span class="seg-time">${formatMs(n.start)}</span><span class="seg-role ${n.role}">${escapeHtml(n.role)}</span><span class="seg-text"><mark class="diff-add">${escapeHtml(n.text)}</mark></span></div>`);
     }
     if (cur) {
       const textHtml = renderAlignedDiff(alignedWordDiff(s.text, cur.text));
       const oldRole = s.role || 'unknown', newRole = cur.role || 'unknown';
-      const roleHtml = oldRole !== newRole
-        ? `<span class="seg-role"><mark class="diff-del">${escapeHtml(s.role || '?')}</mark><mark class="diff-add">${escapeHtml(cur.role || '?')}</mark></span>`
-        : `<span class="seg-role ${oldRole}">${escapeHtml(s.role || '?')}</span>`;
+      const roleHtml = oldRole !== newRole 
+        ? `<span class="seg-role"><mark class="diff-del">${escapeHtml(s.role)}</mark><mark class="diff-add">${escapeHtml(cur.role)}</mark></span>`
+        : `<span class="seg-role ${oldRole}">${escapeHtml(s.role)}</span>`;
       const timeHtml = Math.round(s.start) !== Math.round(cur.start)
         ? `<span class="time-diff"><mark class="diff-del">${formatMs(s.start)}</mark><mark class="diff-add">${formatMs(cur.start)}</mark></span>`
         : formatMs(s.start);
       parts.push(`<div class="seg"><span class="seg-time">${timeHtml}</span>${roleHtml}<span class="seg-text">${textHtml}</span></div>`);
     } else {
-      parts.push(`<div class="seg seg-removed"><span class="seg-time">${formatMs(s.start)}</span><span class="seg-role ${s.role || 'unknown'}">${escapeHtml(s.role || '?')}</span><span class="seg-text"><mark class="diff-del">${escapeHtml(s.text)}</mark></span></div>`);
+      parts.push(`<div class="seg seg-removed"><span class="seg-time">${formatMs(s.start)}</span><span class="seg-role ${s.role}">${escapeHtml(s.role)}</span><span class="seg-text"><mark class="diff-del">${escapeHtml(s.text)}</mark></span></div>`);
     }
   }
-  while (ii < sorted.length) {
-    const n = sorted[ii++];
-    parts.push(`<div class="seg seg-added"><span class="seg-time">${formatMs(n.start)}</span><span class="seg-role ${n.role || 'unknown'}">${escapeHtml(n.role || '?')}</span><span class="seg-text"><mark class="diff-add">${escapeHtml(n.text)}</mark></span></div>`);
+  while (ii < sortedInserted.length) {
+    const n = sortedInserted[ii++];
+    parts.push(`<div class="seg seg-added"><span class="seg-time">${formatMs(n.start)}</span><span class="seg-role ${n.role}">${escapeHtml(n.role)}</span><span class="seg-text"><mark class="diff-add">${escapeHtml(n.text)}</mark></span></div>`);
   }
   return `<div class="segments">${parts.join('')}</div>`;
 }
-function hasRealHistory(versions, d) {
-  // Show the edit-history indicator only when there is BOTH a labeler-state
-  // (reviewed=false) and a reviewer-state (reviewed=true) snapshot in the
-  // chronology, and the two have different transcripts. Multiple
-  // labeler-only snapshots, multiple reviewer-only snapshots, or a review
-  // that approved without changes do not count.
-  if (!versions || !versions.length) return false;
-  const all = [...versions, d];
-  let labelerVer = null;
-  let reviewerVer = null;
-  for (const v of all) {
-    if (v.reviewed) reviewerVer = v;
-    else labelerVer = v;
-  }
-  if (!labelerVer || !reviewerVer) return false;
-  return true;
-}
-function renderHistory(versions, id, d) {
-  if (!versions || !versions.length || !hasRealHistory(versions, d)) return '';
-  const submitted = [...versions].reverse().find(v => !v.reviewed);
-  if (!submitted) return '';
-  const { pct } = wordDiff(submitted.transcript || '', d.transcript || '');
-  const pctHtml = pct ? ` · <span style="color:var(--red);opacity:0.75">${pct}% changed</span>` : '';
-  const et = classifyDocEdits(d);
-  const etTags = [
-    et.roleFlips ? `<span class="edit-tag edit-tag-role">${et.roleFlips} role flip${et.roleFlips > 1 ? 's' : ''}</span>` : '',
-    et.capsChange  ? `<span class="edit-tag edit-tag-caps">${et.capsChange} caps chg</span>` : '',
-    et.timeShifts ? `<span class="edit-tag edit-tag-time">${et.timeShifts} time shift${et.timeShifts > 1 ? 's' : ''}</span>` : '',
-  ].filter(Boolean).join('');
-  const segs = renderVersionSegs(submitted.segments, d.segments);
-  return `<div class="history-panel" id="hp-${escapeAttr(String(id))}"><div class="version-block prior"><div class="version-block-header"><span class="version-block-date">${escapeHtml(submitted.snapshotDate || '—')}</span><span class="version-block-glyph">⟲</span><span class="version-block-desc">labeler ${escapeHtml(submitted.annotator || '?')}${pctHtml}${etTags}</span></div>${segs}</div></div>`;
+
+function renderHistory(d) {
+  if (!d.versions || !d.versions.length) return '';
+  const initial = d.versions[0];
+  const { pct } = wordDiff(initial.transcript, d.transcript);
+  const pctHtml = pct > 0 ? ` · <span style="color:var(--red);opacity:0.75">${pct}% changed</span>` : '';
+  const segs = renderVersionSegs(initial.segments, d.segments);
+  return `<div class="history-panel" id="hp-${escapeAttr(String(d.id))}"><div class="version-block prior"><div class="version-block-header"><span class="version-block-date">${escapeHtml(initial.snapshotDate || '—')}</span><span class="version-block-glyph">⟲</span><span class="version-block-desc">initial state${pctHtml}</span></div>${segs}</div></div>`;
 }
 
 function formatMs(ms) { return ms == null ? '' : (ms / 1000).toFixed(2) + 's'; }
 function escapeHtml(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
 function escapeAttr(s) { return escapeHtml(s).replace(/`/g, '&#96;'); }
-function escapeRegex(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
-
-function setupFacetAutocomplete(inputId, facetKey, options) {
-  const input = $(inputId);
-  if (!input) return;
-  const wrap = input.parentNode;
-  const drop = document.createElement('div');
-  drop.className = 'ac-drop';
-  wrap.appendChild(drop);
-
-  let activeIdx = -1;
-
-  function getOpts() { return drop.querySelectorAll('.ac-opt'); }
-
-  function render(items) {
-    const q = input.value.trim();
-    const re = q ? new RegExp(`(${escapeRegex(q)})`, 'gi') : null;
-    drop.innerHTML = items.map(item => {
-      const safe = escapeHtml(item.value);
-      const label = re ? safe.replace(re, '<mark>$1</mark>') : safe;
-      return `<div class="ac-opt" data-val="${escapeAttr(item.value)}">${label}<span class="ac-count">${item.count}</span></div>`;
-    }).join('');
-    drop.classList.add('open');
-    activeIdx = -1;
-  }
-
-  function hide() { drop.classList.remove('open'); activeIdx = -1; }
-
-  function select(val) {
-    input.value = val;
-    facetSel[facetKey] = val;
-    hide();
-    rerun();
-  }
-
-  function setActive(idx) {
-    const opts = getOpts();
-    opts.forEach((o, i) => o.classList.toggle('ac-active', i === idx));
-    activeIdx = idx;
-  }
-
-  input.addEventListener('input', () => {
-    const q = input.value.trim().toLowerCase();
-    if (!q) { hide(); facetSel[facetKey] = ''; rerun(); return; }
-    const matches = options.filter(o => o.value.toLowerCase().includes(q));
-    if (matches.length) render(matches); else hide();
-    facetSel[facetKey] = input.value.trim();
-    rerun();
-  });
-
-  input.addEventListener('keydown', e => {
-    const opts = getOpts();
-    if (!drop.classList.contains('open') || !opts.length) return;
-    if (e.key === 'ArrowDown') { e.preventDefault(); setActive(Math.min(activeIdx + 1, opts.length - 1)); }
-    else if (e.key === 'ArrowUp') { e.preventDefault(); setActive(Math.max(activeIdx - 1, 0)); }
-    else if (e.key === 'Enter' && activeIdx >= 0) { e.preventDefault(); select(opts[activeIdx].dataset.val); }
-    else if (e.key === 'Escape') { hide(); }
-  });
-
-  drop.addEventListener('mousedown', e => {
-    const opt = e.target.closest('.ac-opt');
-    if (opt) { e.preventDefault(); select(opt.dataset.val); }
-  });
-
-  input.addEventListener('blur', () => setTimeout(hide, 150));
-}
-function highlight(text, terms) {
-  const safe = escapeHtml(text || '');
-  if (!terms || !terms.length) return safe;
-  const escaped = terms.map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).filter(Boolean);
-  if (!escaped.length) return safe;
-  const pattern = wholeWord
-    ? escaped.map(t => `\\b${t}\\b`).join('|')
-    : escaped.join('|');
-  try { return safe.replace(new RegExp(`(${pattern})`, 'gi'), '<mark>$1</mark>'); }
-  catch { return safe; }
-}
-
-// ====================== Selection ======================
-function loadSelection() {
-  try {
-    const saved = localStorage.getItem(SELECTION_KEY);
-    if (!saved) { selection = new Set(); }
-    else {
-      const ids = new Set(JSON.parse(saved));
-      const valid = new Set(allDocs.map(d => d.id));
-      selection = new Set([...ids].filter(id => valid.has(id)));
-      if (selection.size !== ids.size) saveSelection(); // prune stale
-    }
-  } catch { selection = new Set(); }
-  updateSelectionBar();
-}
-function saveSelection() {
-  localStorage.setItem(SELECTION_KEY, JSON.stringify([...selection]));
-}
-function updateSelectionBar() {
-  const bar = $('selection-bar');
-  $('sel-count').textContent = selection.size;
-  bar.classList.toggle('visible', selection.size > 0);
-}
-
-function sanitizeFilename(s) {
-  return String(s).replace(/[\\/:*?"<>|]+/g, '_').replace(/\s+/g, '_').replace(/_+/g, '_').replace(/^_+|_+$/g, '').slice(0, 180) || 'export';
-}
-
-function wouldMix(d) {
-  const docs = allDocs.filter(x => selection.has(x.id));
-  if (!docs.length) return null;
-  const batches = new Set(docs.map(x => x.batch || ''));
-  const labelers = new Set(docs.map(x => x.annotator || ''));
-  const mixesBatch = !batches.has(d.batch || '');
-  const mixesLabeler = !labelers.has(d.annotator || '');
-  if (!mixesBatch && !mixesLabeler) return null;
-  return { mixesBatch, mixesLabeler, newBatch: d.batch || '(none)', newLabeler: d.annotator || '(none)' };
-}
-
-function getExportTermsMap() {
-  const map = {};
-  if (!currentResults) return map;
-  for (const h of currentResults) map[h.id] = Object.keys(h.match || []);
-  return map;
-}
-
-function exportPdf() {
-  if (!selection.size) return;
-  const docs = allDocs.filter(d => selection.has(d.id));
-  docs.sort((a, b) => String(a.key || '').localeCompare(String(b.key || '')));
-  const today = new Date().toISOString().slice(0, 10);
-  const termsMap = getExportTermsMap();
-  const batches = new Set(docs.map(d => d.batch || ''));
-  const labelers = new Set(docs.map(d => d.annotator || ''));
-  let filename;
-  if (batches.size === 1 && labelers.size === 1) {
-    const labeler = [...labelers][0] || 'unknown';
-    const batch = [...batches][0] || 'unknown';
-    filename = sanitizeFilename(`${labeler}_${batch}_${today}`);
-  } else {
-    const suggested = sanitizeFilename(`mixed_${today}`);
-    const input = prompt('Selection mixes batches or labelers — enter a filename for this export:', suggested);
-    if (input === null) return;
-    filename = sanitizeFilename(input) || suggested;
-  }
-  const w = window.open('', '_blank');
-  if (!w) { alert('popup blocked — allow popups to export'); return; }
-  w.document.open();
-  w.document.write(buildExportHtml(docs, filename, termsMap));
-  w.document.close();
-  w.addEventListener('load', () => setTimeout(() => w.print(), 300));
-}
-
-function buildExportHtml(docs, filename, termsMap) {
-  const today = new Date().toISOString().slice(0, 10);
-  const docsHtml = docs.map(d => exportRow(d, termsMap[d.id] || [])).join('');
-  return `<!doctype html><html><head><meta charset="utf-8">
-<title>${escapeHtml(filename)}</title>
-<style>
-  @page { size: letter landscape; margin: 0.55in 0.65in; }
-  * { box-sizing: border-box; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif; color: #111; font-size: 10.5pt; line-height: 1.5; margin: 0; }
-  h1 { font-size: 16pt; margin: 0 0 4pt; font-weight: 600; }
-  .header-meta { font-size: 9pt; color: #666; margin-bottom: 18pt; padding-bottom: 10pt; border-bottom: 1px solid #ccc; }
-  .row { page-break-inside: avoid; break-inside: avoid; margin-bottom: 18pt; padding-bottom: 14pt; border-bottom: 1px solid #ddd; }
-  .row:last-child { border-bottom: none; }
-  .row-key { font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-size: 11pt; font-weight: 600; word-break: break-all; }
-  .row-key a { color: #0a4ea8; text-decoration: underline; text-underline-offset: 2pt; text-decoration-thickness: 0.5pt; }
-  .row-meta { font-size: 9pt; color: #555; margin: 4pt 0 10pt; }
-  .row-meta span { margin-right: 12pt; white-space: nowrap; }
-  .row-meta .reviewed { color: #2a7a3a; font-weight: 600; }
-  .row-meta .unreviewed { color: #999; }
-  .segs { margin: 6pt 0; }
-  .seg { display: grid; grid-template-columns: 56pt auto 1fr; gap: 8pt; padding: 1.5pt 0; font-size: 10pt; }
-  .seg-time { color: #888; font-variant-numeric: tabular-nums; font-family: ui-monospace, monospace; }
-  .seg-role { font-size: 8pt; text-transform: uppercase; letter-spacing: 0.05em; padding-top: 1.5pt; white-space: nowrap; padding-right: 4pt; }
-  .seg-role.pilot { color: #2a7a3a; }
-  .seg-role.atc { color: #b86b00; }
-  .seg-role.unknown { color: #999; }
-  .seg-text { color: #111; }
-  .versions-h { font-size: 9pt; font-weight: 600; margin: 14pt 0 4pt; color: #555; text-transform: uppercase; letter-spacing: 0.06em; }
-  .segs-label { font-size: 8.5pt; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: #777; margin: 8pt 0 3pt; }
-  .segs-label.label-reviewed { color: #2a7a3a; }
-  .segs-label.label-submitted { color: #b86b00; }
-  .ver { border-left: 2pt solid #ccc; padding: 4pt 0 4pt 10pt; margin: 6pt 0; page-break-inside: avoid; break-inside: avoid; }
-  .ver.ver-submitted { border-left-color: #ffb347; background: #fffbf4; padding: 4pt 8pt 4pt 10pt; }
-  .ver-h { font-size: 9pt; color: #666; margin-bottom: 3pt; }
-  .ver-h b { color: #111; font-weight: 600; }
-  .ver-submitted-tag { color: #b86b00; font-size: 8pt; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
-  .diff-aligned { display: inline-grid; column-gap: 0.3em; row-gap: 1pt; align-items: baseline; }
-  .da-eq  { color: #aaa; }
-  .da-del { color: #b8231f; text-decoration: line-through; }
-  .da-ins { color: #1a5e1a; }
-  .time-diff { display: flex; flex-direction: column; gap: 1pt; }
-  mark { background: #fff48a; color: #111; padding: 0 1pt; border-radius: 1pt; }
-  .row-key mark { background: #fff48a; color: #111; }
-  mark.diff-del { background: transparent; color: #b8231f; text-decoration: line-through; padding: 0; border-radius: 0; font-style: normal; }
-  mark.diff-add { background: #d6f0d6; color: #1a5e1a; padding: 0; border-radius: 1pt; font-style: normal; }
-  .seg.seg-removed { border-left: 2pt solid #e57373; padding-left: 6pt; }
-  .seg.seg-added   { border-left: 2pt solid #2a7a3a; padding-left: 6pt; }
-  .seg-role mark.diff-del, .seg-role mark.diff-add { font-size: 8pt; text-transform: uppercase; letter-spacing: 0.05em; }
-  .seg-time mark.diff-del, .seg-time mark.diff-add { font-size: inherit; font-family: inherit; font-variant-numeric: tabular-nums; }
-  .ver-pct { color: #b8231f; opacity: 0.75; }
-  @media print {
-    .row, .ver { break-inside: avoid; page-break-inside: avoid; }
-    mark { -webkit-print-color-adjust: exact; print-color-adjust: exact; background: #fff48a !important; }
-    mark.diff-del { -webkit-print-color-adjust: exact; print-color-adjust: exact; background: transparent !important; color: #b8231f !important; text-decoration: line-through !important; }
-    mark.diff-add { -webkit-print-color-adjust: exact; print-color-adjust: exact; background: #d6f0d6 !important; color: #1a5e1a !important; }
-    .da-del { -webkit-print-color-adjust: exact; print-color-adjust: exact; color: #b8231f !important; text-decoration: line-through !important; }
-    .da-ins { -webkit-print-color-adjust: exact; print-color-adjust: exact; color: #1a5e1a !important; }
-    .da-eq  { color: #aaa !important; }
-    .export-comment { background: #fdfaf5; border-left: 2pt solid #ffb347; padding: 6pt 10pt; margin-top: 8pt; font-size: 9.5pt; color: #333; }
-  }
-</style></head><body>
-<h1>Audit Report</h1>
-<div class="header-meta">${docs.length} recording${docs.length === 1 ? '' : 's'} · exported ${today}</div>
-${docsHtml}
-</body></html>`;
-}
-
-function exportRow(d, terms) {
-  const dur = d.duration ? `${d.duration.toFixed(1)}s` : '—';
-  const facets = ['airport', 'position', 'date', 'time'].filter(f => d[f]).map(f => `<span>${escapeHtml(d[f])}</span>`).join('');
-  const review = d.reviewed
-    ? `<span class="reviewed">&#x2713; approved${d.reviewedAt ? ' on ' + new Date(d.reviewedAt).toISOString().slice(0,10) : ''}</span>`
-    : `<span class="unreviewed">straight-to-done</span>`;
-  const labeler = d.annotator ? `<span>labeler: ${escapeHtml(d.annotator)}</span>` : '';
-  const batch = d.batch ? `<span>batch: ${escapeHtml(d.batch)}</span>` : '';
-  const segs = (d.segments || []).map(s =>
-    `<div class="seg"><span class="seg-time">${formatMs(s.start)}</span><span class="seg-role ${s.role || 'unknown'}">${escapeHtml(s.role || '?')}</span><span class="seg-text">${highlight(s.text, terms)}</span></div>`
-  ).join('');
-
-  const hasHistory = d.versions && d.versions.length && hasRealHistory(d.versions, d);
-
-  let versionsHtml = '';
-  if (hasHistory) {
-    const submitted = [...d.versions].reverse().find(v => !v.reviewed);
-    if (submitted) versionsHtml = exportVersion(submitted, terms, d);
-  }
-
-  const keyHtml = highlight(d.key || d.id || '', terms);
-  const keyEl = (d.projectId && d.id)
-    ? `<a href="https://app.labelbox.com/projects/${escapeAttr(d.projectId)}/data-rows/${escapeAttr(d.id)}">${keyHtml}</a>`
-    : keyHtml;
-
-  // --- ADD THIS ---
-  const savedComment = commentsMap.get(String(d.id));
-  const commentHtml = savedComment ? `<div class="export-comment"><b>Note:</b><br>${escapeHtml(savedComment).replace(/\n/g, '<br>')}</div>` : '';
-  // ----------------
-
-  return `<div class="row">
-    <div class="row-key">${keyEl}</div>
-    <div class="row-meta">${review}${batch}${labeler}${facets}<span>${dur}</span></div>
-    ${hasHistory ? '' : `<div class="segs">${segs}</div>`}
-    ${versionsHtml}
-    ${commentHtml}
-  </div>`;
-}
-
-function exportVersion(v, terms, d) {
-  const date = v.snapshotDate || '—';
-  const isSubmitted = !v.reviewed && d.reviewed;
-  let desc = v.changeType === 'initial' ? `initial · labeler ${escapeHtml(v.annotator || '?')}` :
-             v.changeType === 'content-only' ? 'transcript revised' :
-             v.changeType === 'state-only' ? (v.reviewed ? 'approved' : 'review status changed') :
-             v.changeType === 'state-and-content' ? (v.reviewed ? 'approved · transcript revised' : 'transcript revised · status changed') :
-             escapeHtml(v.changeType || '');
-  if (v.changeType !== 'state-only' && (v.changeType !== 'initial' || !v.reviewed)) {
-    const { pct } = wordDiff(v.transcript || '', d.transcript || '');
-    if (pct !== null) desc += ` · <span class="ver-pct">${pct}% changed</span>`;
-  }
-  const badge = isSubmitted ? `<span class="ver-submitted-tag">approved</span> · ` : '';
-  let segsHtml = '';
-  if (v.changeType !== 'state-only' && v.segments && v.segments.length) {
-    const { pairs, inserted } = matchSegments(v.segments, d.segments || []);
-    const sorted = [...inserted].sort((a, b) => a.start - b.start);
-    let ii = 0;
-    const parts = [];
-    for (const { old: s, cur } of pairs) {
-      while (ii < sorted.length && sorted[ii].start < s.start) {
-        const n = sorted[ii++];
-        parts.push(`<div class="seg seg-added"><span class="seg-time">${formatMs(n.start)}</span><span class="seg-role ${n.role || 'unknown'}">${escapeHtml(n.role || '?')}</span><span class="seg-text"><mark class="diff-add">${escapeHtml(n.text)}</mark></span></div>`);
-      }
-      if (cur) {
-        const textHtml = renderAlignedDiff(alignedWordDiff(s.text, cur.text));
-        const oldRole = s.role || 'unknown', newRole = cur.role || 'unknown';
-        const roleHtml = oldRole !== newRole
-          ? `<span class="seg-role"><mark class="diff-del">${escapeHtml(s.role || '?')}</mark><mark class="diff-add">${escapeHtml(cur.role || '?')}</mark></span>`
-          : `<span class="seg-role ${oldRole}">${escapeHtml(s.role || '?')}</span>`;
-        const timeHtml = Math.round(s.start) !== Math.round(cur.start)
-          ? `<span class="time-diff"><mark class="diff-del">${formatMs(s.start)}</mark><mark class="diff-add">${formatMs(cur.start)}</mark></span>`
-          : formatMs(s.start);
-        parts.push(`<div class="seg"><span class="seg-time">${timeHtml}</span>${roleHtml}<span class="seg-text">${textHtml}</span></div>`);
-      } else {
-        parts.push(`<div class="seg seg-removed"><span class="seg-time">${formatMs(s.start)}</span><span class="seg-role ${s.role || 'unknown'}">${escapeHtml(s.role || '?')}</span><span class="seg-text"><mark class="diff-del">${escapeHtml(s.text)}</mark></span></div>`);
-      }
-    }
-    while (ii < sorted.length) {
-      const n = sorted[ii++];
-      parts.push(`<div class="seg seg-added"><span class="seg-time">${formatMs(n.start)}</span><span class="seg-role ${n.role || 'unknown'}">${escapeHtml(n.role || '?')}</span><span class="seg-text"><mark class="diff-add">${escapeHtml(n.text)}</mark></span></div>`);
-    }
-    segsHtml = `<div class="segs">${parts.join('')}</div>`;
-  }
-  return `<div class="ver${isSubmitted ? ' ver-submitted' : ''}"><div class="ver-h">${badge}<b>${escapeHtml(date)}</b> · ${desc}</div>${segsHtml}</div>`;
-}
 
 // ====================== Wire up ======================
 let commentDebounce;
@@ -1470,277 +828,143 @@ results.addEventListener('input', e => {
   if (e.target.classList.contains('comment-input')) {
     const id = e.target.dataset.cid;
     const val = e.target.value;
-    
-    if (val.trim()) commentsMap.set(id, val);
-    else commentsMap.delete(id);
-
-    // Save to local storage automatically after they stop typing for 500ms
+    if (val.trim()) commentsMap.set(id, val); else commentsMap.delete(id);
     clearTimeout(commentDebounce);
     commentDebounce = setTimeout(saveComments, 500); 
-  }
-});
-let debounceTimer;
-q.addEventListener('input', e => {
-  clearTimeout(debounceTimer);
-  debounceTimer = setTimeout(() => rerun(), 80);
-});
-function copyId(e, el) {
-  e.stopPropagation();
-  const text = el.dataset.copy;
-  if (text && navigator.clipboard) {
-    navigator.clipboard.writeText(text).then(() => {
-      const orig = el.textContent;
-      el.classList.add('copied');
-      el.textContent = 'copied';
-      setTimeout(() => { el.classList.remove('copied'); el.textContent = orig; }, 700);
-    }).catch(() => {});
-  }
-}
-document.addEventListener('click', e => {
-  const copy = e.target.closest('.copy-id');
-  if (copy) {
-    const text = copy.dataset.copy;
-    if (text && navigator.clipboard) {
-      navigator.clipboard.writeText(text).then(() => {
-        const orig = copy.textContent;
-        copy.classList.add('copied');
-        copy.textContent = 'copied';
-        setTimeout(() => { copy.classList.remove('copied'); copy.textContent = orig; }, 700);
-      }).catch(() => {});
-    }
-    return;
   }
 });
 
 results.addEventListener('click', e => {
   const badge = e.target.closest('.version-badge');
-  if (!badge) return;
-  const panel = document.getElementById(`hp-${badge.dataset.vid}`);
-  if (!panel) return;
-  panel.classList.toggle('open');
-  badge.classList.toggle('open');
+  if (badge) {
+    const panel = document.getElementById(`hp-${badge.dataset.vid}`);
+    if (panel) {
+      panel.classList.toggle('open');
+      badge.classList.toggle('open');
+    }
+    return;
+  }
+  
+  const copy = e.target.closest('.copy-id');
+  if (copy) {
+    const text = copy.dataset.copy;
+    if (text && navigator.clipboard) {
+      navigator.clipboard.writeText(text).then(() => {
+        const orig = copy.textContent; copy.classList.add('copied'); copy.textContent = 'copied';
+        setTimeout(() => { copy.classList.remove('copied'); copy.textContent = orig; }, 700);
+      }).catch(() => {});
+    }
+  }
 });
+
 results.addEventListener('change', e => {
   const cb = e.target.closest('.select-cb');
   if (!cb) return;
   const id = cb.dataset.sel;
-  if (cb.checked) {
-    const d = allDocs.find(x => x.id === id);
-    const mix = d ? wouldMix(d) : null;
-    if (mix) {
-      const parts = [];
-      if (mix.mixesBatch) parts.push(`a different batch (${mix.newBatch})`);
-      if (mix.mixesLabeler) parts.push(`a different labeler (${mix.newLabeler})`);
-      const msg = `This recording is from ${parts.join(' and ')} than your current selection.\n\nMixing means you'll need to set the filename manually at export. Continue?`;
-      if (!confirm(msg)) { cb.checked = false; return; }
-    }
-    selection.add(id);
-  } else {
-    selection.delete(id);
-  }
+  if (cb.checked) selection.add(id); else selection.delete(id);
   saveSelection();
   updateSelectionBar();
 });
+
 $('sel-clear').addEventListener('click', () => {
-  if (!selection.size) return;
-  if (!confirm(`Clear ${selection.size} selected recording${selection.size === 1 ? '' : 's'}?`)) return;
-  selection.clear();
-  saveSelection();
-  updateSelectionBar();
+  selection.clear(); saveSelection(); updateSelectionBar();
   document.querySelectorAll('.select-cb:checked').forEach(cb => cb.checked = false);
 });
+
+function exportPdf() {
+  if (!selection.size) return;
+  const docs = allDocs.filter(d => selection.has(d.id));
+  docs.sort((a, b) => String(a.key || '').localeCompare(String(b.key || '')));
+  const w = window.open('', '_blank');
+  if (!w) { alert('popup blocked — allow popups to export'); return; }
+  w.document.open();
+  w.document.write(buildExportHtml(docs));
+  w.document.close();
+  // Wait for fonts/styles to load before printing
+  w.addEventListener('load', () => setTimeout(() => w.print(), 500));
+}
+
+function buildExportHtml(docs) {
+  const today = new Date().toISOString().slice(0, 10);
+  const docsHtml = docs.map(d => exportRow(d)).join('');
+  const styles = document.querySelector('style').innerHTML;
+  return `<!doctype html><html><head><meta charset="utf-8">
+<title>ATC Transcripts ${today} (${docs.length})</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Fraunces:opsz,wght@9..144,600&display=swap">
+<style>${styles}</style>
+</head><body class="export-body">
+<h1 class="export-h1">ATC Transcript Export</h1>
+<div class="export-meta">${docs.length} recording${docs.length === 1 ? '' : 's'} · exported ${today}</div>
+${docsHtml}
+</body></html>`;
+}
+
+function exportRow(d) {
+  const dur = d.duration ? `${d.duration.toFixed(1)}s` : '—';
+  const facets = ['airport', 'position', 'date', 'time'].filter(f => d[f]).map(f => `<span class="export-tag">${escapeHtml(d[f])}</span>`).join('');   
+  const review = d.reviewed
+    ? `<span class="export-tag reviewed">✓ approved</span>`
+    : `<span class="export-tag unapproved">unapproved</span>`;
+  const labeler = d.annotator ? `<span class="export-tag">labeler: ${escapeHtml(d.annotator)}</span>` : '';
+  const batch = d.batch ? `<span class="export-tag">batch: ${escapeHtml(d.batch)}</span>` : '';
+  const segs = (d.segments || []).map(s =>
+    `<div class="export-seg"><span class="export-seg-time">${formatMs(s.start)}</span><span class="export-seg-role ${s.role || 'unknown'}">${escapeHtml(s.role || '?')}</span><span class="export-seg-text">${escapeHtml(s.text)}</span></div>`
+  ).join('');
+
+  let versionsHtml = '';
+  if (d.versions && d.versions.length) {
+    const verBlocks = [...d.versions].reverse().map(v => exportVersion(v, d)).join('');
+    versionsHtml = `<div class="export-versions-h">Edit history (${d.versions.length} prior version${d.versions.length === 1 ? '' : 's'})</div>${verBlocks}`;
+  }
+
+  const savedComment = commentsMap.get(String(d.id));
+  const commentHtml = savedComment ? `<div class="export-comment"><b>Note:</b><br>${escapeHtml(savedComment).replace(/\n/g, '<br>')}</div>` : '';
+
+  return `<div class="export-row">
+    <div class="export-key">${escapeHtml(d.key || d.id || '')}</div>
+    <div class="export-tags">${review}${batch}${labeler}${facets}<span>${dur}</span></div>
+    <div class="export-segs">${segs}</div>
+    ${versionsHtml}
+    ${commentHtml}
+  </div>`;
+}
+
+function exportVersion(v, d) {
+  const date = v.snapshotDate || '—';
+  const { pct } = wordDiff(v.transcript, d.transcript);
+  const pctHtml = pct > 0 ? ` · ${pct}% changed` : '';
+  const segs = renderVersionSegs(v.segments, d.segments);
+  
+  // Adapt classes for export window
+  const exportSegs = segs
+    .replace(/class="seg-time"/g, 'class="export-seg-time"')
+    .replace(/class="seg-role (.*?)"/g, 'class="export-seg-role $1"')
+    .replace(/class="seg-text"/g, 'class="export-seg-text"')
+    .replace(/class="seg"/g, 'class="export-seg"')
+    .replace(/class="segments"/g, 'class="export-segs"');
+
+  return `<div class="export-ver">
+    <div class="export-ver-h"><b>${escapeHtml(date)}</b> · initial state${pctHtml}</div>
+    ${exportSegs}
+  </div>`;
+}
+
 $('sel-export').addEventListener('click', exportPdf);
-document.querySelectorAll('.pill[data-review]').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.pill[data-review]').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    activeReview = btn.dataset.review;
-    rerun();
-  });
-});
-document.querySelectorAll('.pill[data-history]').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.pill[data-history]').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    activeHistory = btn.dataset.history;
-    rerun();
-  });
-});
-document.querySelectorAll('.pill[data-match]').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.pill[data-match]').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    wholeWord = btn.dataset.match === 'word';
-    rerun();
-  });
-});
-$('f-sort').addEventListener('change', (e) => {
-  activeSort = e.target.value;
-  rerun();
-});
 
-// ====================== Labeler Stats ======================
-let labelerSortCol = 'avgPct', labelerSortDir = 'desc';
 
-function computeLabelerStats(sortCol, sortDir) {
-  const stats = new Map();
-  for (const d of allDocs) {
-    if (!d.annotator) continue;
-    if (!stats.has(d.annotator)) {
-      stats.set(d.annotator, { submitted: 0, approved: 0, pctChanges: [], roleFlips: 0, capsChange: 0, timeShifts: 0 });
-    }
-    const s = stats.get(d.annotator);
-    s.submitted++;
-    if (d.reviewed) s.approved++;
-    if (hasRealHistory(d.versions, d)) {
-      s.pctChanges.push(getDocPct(d));
-      const et = classifyDocEdits(d);
-      s.roleFlips += et.roleFlips;
-      s.capsChange  += et.capsChange;
-      s.timeShifts += et.timeShifts;
-    }
-  }
-
-  const result = [];
-  for (const [annotator, data] of stats) {
-    if (data.pctChanges.length === 0) continue;
-    const withHistory = data.pctChanges.length;
-    const avgPct = (data.pctChanges.reduce((a, b) => a + b, 0) / withHistory).toFixed(1);
-    const concernScore = +(
-      (data.roleFlips  / withHistory) * 10 +
-      parseFloat(avgPct) +
-      (data.timeShifts / withHistory) * 10 +
-      (data.capsChange / withHistory) * 5
-    ).toFixed(1);
-    result.push({ annotator, ...data, withHistory, avgPct, concernScore, totalConcern: +(concernScore * withHistory).toFixed(1) });
-  }
-
-  result.sort((a, b) => {
-    let aVal = a[sortCol], bVal = b[sortCol];
-    if (sortCol === 'avgPct') {
-      aVal = parseFloat(a.avgPct); bVal = parseFloat(b.avgPct);
-      return sortDir === 'asc' ? aVal - bVal : bVal - aVal;
-    }
-    if (sortCol === 'annotator') {
-      return sortDir === 'asc' ? String(aVal).localeCompare(String(bVal)) : String(bVal).localeCompare(String(aVal));
-    }
-    return sortDir === 'asc' ? aVal - bVal : bVal - aVal;
-  });
-  return result;
+function loadSelection() {
+  try {
+    const saved = localStorage.getItem(SELECTION_KEY);
+    if (saved) selection = new Set(JSON.parse(saved));
+  } catch { selection = new Set(); }
+  updateSelectionBar();
 }
-
-function toggleStatsDetail(tr) {
-  const next = tr.nextElementSibling;
-  if (next && next.classList.contains('stats-detail-row')) {
-    next.remove();
-    tr.classList.remove('expanded');
-    return;
-  }
-  tr.classList.add('expanded');
-  const d = tr.dataset;
-  const items = [
-    d.submitted !== undefined ? `<span>submitted <b>${d.submitted}</b></span>` : '',
-    `<span>approved <b>${d.approved}</b></span>`,
-    `<span>avg % changed <b style="color:var(--amber)">${d.avgpct}%</b></span>`,
-    `<span>role flips <b style="color:${+d.roleflips ? 'var(--red)' : 'var(--ink-faint)'}">${+d.roleflips || '—'}</b></span>`,
-    `<span>caps chg <b style="color:${+d.capschg ? 'var(--ink-dim)' : 'var(--ink-faint)'}">${+d.capschg || '—'}</b></span>`,
-    `<span>time shifts <b style="color:${+d.timeshifts ? 'var(--pilot)' : 'var(--ink-faint)'}">${+d.timeshifts || '—'}</b></span>`,
-  ].filter(Boolean).join('');
-  const row = document.createElement('tr');
-  row.className = 'stats-detail-row';
-  row.innerHTML = `<td colspan="3"><div class="stats-detail">${items}</div></td>`;
-  tr.after(row);
+function saveSelection() { localStorage.setItem(SELECTION_KEY, JSON.stringify([...selection])); }
+function updateSelectionBar() {
+  const bar = $('selection-bar');
+  $('sel-count').textContent = selection.size;
+  bar.classList.toggle('visible', selection.size > 0);
 }
-
-function concernColor(score, max) {
-  if (!max) return 'var(--ink-dim)';
-  const pct = score / max;
-  if (pct >= 0.7) return 'var(--red)';
-  if (pct >= 0.35) return 'var(--amber)';
-  return 'var(--pilot)';
-}
-
-$('stats-tbody').addEventListener('change', e => {
-  const cb = e.target.closest('.labeler-excl-cb');
-  if (!cb) return;
-  const name = cb.dataset.labeler;
-  if (cb.checked) excludedLabelers.add(name);
-  else excludedLabelers.delete(name);
-  saveExcludedLabelers();
-  cb.closest('tr').classList.toggle('excluded-labeler', cb.checked);
-  const count = excludedLabelers.size;
-  $('excluded-count').textContent = count ? `— ${count} excluded` : '';
-  rerun();
-});
-
-function renderLabelerStats() {
-  const stats = computeLabelerStats(labelerSortCol, labelerSortDir);
-  const maxAvgPct = stats.length ? Math.max(...stats.map(s => parseFloat(s.avgPct))) : 0;
-  const tbody = $('stats-tbody');
-  tbody.innerHTML = stats.map(s => {
-    const excl = excludedLabelers.has(s.annotator);
-    return `
-    <tr class="stats-row${excl ? ' excluded-labeler' : ''}" onclick="toggleStatsDetail(this)"
-        data-submitted="${s.submitted}" data-approved="${s.approved}" data-avgpct="${s.avgPct}"
-        data-roleflips="${s.roleFlips}" data-capschg="${s.capsChange}" data-timeshifts="${s.timeShifts}">
-      <td onclick="event.stopPropagation()" style="padding: 8px 4px; text-align: center;">
-        <input type="checkbox" class="labeler-excl-cb" data-labeler="${escapeAttr(s.annotator)}"
-               ${excl ? 'checked' : ''}
-               style="cursor:pointer; accent-color: var(--amber);">
-      </td>
-      <td><span class="copy-id" data-copy="${escapeAttr(s.annotator)}" title="click to copy" onclick="copyId(event,this)">${escapeHtml(s.annotator)}</span></td>
-      <td style="text-align: right; font-weight: 500; color: ${concernColor(parseFloat(s.avgPct), maxAvgPct)};">${s.avgPct}% | ${s.withHistory}</td>
-      <td style="text-align: right;">${s.withHistory}</td>
-    </tr>`;
-  }).join('');
-  const count = excludedLabelers.size;
-  $('excluded-count').textContent = count ? `— ${count} excluded` : '';
-  updateSortIndicators('stats-table', labelerSortCol, labelerSortDir);
-}
-
-$('btn-stats').addEventListener('click', () => {
-  const panel = $('stats-panel');
-  panel.classList.toggle('open');
-  if (panel.classList.contains('open')) {
-    renderLabelerStats();
-  }
-});
-
-$('btn-close-stats').addEventListener('click', () => {
-  $('stats-panel').classList.remove('open');
-});
-
-function updateSortIndicators(tableId, col, dir) {
-  const table = $(tableId);
-  table.querySelectorAll('th').forEach(th => {
-    th.removeAttribute('data-active');
-  });
-  const activeHeader = table.querySelector(`th[data-sort="${col}"]`);
-  if (activeHeader) {
-    activeHeader.setAttribute('data-active', dir);
-  }
-}
-
-document.querySelectorAll('#stats-table th[data-sort]').forEach(th => {
-  th.addEventListener('click', () => {
-    const col = th.dataset.sort;
-    if (labelerSortCol === col) {
-      labelerSortDir = labelerSortDir === 'asc' ? 'desc' : 'asc';
-    } else {
-      labelerSortCol = col;
-      labelerSortDir = 'asc';
-    }
-    renderLabelerStats();
-  });
-});
-
-
-(async function main() {
-  try { meta = await fetchMeta(); }
-  catch { showLock('couldn\u2019t load meta.json (have you built yet?)'); return; }
-  const ok = await tryUnlockFromSession();
-  if (!ok) showLock('');
-})();
 </script>
 </body>
 </html>
