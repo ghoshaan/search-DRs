@@ -257,6 +257,10 @@
         <option value="compare">Comparison</option>
         <option value="snapshot">Single Snapshot</option>
       </select>
+      <select id="sort-order" class="version-badge" style="height: auto;">
+        <option value="key">Sort: Key</option>
+        <option value="diff">Sort: % Change</option>
+      </select>
       <select id="snapshot-select" class="version-badge" style="height: auto; display: none;">
       </select>
       <a class="meta-link" onclick="showView('instructions')">Instructions</a>
@@ -541,7 +545,9 @@ async function processSnapshots(files) {
       snapshotStates.set(occ.snapshotDate, occ);
     }
 
-    processedRows.push({ ...primary, versions, snapshotStates });
+    const initial = collapsed[0];
+    const { pct } = wordDiff(initial.transcript, primary.transcript);
+    processedRows.push({ ...primary, versions, snapshotStates, pct });
   }
 
   allDocs = processedRows;
@@ -588,6 +594,8 @@ snapshotSelect.addEventListener('change', () => {
   rerun();
 });
 
+$('sort-order').addEventListener('change', rerun);
+
 function rerun() {
   currentPage = 1;
   filteredDocs = allDocs.filter(d => {
@@ -596,6 +604,25 @@ function rerun() {
     }
     return true;
   });
+
+  const sort = $('sort-order').value;
+  if (sort === 'diff') {
+    filteredDocs.sort((a, b) => {
+      const getScore = doc => {
+        const isMissing = snapshots.length > 1 && doc.snapshotStates.size === 1;
+        if (isMissing) return -2;
+        if (doc.reviewed && (doc.pct || 0) === 0) return -1;
+        return doc.pct || 0;
+      };
+      const scoreA = getScore(a);
+      const scoreB = getScore(b);
+      if (scoreA !== scoreB) return scoreB - scoreA;
+      return String(a.key || '').localeCompare(String(b.key || ''));
+    });
+  } else {
+    filteredDocs.sort((a, b) => String(a.key || '').localeCompare(String(b.key || '')));
+  }
+
   renderPage();
 }
 
@@ -838,7 +865,7 @@ function renderVersionSegs(segments, currentSegments) {
 function renderHistory(d) {
   if (!d.versions || !d.versions.length) return '';
   const initial = d.versions[0];
-  const { pct } = wordDiff(initial.transcript, d.transcript);
+  const pct = d.pct || 0;
   const pctHtml = pct > 0 ? ` · <span style="color:var(--red);opacity:0.75">${pct}% changed</span>` : '';
   const segs = renderVersionSegs(initial.segments, d.segments);
   return `<div class="history-panel" id="hp-${escapeAttr(String(d.id))}"><div class="version-block prior"><div class="version-block-header"><span class="version-block-date">${escapeHtml(initial.snapshotDate || '—')}</span><span class="version-block-glyph">⟲</span><span class="version-block-desc">initial state${pctHtml}</span></div>${segs}</div></div>`;
