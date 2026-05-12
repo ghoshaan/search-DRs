@@ -821,11 +821,28 @@ function wordDiff(oldText, newText) {
 }
 
 function matchSegments(oldSegs, newSegs) {
-  const newByStart = new Map(newSegs.map(s => [Math.round(s.start), s]));
   const matchedNew = new Set();
   const pairs = oldSegs.map(s => {
-    const m = newByStart.get(Math.round(s.start));
-    if (m && !matchedNew.has(m)) { matchedNew.add(m); return { old: s, cur: m }; }
+    // 1. Exact match
+    let bestMatch = newSegs.find(ns => !matchedNew.has(ns) && Math.round(ns.start) === Math.round(s.start));
+    
+    // 2. Fuzzy match within 1s if no exact match
+    if (!bestMatch) {
+      let bestDist = 1001;
+      for (const ns of newSegs) {
+        if (matchedNew.has(ns)) continue;
+        const dist = Math.abs(ns.start - s.start);
+        if (dist < 1000 && dist < bestDist) {
+          bestDist = dist;
+          bestMatch = ns;
+        }
+      }
+    }
+
+    if (bestMatch) {
+      matchedNew.add(bestMatch);
+      return { old: s, cur: bestMatch };
+    }
     return { old: s, cur: null };
   });
   return { pairs, inserted: newSegs.filter(s => !matchedNew.has(s)) };
