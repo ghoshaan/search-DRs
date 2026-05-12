@@ -203,29 +203,29 @@
 
   /* PDF Export Styles */
   @page { size: landscape; margin: 0.5in; }
-  .export-body { font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif; color: #111; font-size: 12pt; line-height: 1.5; margin: 0; padding: 0.1in; }
-  .export-h1 { font-size: 18pt; margin: 0 0 4pt; font-weight: 600; font-family: 'Fraunces', serif; }
-  .export-meta { font-size: 10pt; color: #666; margin-bottom: 18pt; padding-bottom: 10pt; border-bottom: 1px solid #ccc; text-transform: uppercase; letter-spacing: 0.1em; }
-  .export-row { page-break-inside: avoid; break-inside: avoid; margin-bottom: 18pt; padding-bottom: 14pt; border-bottom: 1px solid #ddd; }
+  .export-body { font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif; color: #111; font-size: 14pt; line-height: 1.5; margin: 0; padding: 0.1in; }
+  .export-h1 { font-size: 22pt; margin: 0 0 6pt; font-weight: 600; font-family: 'Fraunces', serif; }
+  .export-meta { font-size: 11pt; color: #666; margin-bottom: 24pt; padding-bottom: 12pt; border-bottom: 1px solid #ccc; text-transform: uppercase; letter-spacing: 0.1em; }
+  .export-row { page-break-inside: avoid; break-inside: avoid; margin-bottom: 24pt; padding-bottom: 18pt; border-bottom: 1px solid #ddd; }
   .export-row:last-child { border-bottom: none; }
-  .export-key { font-family: 'JetBrains Mono', monospace; font-size: 13pt; font-weight: 600; word-break: break-all; margin-bottom: 4pt; }
+  .export-key { font-family: 'JetBrains Mono', monospace; font-size: 15pt; font-weight: 600; word-break: break-all; margin-bottom: 6pt; }
   a.export-key { color: inherit; text-decoration: none; display: block; }
-  .export-tags { font-size: 10pt; color: #555; margin-bottom: 10pt; display: flex; gap: 12pt; flex-wrap: wrap; }
+  .export-tags { font-size: 11pt; color: #555; margin-bottom: 12pt; display: flex; gap: 14pt; flex-wrap: wrap; }
   .export-tag { display: inline-block; }
   .export-tag.reviewed { color: #2a7a3a; font-weight: 600; }
   .export-tag.unapproved { color: #999; }
-  .export-segs { margin: 6pt 0; display: grid; gap: 4px; }
-  .export-seg { display: grid; grid-template-columns: 64pt 50pt 1fr; gap: 8pt; padding: 2pt 0; font-size: 12pt; align-items: baseline; }
-  .export-seg-time { color: #888; font-variant-numeric: tabular-nums; font-family: 'JetBrains Mono', monospace; font-size: 10pt; }
-  .export-seg-role { font-size: 9pt; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
+  .export-segs { margin: 8pt 0; display: grid; gap: 6pt; }
+  .export-seg { display: grid; grid-template-columns: 75pt 60pt 1fr; gap: 10pt; padding: 3pt 0; font-size: 14pt; align-items: baseline; }
+  .export-seg-time { color: #888; font-variant-numeric: tabular-nums; font-family: 'JetBrains Mono', monospace; font-size: 11pt; }
+  .export-seg-role { font-size: 10pt; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
   .export-seg-role.pilot { color: #2a7a3a; }
   .export-seg-role.atc { color: #b86b00; }
-  .export-seg-text { color: #111; }
-  .export-versions-h { font-size: 10pt; font-weight: 600; margin: 14pt 0 4pt; color: #555; text-transform: uppercase; letter-spacing: 0.06em; }
-  .export-ver { border-left: 2pt solid #ccc; padding: 4pt 0 4pt 10pt; margin: 6pt 0; page-break-inside: avoid; break-inside: avoid; }
-  .export-ver-h { font-size: 10pt; color: #666; margin-bottom: 4pt; }
+  .export-seg-text { color: #111; overflow-wrap: break-word; word-break: break-word; min-width: 0; }
+  .export-versions-h { font-size: 11pt; font-weight: 600; margin: 18pt 0 6pt; color: #555; text-transform: uppercase; letter-spacing: 0.06em; }
+  .export-ver { border-left: 2pt solid #ccc; padding: 4pt 0 4pt 12pt; margin: 8pt 0; page-break-inside: avoid; break-inside: avoid; }
+  .export-ver-h { font-size: 11pt; color: #666; margin-bottom: 6pt; }
   .export-ver-h b { color: #111; font-weight: 600; }
-  .export-comment { background: #fdfaf5; border-left: 2pt solid #ffb347; padding: 6pt 10pt; margin-top: 8pt; font-size: 11pt; color: #333; }
+  .export-comment { background: #fdfaf5; border-left: 2pt solid #ffb347; padding: 8pt 12pt; margin-top: 10pt; font-size: 13pt; color: #333; }
 </style>
 </head>
 <body>
