@@ -791,7 +791,7 @@ function renderDoc(d) {
     <div class="seg">
       <span class="seg-time">${formatMs(s.start)}</span>
       <span class="seg-role ${s.role || 'unknown'}">${escapeHtml(s.role || '?')}</span>
-      <span class="seg-text">${escapeHtml(s.text)}</span>
+      <span class="seg-text">${renderText(s.text)}</span>
     </div>
   `).join('');
 
@@ -903,26 +903,26 @@ function alignedWordDiff(oldText, newText) {
 }
 
 function renderAlignedDiff(slots) {
-  if (!slots.some(s => s.type !== 'eq')) return slots.map(s => escapeHtml(s.word)).join(' ');
-  
+  if (!slots.some(s => s.type !== 'eq')) return slots.map(s => renderText(s.word)).join(' ');
+
   const cols = slots.map(sl => {
     if (sl.type === 'eq') {
-      return `<span class="da-eq">${escapeHtml(sl.word)}</span>`;
+      return `<span class="da-eq">${renderText(sl.word)}</span>`;
     }
     let top = '', bot = '';
     if (sl.type === 'del') {
-      top = `<span class="da-del">${escapeHtml(sl.word)}</span>`;
+      top = `<span class="da-del">${renderText(sl.word)}</span>`;
       bot = `<span></span>`;
     } else if (sl.type === 'ins') {
       top = `<span></span>`;
-      bot = `<span class="da-ins">${escapeHtml(sl.word)}</span>`;
+      bot = `<span class="da-ins">${renderText(sl.word)}</span>`;
     } else {
-      top = `<span class="da-del">${escapeHtml(sl.oldWord)}</span>`;
-      bot = `<span class="da-ins">${escapeHtml(sl.newWord)}</span>`;
+      top = `<span class="da-del">${renderText(sl.oldWord)}</span>`;
+      bot = `<span class="da-ins">${renderText(sl.newWord)}</span>`;
     }
     return `<span class="da-col">${top}${bot}</span>`;
   });
-  
+
   return `<span class="diff-aligned">${cols.join('')}</span>`;
 }
 
@@ -974,7 +974,7 @@ function renderVersionSegs(segments, currentSegments) {
   for (const { old: s, cur } of pairs) {
     while (ii < sortedInserted.length && sortedInserted[ii].start < s.start) {
       const n = sortedInserted[ii++];
-      parts.push(`<div class="seg seg-added"><span class="seg-time">${formatMs(n.start)}</span><span class="seg-role ${n.role}">${escapeHtml(n.role)}</span><span class="seg-text"><mark class="diff-add">${escapeHtml(n.text)}</mark></span></div>`);
+      parts.push(`<div class="seg seg-added"><span class="seg-time">${formatMs(n.start)}</span><span class="seg-role ${n.role}">${escapeHtml(n.role)}</span><span class="seg-text"><mark class="diff-add">${renderText(n.text)}</mark></span></div>`);
     }
     if (cur) {
       const textHtml = renderAlignedDiff(alignedWordDiff(s.text, cur.text));
@@ -987,12 +987,12 @@ function renderVersionSegs(segments, currentSegments) {
         : formatMs(s.start);
       parts.push(`<div class="seg"><span class="seg-time">${timeHtml}</span>${roleHtml}<span class="seg-text">${textHtml}</span></div>`);
     } else {
-      parts.push(`<div class="seg seg-removed"><span class="seg-time">${formatMs(s.start)}</span><span class="seg-role ${s.role}">${escapeHtml(s.role)}</span><span class="seg-text"><mark class="diff-del">${escapeHtml(s.text)}</mark></span></div>`);
+      parts.push(`<div class="seg seg-removed"><span class="seg-time">${formatMs(s.start)}</span><span class="seg-role ${s.role}">${escapeHtml(s.role)}</span><span class="seg-text"><mark class="diff-del">${renderText(s.text)}</mark></span></div>`);
     }
   }
   while (ii < sortedInserted.length) {
     const n = sortedInserted[ii++];
-    parts.push(`<div class="seg seg-added"><span class="seg-time">${formatMs(n.start)}</span><span class="seg-role ${n.role}">${escapeHtml(n.role)}</span><span class="seg-text"><mark class="diff-add">${escapeHtml(n.text)}</mark></span></div>`);
+    parts.push(`<div class="seg seg-added"><span class="seg-time">${formatMs(n.start)}</span><span class="seg-role ${n.role}">${escapeHtml(n.role)}</span><span class="seg-text"><mark class="diff-add">${renderText(n.text)}</mark></span></div>`);
   }
   return `<div class="segments">${parts.join('')}</div>`;
 }
@@ -1009,6 +1009,7 @@ function renderHistory(d) {
 function formatMs(ms) { return ms == null ? '' : (ms / 1000).toFixed(2) + 's'; }
 function escapeHtml(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
 function escapeAttr(s) { return escapeHtml(s).replace(/`/g, '&#96;'); }
+function renderText(s) { return escapeHtml(s).replace(/-->/g, '→').replace(/->/g, '→'); }
 
 // ====================== Wire up ======================
 
@@ -1234,7 +1235,7 @@ function exportRow(d) {
     <div class="export-seg">
       <span class="export-seg-time">${formatMs(s.start)}</span>
       <span class="export-seg-role ${s.role || 'unknown'}">${escapeHtml(s.role || '?')}</span>
-      <span class="export-seg-text">${escapeHtml(s.text)}</span>
+      <span class="export-seg-text">${renderText(s.text)}</span>
     </div>
   `).join('');
 
