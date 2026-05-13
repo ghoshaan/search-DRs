@@ -1018,12 +1018,12 @@ function formatMs(ms) { return ms == null ? '' : (ms / 1000).toFixed(2) + 's'; }
 function escapeHtml(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
 function escapeAttr(s) { return escapeHtml(s).replace(/`/g, '&#96;'); }
 function renderText(s) {
-  const ARROW = `<span style="font-size:18px;">&#8680;</span>`;
+  const ARROW = `<span style="font-size:18px;">&#10230;</span>`;
   return escapeHtml(s).replace(/--&gt;/g, ARROW).replace(/-&gt;/g, ARROW);
 }
 // Render comment text for PDF export: escape HTML, swap "->" / "-->" for a sized arrow glyph, preserve newlines
 function renderCommentText(s) {
-  const ARROW = `<span style="font-size:14px;">&#8680;</span>`;
+  const ARROW = `<span style="font-size:14px;">&#10230;</span>`;
   return escapeHtml(s)
     .replace(/--&gt;/g, ARROW)
     .replace(/-&gt;/g, ARROW)
