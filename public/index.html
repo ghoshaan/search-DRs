@@ -126,7 +126,9 @@
   .version-block-desc { color: var(--ink-dim); }
   .version-block.prior { background: rgba(229,115,115,0.05); padding: 8px 10px; border-radius: 2px; margin: 4px -4px; }
 
-  .diff-aligned { display: inline-grid; column-gap: 0.35em; row-gap: 1px; align-items: baseline; }
+  .diff-aligned { display: inline-flex; flex-wrap: wrap; column-gap: 0.35em; row-gap: 12px; align-items: flex-start; }
+  .da-col { display: inline-flex; flex-direction: column; }
+  .da-col > span { display: block; min-height: 1.55em; white-space: nowrap; }
   .da-eq  { color: var(--ink-faint); }
   .da-del { color: var(--red); text-decoration: line-through; }
   .da-ins { color: var(--green); }
@@ -209,7 +211,7 @@
   .export-row { page-break-inside: avoid; break-inside: avoid; margin-bottom: 24pt; padding-bottom: 18pt; border-bottom: 1px solid #ddd; }
   .export-row:last-child { border-bottom: none; }
   .export-key { font-family: 'JetBrains Mono', monospace; font-size: 15pt; font-weight: 600; word-break: break-all; margin-bottom: 6pt; }
-  a.export-key { color: inherit; text-decoration: none; display: block; }
+  a.export-key { color: #0066cc; text-decoration: underline; display: block; }
   .export-tags { font-size: 11pt; color: #555; margin-bottom: 12pt; display: flex; gap: 14pt; flex-wrap: wrap; }
   .export-tag { display: inline-block; }
   .export-tag.reviewed { color: #2a7a3a; font-weight: 600; }
@@ -259,11 +261,12 @@
         <option value="snapshot">Single Snapshot</option>
       </select>
       <select id="sort-order" class="version-badge" style="height: auto;">
+        <option value="diff" selected>Sort: % Change</option>
         <option value="key">Sort: Key</option>
-        <option value="diff">Sort: % Change</option>
       </select>
       <select id="snapshot-select" class="version-badge" style="height: auto; display: none;">
       </select>
+      <a class="meta-link" onclick="location.reload()">Back</a>
       <a class="meta-link" onclick="showView('instructions')">Instructions</a>
     </div>
   </header>
@@ -697,8 +700,11 @@ function renderDoc(d) {
     </div>
   `).join('');
 
-  const annotatorLine = displayDoc.annotator ? `<div class="annotator-line">labeler <span class="copy-id" data-copy="${escapeAttr(displayDoc.annotator)}">${escapeHtml(displayDoc.annotator)}</span></div>` : '';
-  const idLine = displayDoc.id ? `<div class="annotator-line">id <span class="copy-id" data-copy="${escapeAttr(String(displayDoc.id))}">${escapeHtml(String(displayDoc.id))}</span></div>` : '';
+  const metaParts = [];
+  if (displayDoc.annotator) metaParts.push(`labeler <span class="copy-id" data-copy="${escapeAttr(displayDoc.annotator)}">${escapeHtml(displayDoc.annotator)}</span>`);
+  if (displayDoc.reviewedBy) metaParts.push(`reviewer <span class="copy-id" data-copy="${escapeAttr(displayDoc.reviewedBy)}">${escapeHtml(displayDoc.reviewedBy)}</span>`);
+  if (displayDoc.id) metaParts.push(`id <span class="copy-id" data-copy="${escapeAttr(String(displayDoc.id))}">${escapeHtml(String(displayDoc.id))}</span>`);
+  const metaLine = metaParts.length ? `<div class="annotator-line">${metaParts.join(' &middot; ')}</div>` : '';
   
   const savedComment = commentsMap.get(String(d.id)) || '';
   const commentUI = `<div class="comment-wrap"><textarea class="comment-input" data-cid="${escapeAttr(String(d.id))}" placeholder="Add a comment...">${escapeHtml(savedComment)}</textarea></div>`;
@@ -724,8 +730,7 @@ function renderDoc(d) {
         </div>
       </header>
       <div class="segments">${segs}</div>
-      ${annotatorLine}
-      ${idLine}
+      ${metaLine}
       ${showHistory ? renderHistory(d) : ''}
       ${commentUI}
     </article>
@@ -789,24 +794,26 @@ function alignedWordDiff(oldText, newText) {
 
 function renderAlignedDiff(slots) {
   if (!slots.some(s => s.type !== 'eq')) return slots.map(s => escapeHtml(s.word)).join(' ');
-  const n = slots.length;
-  let top = '', bot = '';
-  for (const sl of slots) {
+  
+  const cols = slots.map(sl => {
+    let top = '', bot = '';
     if (sl.type === 'eq') {
-      top += `<span class="da-eq">${escapeHtml(sl.word)}</span>`;
-      bot += `<span class="da-eq">${escapeHtml(sl.word)}</span>`;
+      top = `<span class="da-eq">${escapeHtml(sl.word)}</span>`;
+      bot = `<span class="da-eq">${escapeHtml(sl.word)}</span>`;
     } else if (sl.type === 'del') {
-      top += `<span class="da-del">${escapeHtml(sl.word)}</span>`;
-      bot += `<span></span>`;
+      top = `<span class="da-del">${escapeHtml(sl.word)}</span>`;
+      bot = `<span></span>`;
     } else if (sl.type === 'ins') {
-      top += `<span></span>`;
-      bot += `<span class="da-ins">${escapeHtml(sl.word)}</span>`;
+      top = `<span></span>`;
+      bot = `<span class="da-ins">${escapeHtml(sl.word)}</span>`;
     } else {
-      top += `<span class="da-del">${escapeHtml(sl.oldWord)}</span>`;
-      bot += `<span class="da-ins">${escapeHtml(sl.newWord)}</span>`;
+      top = `<span class="da-del">${escapeHtml(sl.oldWord)}</span>`;
+      bot = `<span class="da-ins">${escapeHtml(sl.newWord)}</span>`;
     }
-  }
-  return `<span class="diff-aligned" style="grid-template-columns:repeat(${n},max-content)">${top}${bot}</span>`;
+    return `<span class="da-col">${top}${bot}</span>`;
+  });
+  
+  return `<span class="diff-aligned">${cols.join('')}</span>`;
 }
 
 function wordDiff(oldText, newText) {
@@ -998,10 +1005,10 @@ function exportRow(d) {
     : (d.reviewedBy ? '' : `<span class="export-tag unapproved">unapproved</span>`);
 
   const labeler = d.annotator ? `<span class="export-tag">labeler: ${escapeHtml(d.annotator)}</span>` : '';
+  const reviewer = d.reviewedBy ? `<span class="export-tag">reviewer: ${escapeHtml(d.reviewedBy)}</span>` : '';
   const batch = d.batch ? `<span class="export-tag">batch: ${escapeHtml(d.batch)}</span>` : '';
-  const segs = (d.segments || []).map(s =>
-    `<div class="export-seg"><span class="export-seg-time">${formatMs(s.start)}</span><span class="export-seg-role ${s.role || 'unknown'}">${escapeHtml(s.role || '?')}</span><span class="export-seg-text">${escapeHtml(s.text)}</span></div>`
-  ).join('');
+  const showCurrentStandalone = !(d.versions && d.versions.length);
+  const segsHtml = showCurrentStandalone ? `<div class="export-segs">${segs}</div>` : '';
 
   let versionsHtml = '';
   if (d.versions && d.versions.length) {
@@ -1018,8 +1025,8 @@ function exportRow(d) {
 
   return `<div class="export-row">
     ${keyEl}
-    <div class="export-tags">${review}${labeler}${facets}<span>${dur}</span></div>
-    <div class="export-segs">${segs}</div>
+    <div class="export-tags">${review}${labeler}${reviewer}${facets}<span>${dur}</span></div>
+    ${segsHtml}
     ${versionsHtml}
     ${commentHtml}
   </div>`;
