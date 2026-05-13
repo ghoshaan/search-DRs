@@ -309,7 +309,10 @@
       <div class="comment-images" id="general-comment-images"></div>
     </div>
     <div class="status">
-      <span id="status-l"></span>
+      <span style="display:flex; gap:10px; align-items:center;">
+        <input type="checkbox" class="select-cb" id="sel-all-cb" title="Select all">
+        <span id="status-l"></span>
+      </span>
       <span id="status-r"></span>
     </div>
 
@@ -1226,9 +1229,21 @@ results.addEventListener('change', e => {
   updateSelectionBar();
 });
 
+$('sel-all-cb').addEventListener('change', e => {
+  if (e.target.checked) {
+    filteredDocs.forEach(d => selection.add(d.id));
+    document.querySelectorAll('.select-cb:not(#sel-all-cb)').forEach(cb => cb.checked = true);
+  } else {
+    selection.clear();
+    document.querySelectorAll('.select-cb:not(#sel-all-cb)').forEach(cb => cb.checked = false);
+  }
+  saveSelection();
+  updateSelectionBar();
+});
+
 $('sel-clear').addEventListener('click', () => {
   selection.clear(); saveSelection(); updateSelectionBar();
-  document.querySelectorAll('.select-cb:checked').forEach(cb => cb.checked = false);
+  document.querySelectorAll('.select-cb').forEach(cb => cb.checked = false);
 });
 
 $('sel-export').addEventListener('click', exportPdf);
