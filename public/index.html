@@ -1009,7 +1009,7 @@ function renderHistory(d) {
 function formatMs(ms) { return ms == null ? '' : (ms / 1000).toFixed(2) + 's'; }
 function escapeHtml(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
 function escapeAttr(s) { return escapeHtml(s).replace(/`/g, '&#96;'); }
-function renderText(s) { return escapeHtml(s).replace(/-->/g, '→').replace(/->/g, '→'); }
+function renderText(s) { return escapeHtml(String(s ?? '').replace(/-->/g, '→').replace(/->/g, '→')); }
 
 // ====================== Wire up ======================
 
