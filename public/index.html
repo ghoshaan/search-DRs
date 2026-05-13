@@ -422,12 +422,9 @@ function parseReview(workflowHistory) {
   const approvals = workflowHistory
     .filter(e => e?.action === 'Approve')
     .sort((a, b) => String(b?.created_at).localeCompare(String(a?.created_at)));
-  
-  const latestAction = [...workflowHistory].sort((a, b) => String(b?.created_at).localeCompare(String(a?.created_at)))[0];
-  const reviewer = parseAnnotator(latestAction?.created_by) ?? latestAction?.created_by ?? null;
 
   if (approvals.length === 0) {
-    return { reviewed: false, reviewedBy: reviewer, reviewedAt: null };
+    return { reviewed: false, reviewedBy: null, reviewedAt: null };
   }
   const latest = approvals[0];
   return {
@@ -435,6 +432,11 @@ function parseReview(workflowHistory) {
     reviewedBy: parseAnnotator(latest.created_by) ?? latest.created_by ?? null,
     reviewedAt: latest.created_at ?? null,
   };
+}
+
+function maxWorkflowDate(workflowHistory) {
+  if (!Array.isArray(workflowHistory)) return null;
+  return workflowHistory.map(e => e?.created_at).filter(Boolean).sort().slice(-1)[0] ?? null;
 }
 
 function flatten(row, batchName, snapshotDate) {
@@ -448,15 +450,17 @@ function flatten(row, batchName, snapshotDate) {
   const projectId = projectEntries[0]?.[0] ?? null;
   const firstProject = projectEntries[0]?.[1];
   const label = firstProject?.labels?.[0];
-  const review = parseReview(firstProject?.project_details?.workflow_history);
+  const workflowHistory = firstProject?.project_details?.workflow_history ?? [];
+  const review = parseReview(workflowHistory);
   const facets = parseKey(key);
   const annotator = parseAnnotator(label?.label_details?.created_by);
   const createdAt = label?.label_details?.created_at ?? null;
+  const maxActivityAt = maxWorkflowDate(workflowHistory) ?? createdAt ?? null;
 
   if (!label) {
     return {
       id, key, duration, audioUrl, projectId, ...facets,
-      batch: batchName, snapshotDate, annotator, createdAt, ...review,
+      batch: batchName, snapshotDate, annotator, createdAt, maxActivityAt, ...review,
       speakers: 0, roles: [], segments: [], transcript: '',
     };
   }
@@ -528,7 +532,7 @@ function flatten(row, batchName, snapshotDate) {
 
   return {
     id, key, duration, audioUrl, projectId, ...facets,
-    batch: batchName, snapshotDate, annotator, createdAt, ...review,
+    batch: batchName, snapshotDate, annotator, createdAt, maxActivityAt, ...review,
     speakers: roles.length,
     roles, segments: dedupedSegments, transcript,
   };
@@ -562,15 +566,30 @@ async function readNDJSON(file, batchName, snapshotDate) {
 async function processSnapshots(files) {
   uploadStatus.textContent = 'Reading files...';
   
-  const snapshotReads = await Promise.all([...files].map((file, idx) => {
-    const date = (idx + 1).toString().padStart(2, '0');
-    return readNDJSON(file, file.name, date);
+  const fileList = [...files];
+  // Read all files with a temporary index-based date first
+  const rawReads = await Promise.all(fileList.map((file, idx) =>
+    readNDJSON(file, file.name, (idx + 1).toString().padStart(2, '0'))
+  ));
+
+  // Determine each file's true temporal position from its data timestamps
+  // (guards against alphabetical ordering placing "_after" before "_before")
+  const fileMaxDates = rawReads.map(rows =>
+    rows.reduce((max, row) => (row.maxActivityAt > max ? row.maxActivityAt : max), '')
+  );
+  const order = fileMaxDates.map((_, i) => i)
+    .sort((a, b) => String(fileMaxDates[a]).localeCompare(String(fileMaxDates[b])));
+
+  snapshots = order.map((origIdx, newIdx) => ({
+    id: (newIdx + 1).toString().padStart(2, '0'),
+    name: fileList[origIdx].name
   }));
 
-  snapshots = [...files].map((file, idx) => ({
-    id: (idx + 1).toString().padStart(2, '0'),
-    name: file.name
-  }));
+  // Rebuild reads with corrected snapshotDates
+  const snapshotReads = order.map((origIdx, newIdx) => {
+    const newDate = (newIdx + 1).toString().padStart(2, '0');
+    return rawReads[origIdx].map(row => ({ ...row, snapshotDate: newDate }));
+  });
 
   uploadStatus.textContent = 'Versioning and indexing...';
   const allOccurrences = snapshotReads.flat();
