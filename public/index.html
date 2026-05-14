@@ -950,7 +950,7 @@ function renderDoc(d) {
 
   const hasTlEdit = tlEditsMap.has(String(d.id));
   const tlBadge = showHistory
-    ? `<button class="tag tag-tl-edit${hasTlEdit ? ' has-edit' : ''}" data-tlbtn="${escapeAttr(String(d.id))}">${hasTlEdit ? 'TL ✎' : 'TL'}</button>`
+    ? `<button class="tag tag-tl-edit${hasTlEdit ? ' has-edit' : ''}" data-tlbtn="${escapeAttr(String(d.id))}">${hasTlEdit ? 'Edit ✎' : 'Edit'}</button>`
     : '';
 
   const segs = (displayDoc.segments || []).map(s => `
@@ -1059,7 +1059,7 @@ function renderTlEditor(d) {
 
 // ====================== Diff Logic ======================
 
-const normWord = w => w.replace(/^[^a-zA-Z0-9]+|[^a-zA-Z0-9]+$/g, '');
+const normWord = w => w.replace(/^[.,]+|[.,]+$/g, '');
 function lcsWords(a, b) {
   const m = a.length, n = b.length;
   if (m * n > 60000) return null;
@@ -1207,17 +1207,49 @@ function renderVersionSegs(segments, currentSegments) {
   return `<div class="segments">${parts.join('')}</div>`;
 }
 
+// Index-based segment diff for labeler→TL: pairs segments positionally so word-level
+// diffs work even when timestamps changed between labeler and reviewer versions.
+function renderIndexedSegDiff(oldSegs, newSegs) {
+  const len = Math.max(oldSegs.length, newSegs.length);
+  const parts = [];
+  for (let i = 0; i < len; i++) {
+    const s = oldSegs[i];
+    const t = newSegs[i];
+    if (s && t) {
+      const textHtml = renderAlignedDiff(alignedWordDiff(s.text, t.text));
+      const oldRole = s.role || 'unknown', newRole = t.role || 'unknown';
+      const roleHtml = oldRole !== newRole
+        ? `<span class="seg-role"><mark class="diff-del">${escapeHtml(s.role)}</mark><mark class="diff-add">${escapeHtml(t.role)}</mark></span>`
+        : `<span class="seg-role ${oldRole}">${escapeHtml(s.role)}</span>`;
+      parts.push(`<div class="seg"><span class="seg-time">${formatMs(t.start)}</span>${roleHtml}<span class="seg-text">${textHtml}</span></div>`);
+    } else if (s) {
+      parts.push(`<div class="seg seg-removed"><span class="seg-time">${formatMs(s.start)}</span><span class="seg-role ${s.role || 'unknown'}">${escapeHtml(s.role || '?')}</span><span class="seg-text"><mark class="diff-del">${renderText(s.text)}</mark></span></div>`);
+    } else {
+      parts.push(`<div class="seg seg-added"><span class="seg-time">${formatMs(t.start)}</span><span class="seg-role ${t.role || 'unknown'}">${escapeHtml(t.role || '?')}</span><span class="seg-text"><mark class="diff-add">${renderText(t.text)}</mark></span></div>`);
+    }
+  }
+  return `<div class="segments">${parts.join('')}</div>`;
+}
+
 function renderHistory(d) {
   if (!d.versions || !d.versions.length) return '';
   const initial = d.versions[0];
   const tlEdit = tlEditsMap.get(String(d.id));
-  const finalSegments = tlEdit ? tlEdit.segments : d.segments;
-  const finalTranscript = finalSegments.map(s => s.text).join(' ');
-  const pct = wordDiff(initial.transcript, finalTranscript).pct;
+
+  if (tlEdit) {
+    // Labeler → TL final using index-based pairing so word diffs work regardless of timestamp drift
+    const finalTranscript = tlEdit.segments.map(s => s.text).join(' ');
+    const pct = wordDiff(initial.transcript, finalTranscript).pct;
+    const pctHtml = pct > 0 ? ` · <span style="color:var(--red);opacity:0.75">${pct}% changed</span>` : '';
+    const segs = renderIndexedSegDiff(initial.segments, tlEdit.segments);
+    return `<div class="history-panel" id="hp-${escapeAttr(String(d.id))}"><div class="version-block prior"><div class="version-block-header"><span class="version-block-date">${escapeHtml(initial.snapshotDate || '—')}</span><span class="version-block-glyph">⟲</span><span class="version-block-desc"><span class="tl-diff-label" style="display:inline;">labeler &#x2192; TL final</span>${pctHtml}</span></div>${segs}</div></div>`;
+  }
+
+  // No TL edits — original behaviour: labeler → reviewer using timestamp-based matching
+  const pct = d.pct || 0;
   const pctHtml = pct > 0 ? ` · <span style="color:var(--red);opacity:0.75">${pct}% changed</span>` : '';
-  const diffLabel = tlEdit ? `<div class="tl-diff-label">labeler &#x2192; TL final</div>` : '';
-  const segs = renderVersionSegs(initial.segments, finalSegments);
-  return `<div class="history-panel" id="hp-${escapeAttr(String(d.id))}"><div class="version-block prior"><div class="version-block-header"><span class="version-block-date">${escapeHtml(initial.snapshotDate || '—')}</span><span class="version-block-glyph">⟲</span><span class="version-block-desc">initial state${pctHtml}</span></div>${diffLabel}${segs}</div></div>`;
+  const segs = renderVersionSegs(initial.segments, d.segments);
+  return `<div class="history-panel" id="hp-${escapeAttr(String(d.id))}"><div class="version-block prior"><div class="version-block-header"><span class="version-block-date">${escapeHtml(initial.snapshotDate || '—')}</span><span class="version-block-glyph">⟲</span><span class="version-block-desc">initial state${pctHtml}</span></div>${segs}</div></div>`;
 }
 
 function formatMs(ms) { return ms == null ? '' : (ms / 1000).toFixed(2) + 's'; }
@@ -1665,7 +1697,12 @@ function exportRow(d) {
 
   let versionsHtml = '';
   if (d.versions && d.versions.length) {
-    versionsHtml = [...d.versions].reverse().map(v => exportVersion(v, finalSegments)).join('');
+    if (tlEdit) {
+      // Labeler → TL final using index-based diff (mirrors history panel)
+      versionsHtml = [...d.versions].reverse().map(v => exportVersion(v, tlEdit.segments, true)).join('');
+    } else {
+      versionsHtml = [...d.versions].reverse().map(v => exportVersion(v, d.segments)).join('');
+    }
   }
 
   const saved = commentsMap.get(String(d.id));
@@ -1693,8 +1730,8 @@ function exportRow(d) {
   </div>`;
 }
 
-function exportVersion(v, finalSegments) {
-  const segs = renderVersionSegs(v.segments, finalSegments);
+function exportVersion(v, finalSegments, isTl = false) {
+  const segs = isTl ? renderIndexedSegDiff(v.segments, finalSegments) : renderVersionSegs(v.segments, finalSegments);
 
   const exportSegs = segs
     .replace(/class="seg-time"/g, 'class="export-seg-time"')
@@ -1703,7 +1740,8 @@ function exportVersion(v, finalSegments) {
     .replace(/class="seg"/g, 'class="export-seg"')
     .replace(/class="segments"/g, 'class="export-segs"');
 
-  return `<div class="export-ver">${exportSegs}</div>`;
+  const tlHeader = isTl ? `<div class="export-ver-h" style="color:#7a3fb0;font-weight:600;">TL corrections</div>` : '';
+  return `<div class="export-ver" style="${isTl ? 'border-left-color:#c9a0ff;' : ''}">${tlHeader}${exportSegs}</div>`;
 }
 
 // PDF modal close
