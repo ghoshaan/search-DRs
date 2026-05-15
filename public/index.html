@@ -339,7 +339,7 @@
       </div>
       <div style="display:flex; gap:10px;">
         <button type="button" class="upload-btn" id="resume-btn" style="margin:0; flex:1;">Continue</button>
-        <button type="button" class="sel-btn" id="start-fresh-btn" style="margin:0;">Start fresh</button>
+        <button type="button" class="sel-btn" id="start-fresh-btn" style="margin:0;">Clear saved files</button>
       </div>
     </div>
     <form class="upload-form" id="upload-form">
@@ -350,9 +350,6 @@
       <button class="upload-btn" id="upload-go" type="submit">Load Snapshots</button>
       <div class="upload-status" id="upload-status"></div>
     </form>
-    <div id="clear-saved-wrap" style="display:none; margin-top: 18px; text-align: center;">
-      <a id="clear-saved-link" style="cursor:pointer; color: var(--ink-faint); font-size: 11px; text-transform: uppercase; letter-spacing: 0.14em; text-decoration: underline; text-underline-offset: 3px;" title="Clear saved files from this browser and start over">Clear saved files</a>
-    </div>
   </div>
 </div>
 
@@ -929,9 +926,6 @@ uploadForm.addEventListener('submit', async (e) => {
     $('resume-count').textContent = files.length;
     $('resume-plural').textContent = files.length === 1 ? '' : 's';
     panel.style.display = 'block';
-    const clearWrap = $('clear-saved-wrap');
-    if (clearWrap) clearWrap.style.display = 'block';
-
     $('resume-btn').addEventListener('click', () => {
       $('resume-btn').disabled = true;
       $('start-fresh-btn').disabled = true;
@@ -941,19 +935,12 @@ uploadForm.addEventListener('submit', async (e) => {
     $('start-fresh-btn').addEventListener('click', async () => {
       try { await clearDb(); } catch (e) { console.warn('Could not clear IDB', e); }
       panel.style.display = 'none';
-      if (clearWrap) clearWrap.style.display = 'none';
     });
   } catch (e) {
     console.warn('Could not check IndexedDB:', e);
   }
 })();
 
-// Explicit "Clear saved files" link in the app header
-$('clear-saved-link')?.addEventListener('click', () => {
-  if (confirm('Clear saved files from this browser? This wipes the IndexedDB cache and reloads the page.')) {
-    clearDbAndReload();
-  }
-});
 
 const uploadCard = document.querySelector('.upload-card');
 ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(name => {
