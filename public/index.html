@@ -333,6 +333,16 @@
     <div style="margin-bottom: 24px;">
       <button onclick="document.getElementById('pdf-modal-overlay').classList.add('open')" style="color: var(--amber); background: transparent; font-family: inherit; text-decoration: none; font-size: 11px; text-transform: uppercase; letter-spacing: 0.14em; border: 1px solid var(--line-2); padding: 10px; display: block; width: 100%; text-align: center; transition: all 0.15s; cursor: pointer;" onmouseover="this.style.borderColor='var(--amber)'" onmouseout="this.style.borderColor='var(--line-2)'">Instructions</button>
     </div>
+    <div id="resume-panel" style="display:none; margin-bottom: 20px; padding: 14px; border: 1px solid var(--line-2); background: rgba(255,179,71,0.04);">
+      <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.14em; color:var(--ink-dim); margin-bottom: 10px;">
+        Recent uploads &middot; <span id="resume-count">0</span> file<span id="resume-plural">s</span>
+      </div>
+      <div id="resume-files" style="font-size: 12px; color: var(--ink-faint); margin-bottom: 12px; max-height: 80px; overflow: auto; word-break: break-all; font-family: 'JetBrains Mono', ui-monospace, monospace; line-height: 1.5;"></div>
+      <div style="display:flex; gap:10px;">
+        <button type="button" class="upload-btn" id="resume-btn" style="margin:0; flex:1;">Resume</button>
+        <button type="button" class="sel-btn" id="start-fresh-btn" style="margin:0;">Start fresh</button>
+      </div>
+    </div>
     <form class="upload-form" id="upload-form">
       <div class="file-input-group">
         <label for="file-inputs">NDJSON Snapshots</label>
@@ -341,6 +351,9 @@
       <button class="upload-btn" id="upload-go" type="submit">Load Snapshots</button>
       <div class="upload-status" id="upload-status"></div>
     </form>
+    <div id="clear-saved-wrap" style="display:none; margin-top: 18px; text-align: center;">
+      <a id="clear-saved-link" style="cursor:pointer; color: var(--ink-faint); font-size: 11px; text-transform: uppercase; letter-spacing: 0.14em; text-decoration: underline; text-underline-offset: 3px;" title="Clear saved files from this browser and start over">Clear saved files</a>
+    </div>
   </div>
 </div>
 
@@ -746,15 +759,21 @@ function openDb() {
 }
 
 async function saveFilesToDb(files) {
+  // Read all file contents BEFORE opening the IDB transaction. Awaiting inside an
+  // open transaction can auto-commit it on some browsers and silently lose puts.
+  const records = await Promise.all([...files].map(async f => ({
+    name: f.name, content: await f.arrayBuffer()
+  })));
   const db = await openDb();
-  const tx = db.transaction(FILES_STORE, 'readwrite');
-  const store = tx.objectStore(FILES_STORE);
-  store.clear();
-  for (const file of files) {
-    const content = await file.arrayBuffer();
-    store.put({ name: file.name, content });
-  }
-  return new Promise((resolve, reject) => { tx.oncomplete = resolve; tx.onerror = e => reject(e.target.error); });
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(FILES_STORE, 'readwrite');
+    const store = tx.objectStore(FILES_STORE);
+    store.clear();
+    for (const r of records) store.put(r);
+    tx.oncomplete = () => resolve();
+    tx.onerror = e => reject(e.target.error);
+    tx.onabort = e => reject(e.target.error || new Error('IndexedDB transaction aborted'));
+  });
 }
 
 async function loadFilesFromDb() {
@@ -778,7 +797,10 @@ async function clearDbAndReload() {
   try { await clearDb(); } catch {}
   location.reload();
 }
-$('site-title')?.addEventListener('click', clearDbAndReload);
+// Clicking the site title now just reloads (preserving IDB) so the Recent uploads
+// panel reappears with your saved files. Use "Clear saved files" or "Start fresh"
+// to explicitly wipe the cache.
+$('site-title')?.addEventListener('click', () => { location.reload(); });
 
 // ====================== File Handling ======================
 
@@ -786,7 +808,12 @@ async function handleFiles(files, { persist = true } = {}) {
   if (!files.length) return;
   $('upload-go').disabled = true;
   if (persist) {
-    try { await saveFilesToDb([...files]); } catch (e) { console.warn('IndexedDB save failed:', e); }
+    try {
+      await saveFilesToDb([...files]);
+    } catch (e) {
+      console.warn('IndexedDB save failed:', e);
+      uploadStatus.textContent = 'Warning: files loaded but could not be saved for next time (' + (e?.message || e) + ')';
+    }
   }
   try {
     await processSnapshots(files);
@@ -802,18 +829,90 @@ uploadForm.addEventListener('submit', async (e) => {
   handleFiles(fileInputs.files);
 });
 
-// Auto-restore previous session from IndexedDB
+// Show Recent uploads / Start fresh prompt on load if a previous session exists in IndexedDB.
+// Each saved file is rendered as a checkable row so you can resume a subset.
 (async () => {
   try {
     const files = await loadFilesFromDb();
-    if (files.length) {
-      uploadStatus.textContent = 'Restoring previous session...';
-      await handleFiles(files, { persist: false });
-    }
+    if (!files.length) return;
+
+    const panel = $('resume-panel');
+    $('resume-count').textContent = files.length;
+    $('resume-plural').textContent = files.length === 1 ? '' : 's';
+
+    const fmtSize = (n) =>
+      n < 1024 ? `${n} B`
+      : n < 1024 * 1024 ? `${(n / 1024).toFixed(1)} KB`
+      : `${(n / (1024 * 1024)).toFixed(1)} MB`;
+
+    const headerRow = files.length > 1
+      ? `<label style="display:flex; gap:8px; align-items:center; padding:4px 0 6px; border-bottom:1px solid var(--line-2); margin-bottom:4px; cursor:pointer; font-size:10px; text-transform:uppercase; letter-spacing:0.14em; color:var(--ink-dim);">
+          <input type="checkbox" class="select-cb" id="resume-all-cb" checked>
+          <span style="flex:1;">All files</span>
+        </label>`
+      : '';
+
+    const fileRows = files.map((f, i) => `
+      <label class="resume-file-row" style="display:flex; gap:8px; align-items:center; padding:4px 0; cursor:pointer;">
+        <input type="checkbox" class="select-cb resume-file-cb" data-idx="${i}" checked>
+        <span style="flex:1; word-break:break-all; color:var(--ink);">${escapeHtml(f.name)}</span>
+        <span style="color:var(--ink-faint); flex-shrink:0; font-size:11px;">${fmtSize(f.size)}</span>
+      </label>
+    `).join('');
+
+    $('resume-files').innerHTML = headerRow + fileRows;
+    $('resume-files').style.maxHeight = '200px';
+    panel.style.display = 'block';
+    const clearWrap = $('clear-saved-wrap');
+    if (clearWrap) clearWrap.style.display = 'block';
+
+    const fileCbs = () => [...$('resume-files').querySelectorAll('.resume-file-cb')];
+    const updateResumeBtn = () => {
+      const n = fileCbs().filter(cb => cb.checked).length;
+      $('resume-btn').textContent = n === files.length ? 'Resume' : n === 0 ? 'Resume (select files)' : `Resume (${n})`;
+      $('resume-btn').disabled = n === 0;
+    };
+    updateResumeBtn();
+
+    $('resume-files').addEventListener('change', (e) => {
+      if (e.target.id === 'resume-all-cb') {
+        fileCbs().forEach(cb => { cb.checked = e.target.checked; });
+      } else if (e.target.classList.contains('resume-file-cb')) {
+        const allCb = $('resume-all-cb');
+        if (allCb) {
+          const cbs = fileCbs();
+          const allChecked = cbs.every(cb => cb.checked);
+          allCb.checked = allChecked;
+          allCb.indeterminate = !allChecked && cbs.some(cb => cb.checked);
+        }
+      }
+      updateResumeBtn();
+    });
+
+    $('resume-btn').addEventListener('click', () => {
+      const selected = fileCbs().filter(cb => cb.checked).map(cb => files[parseInt(cb.dataset.idx)]);
+      if (!selected.length) return;
+      $('resume-btn').disabled = true;
+      $('start-fresh-btn').disabled = true;
+      uploadStatus.textContent = `Restoring ${selected.length} file${selected.length === 1 ? '' : 's'}...`;
+      // persist:false so we don't overwrite the unselected files in the cache
+      handleFiles(selected, { persist: false });
+    });
+    $('start-fresh-btn').addEventListener('click', async () => {
+      try { await clearDb(); } catch (e) { console.warn('Could not clear IDB', e); }
+      panel.style.display = 'none';
+    });
   } catch (e) {
-    console.warn('Could not restore from IndexedDB:', e);
+    console.warn('Could not check IndexedDB:', e);
   }
 })();
+
+// Explicit "Clear saved files" link in the app header
+$('clear-saved-link')?.addEventListener('click', () => {
+  if (confirm('Clear saved files from this browser? This wipes the IndexedDB cache and reloads the page.')) {
+    clearDbAndReload();
+  }
+});
 
 const uploadCard = document.querySelector('.upload-card');
 ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(name => {
@@ -837,9 +936,11 @@ function showApp() {
   }
 }
 
+// Browser back button now reloads without wiping IDB, so the Recent uploads
+// panel still shows the saved files you can resume.
 window.addEventListener('popstate', e => {
   if (e.state?.view !== 'app') {
-    clearDbAndReload();
+    location.reload();
   }
 });
 
