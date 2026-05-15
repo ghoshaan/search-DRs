@@ -335,11 +335,10 @@
     </div>
     <div id="resume-panel" style="display:none; margin-bottom: 20px; padding: 14px; border: 1px solid var(--line-2); background: rgba(255,179,71,0.04);">
       <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.14em; color:var(--ink-dim); margin-bottom: 10px;">
-        Recent uploads &middot; <span id="resume-count">0</span> file<span id="resume-plural">s</span>
+        Recent uploads &middot; <span id="resume-count">0</span> snapshot<span id="resume-plural">s</span> cached
       </div>
-      <div id="resume-files" style="font-size: 12px; color: var(--ink-faint); margin-bottom: 12px; max-height: 80px; overflow: auto; word-break: break-all; font-family: 'JetBrains Mono', ui-monospace, monospace; line-height: 1.5;"></div>
       <div style="display:flex; gap:10px;">
-        <button type="button" class="upload-btn" id="resume-btn" style="margin:0; flex:1;">Resume</button>
+        <button type="button" class="upload-btn" id="resume-btn" style="margin:0; flex:1;">Continue</button>
         <button type="button" class="sel-btn" id="start-fresh-btn" style="margin:0;">Start fresh</button>
       </div>
     </div>
@@ -357,21 +356,28 @@
   </div>
 </div>
 
+<div class="upload-view" id="pick-view" style="display:none;">
+  <div class="upload-card" style="width: fit-content; max-width: 90vw; min-width: 340px;">
+    <img src="favicon.svg" alt="" style="position: absolute; top: 20px; left: 24px; width: 56px; height: 56px; opacity: 0.85;">
+    <h1 class="upload-title" style="margin-top: 52px;">lazy<em>detective</em></h1>
+    <div class="upload-sub">select snapshots to load</div>
+    <div id="pick-file-list" style="margin-bottom: 20px; font-size: 13px; display: flex; flex-direction: column; gap: 6px;"></div>
+    <button class="upload-btn" id="pick-load-btn">Load</button>
+    <div class="upload-status" id="pick-status"></div>
+    <button type="button" id="pick-back-btn" style="background: transparent; border: none; color: var(--ink-faint); font-family: inherit; font-size: 11px; text-transform: uppercase; letter-spacing: 0.14em; cursor: pointer; margin-top: 14px; padding: 0; display: block; width: 100%; text-align: center;">← Back</button>
+  </div>
+</div>
+
 <div class="app" id="app">
   <header>
     <h1 id="site-title" style="cursor:pointer;">lazy<em>detective</em></h1>
     <div class="meta">
       <span><b id="m-docs">—</b> recordings</span>
-      <select id="view-mode" class="version-badge" style="height: auto;">
-        <option value="compare">Comparison</option>
-        <option value="snapshot">Single Snapshot</option>
-      </select>
       <select id="sort-order" class="version-badge" style="height: auto;">
         <option value="diff" selected>Sort: % Change</option>
         <option value="key">Sort: Key</option>
       </select>
-      <select id="snapshot-select" class="version-badge" style="height: auto; display: none;">
-      </select>
+      <a class="meta-link" id="change-snapshots-btn" style="cursor:pointer;">Snapshots</a>
       <a class="meta-link" onclick="document.getElementById('pdf-modal-overlay').classList.add('open')" style="cursor:pointer;">Instructions</a>
     </div>
   </header>
@@ -411,18 +417,15 @@ const uploadView = $('upload-view');
 const uploadForm = $('upload-form');
 const uploadStatus = $('upload-status');
 const fileInputs = $('file-inputs');
+const pickView = $('pick-view');
 
 const app = $('app');
 const results = $('results');
 const statusL = $('status-l');
 const statusR = $('status-r');
-const viewMode = $('view-mode');
-const snapshotSelect = $('snapshot-select');
 
 let allDocs = [];
-let snapshots = []; 
-let activeViewMode = 'compare'; 
-let activeSnapshot = ''; 
+let snapshots = [];
 
 const SELECTION_KEY = 'atc-search-selection-v1';
 let selection = new Set();
@@ -535,6 +538,15 @@ function parseReview(workflowHistory) {
 function maxWorkflowDate(workflowHistory) {
   if (!Array.isArray(workflowHistory)) return null;
   return workflowHistory.map(e => e?.created_at).filter(Boolean).sort().slice(-1)[0] ?? null;
+}
+
+function computeSnapshotName(rows, file) {
+  const ts = new Date(file.lastModified).toISOString().slice(0, 19).replace('T', ' ') + 'Z';
+  const annotators = [...new Set(rows.map(r => r.annotator).filter(Boolean))];
+  const reviewers = [...new Set(rows.map(r => r.reviewedBy).filter(Boolean))];
+  if (annotators.length === 1) return `${annotators[0]} labeler ${ts}`;
+  if (reviewers.length === 1) return `${reviewers[0]} reviewer ${ts}`;
+  return `mixed snapshot ${ts}`;
 }
 
 function flatten(row, batchName, snapshotDate) {
@@ -678,9 +690,12 @@ async function processSnapshots(files) {
   const order = fileMaxDates.map((_, i) => i)
     .sort((a, b) => String(fileMaxDates[a]).localeCompare(String(fileMaxDates[b])));
 
+  const computedNames = fileList.map((file, origIdx) =>
+    computeSnapshotName(rawReads[origIdx], file)
+  );
   snapshots = order.map((origIdx, newIdx) => ({
     id: (newIdx + 1).toString().padStart(2, '0'),
-    name: fileList[origIdx].name
+    name: computedNames[origIdx]
   }));
 
   // Rebuild reads with corrected snapshotDates
@@ -729,18 +744,13 @@ async function processSnapshots(files) {
   allDocs.sort((a, b) => String(a.key || '').localeCompare(String(b.key || '')));
 
   showApp();
-  populateSnapshotSelect();
   loadComments();
   loadMajor();
   loadTlEdits();
   $('m-docs').textContent = allDocs.length.toLocaleString();
   statusL.textContent = `ready · ${allDocs.length.toLocaleString()} recordings`;
   rerun();
-}
-
-function populateSnapshotSelect() {
-  snapshotSelect.innerHTML = snapshots.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('');
-  if (snapshots.length > 0) activeSnapshot = snapshots[0].id;
+  return fileList.map((file, origIdx) => ({ file, name: computedNames[origIdx] }));
 }
 
 // ====================== IndexedDB ======================
@@ -762,7 +772,7 @@ async function saveFilesToDb(files) {
   // Read all file contents BEFORE opening the IDB transaction. Awaiting inside an
   // open transaction can auto-commit it on some browsers and silently lose puts.
   const records = await Promise.all([...files].map(async f => ({
-    name: f.name, content: await f.arrayBuffer()
+    name: f.name, content: await f.arrayBuffer(), lastModified: f.lastModified
   })));
   const db = await openDb();
   return new Promise((resolve, reject) => {
@@ -781,7 +791,7 @@ async function loadFilesFromDb() {
   const tx = db.transaction(FILES_STORE, 'readonly');
   return new Promise((resolve, reject) => {
     const req = tx.objectStore(FILES_STORE).getAll();
-    req.onsuccess = e => resolve(e.target.result.map(r => new File([r.content], r.name)));
+    req.onsuccess = e => resolve(e.target.result.map(r => new File([r.content], r.name, { lastModified: r.lastModified ?? Date.now() })));
     req.onerror = e => reject(e.target.error);
   });
 }
@@ -804,24 +814,83 @@ $('site-title')?.addEventListener('click', () => { location.reload(); });
 
 // ====================== File Handling ======================
 
-async function handleFiles(files, { persist = true } = {}) {
+async function handleFiles(files) {
   if (!files.length) return;
   $('upload-go').disabled = true;
-  if (persist) {
-    try {
-      await saveFilesToDb([...files]);
-    } catch (e) {
-      console.warn('IndexedDB save failed:', e);
-      uploadStatus.textContent = 'Warning: files loaded but could not be saved for next time (' + (e?.message || e) + ')';
-    }
-  }
+  uploadStatus.textContent = 'Reading files...';
   try {
-    await processSnapshots(files);
+    const fileList = [...files];
+    const rawReads = await Promise.all(fileList.map((file, idx) =>
+      readNDJSON(file, file.name, (idx + 1).toString().padStart(2, '0'))
+    ));
+    const namedFiles = fileList.map((file, i) => ({ file, name: computeSnapshotName(rawReads[i], file) }));
+    uploadStatus.textContent = '';
+    $('upload-go').disabled = false;
+    showPickView(namedFiles);
   } catch (err) {
     console.error(err);
-    uploadStatus.textContent = 'Error processing files: ' + err.message;
+    uploadStatus.textContent = 'Error reading files: ' + err.message;
     $('upload-go').disabled = false;
   }
+}
+
+function showPickView(namedFiles, { fromViewer = false } = {}) {
+  uploadView.style.display = 'none';
+  app.classList.remove('unlocked');
+  pickView.style.display = 'flex';
+  const list = $('pick-file-list');
+  list.innerHTML = namedFiles.map((nf, i) => `
+    <label style="display:flex; gap:10px; align-items:center; cursor:pointer; padding: 8px 10px; border: 1px solid var(--line-2); transition: border-color 0.12s;" onmouseover="this.style.borderColor='var(--amber)'" onmouseout="this.style.borderColor='var(--line-2)'">
+      <input type="checkbox" class="pick-cb" data-idx="${i}" checked style="accent-color: var(--amber); width:14px; height:14px; flex-shrink:0;">
+      <span style="font-size:12px; font-family:'JetBrains Mono',ui-monospace,monospace; color:var(--ink); word-break:break-all;">${escapeHtml(nf.name)}</span>
+    </label>
+  `).join('');
+
+  const loadBtn = $('pick-load-btn');
+  loadBtn.disabled = false;
+  loadBtn.textContent = 'Load';
+  const pickStatus = $('pick-status');
+  pickStatus.textContent = '';
+
+  const updateBtn = () => {
+    const n = [...list.querySelectorAll('.pick-cb')].filter(cb => cb.checked).length;
+    loadBtn.disabled = n === 0;
+    loadBtn.textContent = n === namedFiles.length ? 'Load' : n === 0 ? 'Load (select files)' : `Load (${n})`;
+  };
+  list.addEventListener('change', updateBtn);
+  updateBtn();
+
+  loadBtn.onclick = async () => {
+    const cbs = [...list.querySelectorAll('.pick-cb')];
+    const selected = cbs.filter(cb => cb.checked).map(cb => namedFiles[parseInt(cb.dataset.idx)]);
+    if (!selected.length) return;
+    loadBtn.disabled = true;
+    pickStatus.textContent = 'Loading...';
+    try {
+      // Save ALL files to IDB so the full library is preserved for future picks
+      const allRenamed = await Promise.all(namedFiles.map(async ({ file, name }) =>
+        new File([await file.arrayBuffer()], name, { lastModified: file.lastModified })
+      ));
+      await saveFilesToDb(allRenamed).catch(e => console.warn('IndexedDB save failed:', e));
+      // Process only the selected subset
+      const selectedRenamed = cbs.filter(cb => cb.checked).map(cb => allRenamed[parseInt(cb.dataset.idx)]);
+      await processSnapshots(selectedRenamed);
+    } catch (err) {
+      console.error(err);
+      pickStatus.textContent = 'Error: ' + err.message;
+      loadBtn.disabled = false;
+    }
+  };
+
+  $('pick-back-btn').onclick = () => {
+    pickView.style.display = 'none';
+    if (fromViewer) {
+      app.classList.add('unlocked');
+    } else {
+      uploadView.style.display = 'flex';
+      $('upload-go').disabled = false;
+    }
+  };
 }
 
 uploadForm.addEventListener('submit', async (e) => {
@@ -829,8 +898,7 @@ uploadForm.addEventListener('submit', async (e) => {
   handleFiles(fileInputs.files);
 });
 
-// Show Recent uploads / Start fresh prompt on load if a previous session exists in IndexedDB.
-// Each saved file is rendered as a checkable row so you can resume a subset.
+// On load, check IndexedDB for cached files and show resume panel.
 (async () => {
   try {
     const files = await loadFilesFromDb();
@@ -839,68 +907,20 @@ uploadForm.addEventListener('submit', async (e) => {
     const panel = $('resume-panel');
     $('resume-count').textContent = files.length;
     $('resume-plural').textContent = files.length === 1 ? '' : 's';
-
-    const fmtSize = (n) =>
-      n < 1024 ? `${n} B`
-      : n < 1024 * 1024 ? `${(n / 1024).toFixed(1)} KB`
-      : `${(n / (1024 * 1024)).toFixed(1)} MB`;
-
-    const headerRow = files.length > 1
-      ? `<label style="display:flex; gap:8px; align-items:center; padding:4px 0 6px; border-bottom:1px solid var(--line-2); margin-bottom:4px; cursor:pointer; font-size:10px; text-transform:uppercase; letter-spacing:0.14em; color:var(--ink-dim);">
-          <input type="checkbox" class="select-cb" id="resume-all-cb" checked>
-          <span style="flex:1;">All files</span>
-        </label>`
-      : '';
-
-    const fileRows = files.map((f, i) => `
-      <label class="resume-file-row" style="display:flex; gap:8px; align-items:center; padding:4px 0; cursor:pointer;">
-        <input type="checkbox" class="select-cb resume-file-cb" data-idx="${i}" checked>
-        <span style="flex:1; word-break:break-all; color:var(--ink);">${escapeHtml(f.name)}</span>
-        <span style="color:var(--ink-faint); flex-shrink:0; font-size:11px;">${fmtSize(f.size)}</span>
-      </label>
-    `).join('');
-
-    $('resume-files').innerHTML = headerRow + fileRows;
-    $('resume-files').style.maxHeight = '200px';
     panel.style.display = 'block';
     const clearWrap = $('clear-saved-wrap');
     if (clearWrap) clearWrap.style.display = 'block';
 
-    const fileCbs = () => [...$('resume-files').querySelectorAll('.resume-file-cb')];
-    const updateResumeBtn = () => {
-      const n = fileCbs().filter(cb => cb.checked).length;
-      $('resume-btn').textContent = n === files.length ? 'Resume' : n === 0 ? 'Resume (select files)' : `Resume (${n})`;
-      $('resume-btn').disabled = n === 0;
-    };
-    updateResumeBtn();
-
-    $('resume-files').addEventListener('change', (e) => {
-      if (e.target.id === 'resume-all-cb') {
-        fileCbs().forEach(cb => { cb.checked = e.target.checked; });
-      } else if (e.target.classList.contains('resume-file-cb')) {
-        const allCb = $('resume-all-cb');
-        if (allCb) {
-          const cbs = fileCbs();
-          const allChecked = cbs.every(cb => cb.checked);
-          allCb.checked = allChecked;
-          allCb.indeterminate = !allChecked && cbs.some(cb => cb.checked);
-        }
-      }
-      updateResumeBtn();
-    });
-
     $('resume-btn').addEventListener('click', () => {
-      const selected = fileCbs().filter(cb => cb.checked).map(cb => files[parseInt(cb.dataset.idx)]);
-      if (!selected.length) return;
       $('resume-btn').disabled = true;
       $('start-fresh-btn').disabled = true;
-      uploadStatus.textContent = `Restoring ${selected.length} file${selected.length === 1 ? '' : 's'}...`;
-      // persist:false so we don't overwrite the unselected files in the cache
-      handleFiles(selected, { persist: false });
+      const namedFiles = files.map(f => ({ file: f, name: f.name }));
+      showPickView(namedFiles);
     });
     $('start-fresh-btn').addEventListener('click', async () => {
       try { await clearDb(); } catch (e) { console.warn('Could not clear IDB', e); }
       panel.style.display = 'none';
+      if (clearWrap) clearWrap.style.display = 'none';
     });
   } catch (e) {
     console.warn('Could not check IndexedDB:', e);
@@ -930,11 +950,27 @@ uploadView.addEventListener('drop', e => {
 
 function showApp() {
   uploadView.style.display = 'none';
+  pickView.style.display = 'none';
   app.classList.add('unlocked');
   if (history.state?.view !== 'app') {
     history.pushState({ view: 'app' }, '');
   }
 }
+
+async function switchSnapshots() {
+  try {
+    const files = await loadFilesFromDb();
+    if (!files.length) { location.reload(); return; }
+    app.classList.remove('unlocked');
+    const namedFiles = files.map(f => ({ file: f, name: f.name }));
+    showPickView(namedFiles, { fromViewer: true });
+  } catch (e) {
+    console.warn('Could not load from IDB:', e);
+    location.reload();
+  }
+}
+
+$('change-snapshots-btn').addEventListener('click', switchSnapshots);
 
 // Browser back button now reloads without wiping IDB, so the Recent uploads
 // panel still shows the saved files you can resume.
@@ -944,27 +980,11 @@ window.addEventListener('popstate', e => {
   }
 });
 
-viewMode.addEventListener('change', () => {
-  activeViewMode = viewMode.value;
-  snapshotSelect.style.display = activeViewMode === 'snapshot' ? 'inline-block' : 'none';
-  rerun();
-});
-
-snapshotSelect.addEventListener('change', () => {
-  activeSnapshot = snapshotSelect.value;
-  rerun();
-});
-
 $('sort-order').addEventListener('change', rerun);
 
 function rerun() {
   currentPage = 1;
-  filteredDocs = allDocs.filter(d => {
-    if (activeViewMode === 'snapshot') {
-      return d.snapshotStates.has(activeSnapshot);
-    }
-    return true;
-  });
+  filteredDocs = [...allDocs];
 
   const sort = $('sort-order').value;
   if (sort === 'diff') {
@@ -1023,12 +1043,8 @@ function renderPagination(totalPages) {
 }
 
 function renderDoc(d) {
-  let displayDoc = d;
-  let showHistory = activeViewMode === 'compare';
-
-  if (activeViewMode === 'snapshot') {
-    displayDoc = d.snapshotStates.get(activeSnapshot);
-  }
+  const displayDoc = d;
+  const showHistory = snapshots.length > 1;
 
   const audioUrl = d.audioUrl || displayDoc.audioUrl;
   const audioEl = audioUrl 
