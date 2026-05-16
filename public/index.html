@@ -503,6 +503,11 @@ let allDocs = [];
 let snapshots = [];
 
 const SELECTION_KEY = 'atc-search-selection-v1';
+
+const GH_OWNER = 'ghoshaan';
+const GH_REPO = 'lazy-detective';
+const GH_BRANCH = 'main';
+const GH_TOKEN_KEY = 'lazy-detective-gh-token';
 let selection = new Set();
 const MAJOR_KEY = 'atc-search-major-v1';
 let majorSet = new Set();
@@ -2152,11 +2157,6 @@ document.getElementById('pdf-modal-overlay').addEventListener('click', e => {
 });
 
 // ====================== GitHub Share ======================
-
-const GH_OWNER = 'ghoshaan';
-const GH_REPO = 'lazy-detective';
-const GH_BRANCH = 'main';
-const GH_TOKEN_KEY = 'lazy-detective-gh-token';
 
 function getGhToken() { return localStorage.getItem(GH_TOKEN_KEY) || null; }
 function setGhToken(t) { localStorage.setItem(GH_TOKEN_KEY, t.trim()); }
