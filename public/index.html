@@ -2026,32 +2026,40 @@ async function loadHtml2Pdf() {
 
 async function generatePdfBlob(htmlString, title) {
   const lib = await loadHtml2Pdf();
-  return new Promise((resolve, reject) => {
-    const iframe = document.createElement('iframe');
-    iframe.style.cssText = 'position:fixed;left:-9999px;top:0;width:1400px;height:1000px;border:0;visibility:hidden;';
-    document.body.appendChild(iframe);
-    const cleanup = () => { try { document.body.removeChild(iframe); } catch {} };
 
-    iframe.addEventListener('load', async () => {
-      try {
-        const body = iframe.contentDocument.body;
-        const opt = {
-          margin: [0.45, 0.45, 0.45, 0.45],
-          filename: `${title}.pdf`,
-          html2canvas: { scale: 1.5, useCORS: true, logging: false, windowWidth: 1400 },
-          jsPDF: { unit: 'in', format: 'letter', orientation: 'landscape' },
-          pagebreak: { mode: ['css', 'legacy'] },
-        };
-        const blob = await lib().set(opt).from(body).output('blob');
-        cleanup();
-        resolve(blob);
-      } catch (e) { cleanup(); reject(e); }
-    }, { once: true });
+  // Parse the export HTML and render in the main document so html2canvas
+  // has the correct style context (iframe bodies lose their stylesheet).
+  const parsed = new DOMParser().parseFromString(htmlString, 'text/html');
 
-    iframe.contentDocument.open();
-    iframe.contentDocument.write(htmlString);
-    iframe.contentDocument.close();
-  });
+  // Inject export CSS into main doc, minus @page and body rules to avoid flicker.
+  const rawCss = Array.from(parsed.head.querySelectorAll('style'))
+    .map(s => s.textContent).join('\n')
+    .replace(/@page\s*\{[^}]*\}/g, '')
+    .replace(/(?:html\s*,\s*)?body\s*\{[^}]*\}/g, '');
+  const tmpStyle = document.createElement('style');
+  tmpStyle.textContent = rawCss;
+  document.head.appendChild(tmpStyle);
+
+  const container = document.createElement('div');
+  container.className = 'export-body';
+  container.style.cssText = 'position:fixed;left:-9999px;top:0;width:1400px;background:#fff;color:#111;font-size:10pt;line-height:1.4;';
+  Array.from(parsed.body.childNodes).forEach(n => container.appendChild(document.adoptNode(n)));
+  document.body.appendChild(container);
+
+  const opt = {
+    margin: [0.45, 0.45, 0.45, 0.45],
+    filename: `${title}.pdf`,
+    html2canvas: { scale: 1.5, useCORS: true, logging: false, windowWidth: 1400 },
+    jsPDF: { unit: 'in', format: [11, 8.5] },
+    pagebreak: { mode: ['css', 'legacy'] },
+  };
+
+  try {
+    return await lib().set(opt).from(container).output('blob');
+  } finally {
+    try { document.body.removeChild(container); } catch {}
+    try { document.head.removeChild(tmpStyle); } catch {}
+  }
 }
 
 async function uploadPdfToDrive(blob, filename) {
