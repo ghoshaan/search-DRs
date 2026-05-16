@@ -180,6 +180,16 @@
   .empty { padding: 80px 32px; text-align: center; color: var(--ink-faint); }
   .empty .glyph { font-family: 'Fraunces', serif; font-size: 65px; font-style: italic; color: var(--line-2); margin-bottom: 12px; }
 
+  /* Filter bar */
+  .filter-bar { padding: 12px 32px; border-bottom: 1px solid var(--line); display: flex; gap: 12px; flex-wrap: wrap; }
+  .filter-group { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 180px; }
+  .filter-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.14em; color: var(--ink-faint); }
+  .filter-input { background: var(--bg); border: 1px solid var(--line-2); color: var(--ink); font-family: inherit; font-size: 13px; padding: 7px 10px; outline: none; width: 100%; transition: border-color 0.15s; }
+  .filter-input:focus { border-color: var(--amber); }
+  .filter-input::placeholder { color: var(--ink-faint); }
+  .filter-clear { background: transparent; border: 1px solid var(--line-2); color: var(--ink-faint); font-family: inherit; font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; padding: 7px 14px; cursor: pointer; transition: all 0.15s; align-self: flex-end; white-space: nowrap; }
+  .filter-clear:hover { color: var(--amber); border-color: rgba(255,179,71,0.4); }
+
   /* Selection */
   .result-key-wrap { display: flex; gap: 10px; align-items: center; flex: 1; min-width: 0; }
   .result-key-wrap .result-key { flex: 1; min-width: 0; }
@@ -329,13 +339,13 @@
   <div class="upload-card">
     <img src="favicon.svg" alt="" style="position: absolute; top: 20px; left: 24px; width: 56px; height: 56px; opacity: 0.85;">
     <h1 class="upload-title" style="margin-top: 52px;">lazy<em>detective</em></h1>
-    <div class="upload-sub">upload one or more snapshots to view</div>
+    <div class="upload-sub">upload one or more data files to view</div>
     <div style="margin-bottom: 24px;">
       <button onclick="document.getElementById('pdf-modal-overlay').classList.add('open')" style="color: var(--amber); background: transparent; font-family: inherit; text-decoration: none; font-size: 11px; text-transform: uppercase; letter-spacing: 0.14em; border: 1px solid var(--line-2); padding: 10px; display: block; width: 100%; text-align: center; transition: all 0.15s; cursor: pointer;" onmouseover="this.style.borderColor='var(--amber)'" onmouseout="this.style.borderColor='var(--line-2)'">Instructions</button>
     </div>
     <div id="resume-panel" style="display:none; margin-bottom: 20px; padding: 14px; border: 1px solid var(--line-2); background: rgba(255,179,71,0.04);">
       <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.14em; color:var(--ink-dim); margin-bottom: 10px;">
-        Recent uploads &middot; <span id="resume-count">0</span> snapshot<span id="resume-plural">s</span> cached
+        Recent uploads &middot; <span id="resume-count">0</span> file<span id="resume-plural">s</span> cached
       </div>
       <div style="display:flex; gap:10px;">
         <button type="button" class="upload-btn" id="resume-btn" style="margin:0; flex:1;">Continue</button>
@@ -344,7 +354,7 @@
     </div>
     <form class="upload-form" id="upload-form">
       <div class="file-input-group">
-        <label for="file-inputs">NDJSON Snapshots</label>
+        <label for="file-inputs">NDJSON Data Files</label>
         <input type="file" id="file-inputs" accept=".ndjson" multiple required>
       </div>
       <button class="upload-btn" id="upload-go" type="submit">Load Snapshots</button>
@@ -353,17 +363,6 @@
   </div>
 </div>
 
-<div class="upload-view" id="pick-view" style="display:none;">
-  <div class="upload-card" style="width: fit-content; max-width: 90vw; min-width: 340px;">
-    <img src="favicon.svg" alt="" style="position: absolute; top: 20px; left: 24px; width: 56px; height: 56px; opacity: 0.85;">
-    <h1 class="upload-title" style="margin-top: 52px;">lazy<em>detective</em></h1>
-    <div class="upload-sub">view selected snapshots</div>
-    <div id="pick-file-list" style="margin-bottom: 20px; font-size: 13px; display: flex; flex-direction: column; gap: 6px;"></div>
-    <button class="upload-btn" id="pick-load-btn">Load</button>
-    <div class="upload-status" id="pick-status"></div>
-    <button type="button" id="pick-back-btn" style="background: transparent; border: none; color: var(--ink-faint); font-family: inherit; font-size: 11px; text-transform: uppercase; letter-spacing: 0.14em; cursor: pointer; margin-top: 14px; padding: 0; display: block; width: 100%; text-align: center;">← Back</button>
-  </div>
-</div>
 
 <div class="app" id="app">
   <header>
@@ -374,13 +373,26 @@
         <option value="diff" selected>Sort: % Change</option>
         <option value="key">Sort: Key</option>
       </select>
-      <a class="meta-link" id="change-snapshots-btn" style="cursor:pointer;">Snapshots</a>
+      <a class="meta-link" id="change-snapshots-btn" style="cursor:pointer;">Upload data</a>
       <a class="meta-link" onclick="document.getElementById('pdf-modal-overlay').classList.add('open')" style="cursor:pointer;">Instructions</a>
     </div>
   </header>
 
   <div id="view-main">
-    <div style="padding: 0 32px 24px;">
+    <div class="filter-bar">
+      <div class="filter-group">
+        <label class="filter-label" for="filter-labeler">Labeler</label>
+        <input class="filter-input" id="filter-labeler" list="labeler-list" placeholder="Filter by labeler…" autocomplete="off">
+        <datalist id="labeler-list"></datalist>
+      </div>
+      <div class="filter-group">
+        <label class="filter-label" for="filter-reviewer">Reviewer</label>
+        <input class="filter-input" id="filter-reviewer" list="reviewer-list" placeholder="Filter by reviewer…" autocomplete="off">
+        <datalist id="reviewer-list"></datalist>
+      </div>
+      <button class="filter-clear" id="filter-clear-btn">Clear filters</button>
+    </div>
+    <div style="padding: 16px 32px 24px;">
       <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--ink-faint); margin-bottom: 8px;">General Comments</div>
       <textarea id="general-comment" class="comment-input" style="min-height: 80px;" placeholder="Enter general comments for the export..."></textarea>
       <div class="comment-images" id="general-comment-images"></div>
@@ -414,7 +426,6 @@ const uploadView = $('upload-view');
 const uploadForm = $('upload-form');
 const uploadStatus = $('upload-status');
 const fileInputs = $('file-inputs');
-const pickView = $('pick-view');
 
 const app = $('app');
 const results = $('results');
@@ -744,6 +755,7 @@ async function processSnapshots(files) {
   loadComments();
   loadMajor();
   loadTlEdits();
+  populateFilterSuggestions();
   $('m-docs').textContent = allDocs.length.toLocaleString();
   statusL.textContent = `ready · ${allDocs.length.toLocaleString()} recordings`;
   rerun();
@@ -820,95 +832,19 @@ async function handleFiles(files) {
     const rawReads = await Promise.all(fileList.map((file, idx) =>
       readNDJSON(file, file.name, (idx + 1).toString().padStart(2, '0'))
     ));
-    const namedFiles = fileList.map((file, i) => ({ file, name: computeSnapshotName(rawReads[i], file) }));
+    const renamedFiles = await Promise.all(fileList.map(async (file, i) => {
+      const name = computeSnapshotName(rawReads[i], file);
+      return new File([await file.arrayBuffer()], name, { lastModified: file.lastModified });
+    }));
+    await saveFilesToDb(renamedFiles).catch(e => console.warn('IndexedDB save failed:', e));
     uploadStatus.textContent = '';
     $('upload-go').disabled = false;
-    showPickView(namedFiles);
+    await processSnapshots(renamedFiles);
   } catch (err) {
     console.error(err);
     uploadStatus.textContent = 'Error reading files: ' + err.message;
     $('upload-go').disabled = false;
   }
-}
-
-function showPickView(namedFiles, { fromViewer = false } = {}) {
-  uploadView.style.display = 'none';
-  app.classList.remove('unlocked');
-  pickView.style.display = 'flex';
-  const list = $('pick-file-list');
-  const allRow = namedFiles.length > 1
-    ? `<label style="display:flex; gap:10px; align-items:center; cursor:pointer; padding: 8px 10px; border: 1px solid var(--line-2); border-bottom: 1px solid var(--line-2); margin-bottom: 2px;" onmouseover="this.style.borderColor='var(--amber)'" onmouseout="this.style.borderColor='var(--line-2)'">
-        <input type="checkbox" id="pick-all-cb" checked style="accent-color: var(--amber); width:14px; height:14px; flex-shrink:0;">
-        <span style="font-size:11px; text-transform:uppercase; letter-spacing:0.12em; color:var(--ink-dim);">All</span>
-      </label>`
-    : '';
-  list.innerHTML = allRow + namedFiles.map((nf, i) => `
-    <label style="display:flex; gap:10px; align-items:center; cursor:pointer; padding: 8px 10px; border: 1px solid var(--line-2); transition: border-color 0.12s;" onmouseover="this.style.borderColor='var(--amber)'" onmouseout="this.style.borderColor='var(--line-2)'">
-      <input type="checkbox" class="pick-cb" data-idx="${i}" checked style="accent-color: var(--amber); width:14px; height:14px; flex-shrink:0;">
-      <span style="font-size:12px; font-family:'JetBrains Mono',ui-monospace,monospace; color:var(--ink); word-break:break-all;">${escapeHtml(nf.name)}</span>
-    </label>
-  `).join('');
-
-  const loadBtn = $('pick-load-btn');
-  loadBtn.disabled = false;
-  loadBtn.textContent = 'Load';
-  const pickStatus = $('pick-status');
-  pickStatus.textContent = '';
-
-  const getCbs = () => [...list.querySelectorAll('.pick-cb')];
-  const allCb = list.querySelector('#pick-all-cb');
-
-  const updateBtn = () => {
-    const cbs = getCbs();
-    const n = cbs.filter(cb => cb.checked).length;
-    loadBtn.disabled = n === 0;
-    loadBtn.textContent = n === namedFiles.length ? 'Load' : n === 0 ? 'Load (select files)' : `Load (${n})`;
-    if (allCb) {
-      allCb.checked = n === cbs.length;
-      allCb.indeterminate = n > 0 && n < cbs.length;
-    }
-  };
-
-  if (allCb) {
-    allCb.addEventListener('change', () => {
-      getCbs().forEach(cb => { cb.checked = allCb.checked; });
-      updateBtn();
-    });
-  }
-  list.addEventListener('change', e => { if (e.target !== allCb) updateBtn(); });
-  updateBtn();
-
-  loadBtn.onclick = async () => {
-    const cbs = [...list.querySelectorAll('.pick-cb')];
-    const selected = cbs.filter(cb => cb.checked).map(cb => namedFiles[parseInt(cb.dataset.idx)]);
-    if (!selected.length) return;
-    loadBtn.disabled = true;
-    pickStatus.textContent = 'Loading...';
-    try {
-      // Save ALL files to IDB so the full library is preserved for future picks
-      const allRenamed = await Promise.all(namedFiles.map(async ({ file, name }) =>
-        new File([await file.arrayBuffer()], name, { lastModified: file.lastModified })
-      ));
-      await saveFilesToDb(allRenamed).catch(e => console.warn('IndexedDB save failed:', e));
-      // Process only the selected subset
-      const selectedRenamed = cbs.filter(cb => cb.checked).map(cb => allRenamed[parseInt(cb.dataset.idx)]);
-      await processSnapshots(selectedRenamed);
-    } catch (err) {
-      console.error(err);
-      pickStatus.textContent = 'Error: ' + err.message;
-      loadBtn.disabled = false;
-    }
-  };
-
-  $('pick-back-btn').onclick = () => {
-    pickView.style.display = 'none';
-    if (fromViewer) {
-      app.classList.add('unlocked');
-    } else {
-      uploadView.style.display = 'flex';
-      $('upload-go').disabled = false;
-    }
-  };
 }
 
 uploadForm.addEventListener('submit', async (e) => {
@@ -926,11 +862,17 @@ uploadForm.addEventListener('submit', async (e) => {
     $('resume-count').textContent = files.length;
     $('resume-plural').textContent = files.length === 1 ? '' : 's';
     panel.style.display = 'block';
-    $('resume-btn').addEventListener('click', () => {
+    $('resume-btn').addEventListener('click', async () => {
       $('resume-btn').disabled = true;
       $('start-fresh-btn').disabled = true;
-      const namedFiles = files.map(f => ({ file: f, name: f.name }));
-      showPickView(namedFiles);
+      uploadStatus.textContent = 'Loading...';
+      try {
+        await processSnapshots(files);
+      } catch (err) {
+        console.error(err);
+        uploadStatus.textContent = 'Error: ' + err.message;
+        $('resume-btn').disabled = false;
+      }
     });
     $('start-fresh-btn').addEventListener('click', async () => {
       try { await clearDb(); } catch (e) { console.warn('Could not clear IDB', e); }
@@ -958,27 +900,13 @@ uploadView.addEventListener('drop', e => {
 
 function showApp() {
   uploadView.style.display = 'none';
-  pickView.style.display = 'none';
   app.classList.add('unlocked');
   if (history.state?.view !== 'app') {
     history.pushState({ view: 'app' }, '');
   }
 }
 
-async function switchSnapshots() {
-  try {
-    const files = await loadFilesFromDb();
-    if (!files.length) { location.reload(); return; }
-    app.classList.remove('unlocked');
-    const namedFiles = files.map(f => ({ file: f, name: f.name }));
-    showPickView(namedFiles, { fromViewer: true });
-  } catch (e) {
-    console.warn('Could not load from IDB:', e);
-    location.reload();
-  }
-}
-
-$('change-snapshots-btn').addEventListener('click', switchSnapshots);
+$('change-snapshots-btn').addEventListener('click', () => location.reload());
 
 // Browser back button now reloads without wiping IDB, so the Recent uploads
 // panel still shows the saved files you can resume.
@@ -989,10 +917,32 @@ window.addEventListener('popstate', e => {
 });
 
 $('sort-order').addEventListener('change', rerun);
+$('filter-labeler').addEventListener('input', rerun);
+$('filter-reviewer').addEventListener('input', rerun);
+$('filter-clear-btn').addEventListener('click', () => {
+  $('filter-labeler').value = '';
+  $('filter-reviewer').value = '';
+  rerun();
+});
+
+function populateFilterSuggestions() {
+  const labelers = [...new Set(allDocs.map(d => d.annotator).filter(Boolean))].sort();
+  const reviewers = [...new Set(allDocs.map(d => d.reviewedBy).filter(Boolean))].sort();
+  $('labeler-list').innerHTML = labelers.map(v => `<option value="${escapeAttr(v)}">`).join('');
+  $('reviewer-list').innerHTML = reviewers.map(v => `<option value="${escapeAttr(v)}">`).join('');
+}
 
 function rerun() {
   currentPage = 1;
-  filteredDocs = [...allDocs];
+
+  const labelerFilter = ($('filter-labeler').value || '').trim().toLowerCase();
+  const reviewerFilter = ($('filter-reviewer').value || '').trim().toLowerCase();
+
+  filteredDocs = allDocs.filter(d => {
+    if (labelerFilter && !(d.annotator || '').toLowerCase().includes(labelerFilter)) return false;
+    if (reviewerFilter && !(d.reviewedBy || '').toLowerCase().includes(reviewerFilter)) return false;
+    return true;
+  });
 
   const sort = $('sort-order').value;
   if (sort === 'diff') {
