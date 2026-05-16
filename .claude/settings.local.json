@@ -39,7 +39,12 @@
       "Bash(git commit *)",
       "Bash(git stash *)",
       "Bash(gh api *)",
-      "Bash(git pull *)"
+      "Bash(git pull *)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\ghosh\\\\Desktop\\\\atc-search\" -Recurse -Directory -Exclude node_modules)",
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(Sort-Object)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\ghosh\\\\Desktop\\\\atc-search\" -Force)",
+      "Bash(Select-Object Name, FullName, PSIsContainer)"
     ]
   }
 }

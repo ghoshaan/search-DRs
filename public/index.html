@@ -355,6 +355,18 @@
   .export-comment { background: #fdfaf5; border-left: 2pt solid #ffb347; padding: 5pt 9pt; margin-top: 6pt; font-size: 9.5pt; color: #333; }
   .export-comment-imgs { display: flex; flex-wrap: wrap; gap: 8pt; margin-top: 7pt; }
   .export-comment-img { max-width: 100%; height: auto; border: 1px solid #ccc; max-height: 3in; object-fit: contain; }
+
+  /* Drive upload toast */
+  .drive-toast {
+    position: fixed; bottom: 72px; right: 20px; z-index: 25;
+    background: var(--panel); border: 1px solid var(--line-2);
+    padding: 9px 14px; font-size: 12px; color: var(--ink-dim);
+    opacity: 0; pointer-events: none; transition: opacity 0.25s;
+    max-width: 320px; line-height: 1.4;
+  }
+  .drive-toast.visible { opacity: 1; pointer-events: auto; }
+  .drive-toast a { color: var(--amber); text-decoration: none; }
+  .drive-toast a:hover { text-decoration: underline; }
 </style>
 </head>
 <body>
@@ -482,6 +494,7 @@
         <button class="sel-btn primary" id="sel-export">export pdf</button>
       </div>
     </div>
+    <div id="drive-toast" class="drive-toast"></div>
 
     <footer>built for atc · client-side processing · <a onclick="document.getElementById('pdf-modal-overlay').classList.add('open')" style="color: inherit; text-decoration: none; cursor: pointer;">instructions</a> · no tracking</footer>
 </div>
@@ -508,6 +521,10 @@ const GH_OWNER = 'ghoshaan';
 const GH_REPO = 'lazy-detective';
 const GH_BRANCH = 'main';
 const GH_TOKEN_KEY = 'lazy-detective-gh-token';
+
+// Set to your deployed Cloudflare Worker URL to enable auto-save to Drive.
+// Leave empty to fall back to the browser print dialog.
+const DRIVE_WORKER_URL = 'https://atc-pdf-drive.ghoshaan.workers.dev';
 let selection = new Set();
 const MAJOR_KEY = 'atc-search-major-v1';
 let majorSet = new Set();
@@ -1970,25 +1987,94 @@ $('sel-clear').addEventListener('click', () => {
   document.querySelectorAll('.select-cb').forEach(cb => cb.checked = false);
 });
 
-$('sel-export').addEventListener('click', exportPdf);
+$('sel-export').addEventListener('click', () => exportPdf().catch(err => {
+  console.error('exportPdf error:', err);
+  showDriveToast(`Export error: ${err.message}`, 5000);
+}));
 
-function exportPdf() {
+// ---- Drive / PDF helpers ----
+
+let driveToastTimer = null;
+
+function showDriveToast(html, autoHideMs = 0) {
+  const el = $('drive-toast');
+  el.innerHTML = html;
+  el.classList.add('visible');
+  clearTimeout(driveToastTimer);
+  if (autoHideMs) driveToastTimer = setTimeout(() => el.classList.remove('visible'), autoHideMs);
+}
+
+function hideDriveToast() {
+  clearTimeout(driveToastTimer);
+  $('drive-toast').classList.remove('visible');
+}
+
+let _html2pdfLib = null;
+async function loadHtml2Pdf() {
+  if (_html2pdfLib) return _html2pdfLib;
+  if (typeof html2pdf !== 'undefined') { _html2pdfLib = html2pdf; return _html2pdfLib; }
+  await new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+    s.onload = resolve;
+    s.onerror = reject;
+    document.head.appendChild(s);
+  });
+  _html2pdfLib = html2pdf;
+  return _html2pdfLib;
+}
+
+async function generatePdfBlob(htmlString, title) {
+  const lib = await loadHtml2Pdf();
+  return new Promise((resolve, reject) => {
+    const iframe = document.createElement('iframe');
+    iframe.style.cssText = 'position:fixed;left:-9999px;top:0;width:1400px;height:1000px;border:0;visibility:hidden;';
+    document.body.appendChild(iframe);
+    const cleanup = () => { try { document.body.removeChild(iframe); } catch {} };
+
+    iframe.addEventListener('load', async () => {
+      try {
+        const body = iframe.contentDocument.body;
+        const opt = {
+          margin: [0.45, 0.45, 0.45, 0.45],
+          filename: `${title}.pdf`,
+          html2canvas: { scale: 1.5, useCORS: true, logging: false, windowWidth: 1400 },
+          jsPDF: { unit: 'in', format: 'letter', orientation: 'landscape' },
+          pagebreak: { mode: ['css', 'legacy'] },
+        };
+        const blob = await lib().set(opt).from(body).output('blob');
+        cleanup();
+        resolve(blob);
+      } catch (e) { cleanup(); reject(e); }
+    }, { once: true });
+
+    iframe.contentDocument.open();
+    iframe.contentDocument.write(htmlString);
+    iframe.contentDocument.close();
+  });
+}
+
+async function uploadPdfToDrive(blob, filename) {
+  const form = new FormData();
+  form.append('file', blob, filename);
+  form.append('filename', filename);
+  const res = await fetch(DRIVE_WORKER_URL, { method: 'POST', body: form });
+  if (!res.ok) throw new Error(`Worker ${res.status}: ${await res.text()}`);
+  return res.json();
+}
+
+async function exportPdf() {
   if (!selection.size) return;
   const docs = allDocs.filter(d => selection.has(d.id));
   docs.sort((a, b) => String(a.key || '').localeCompare(String(b.key || '')));
 
   const reviewers = [...new Set(docs.map(d => d.reviewedBy).filter(Boolean))];
   const annotators = [...new Set(docs.map(d => d.annotator).filter(Boolean))];
-  
+
   let commonId = '';
   let commonRole = '';
-  if (annotators.length === 1) {
-    commonId = annotators[0];
-    commonRole = 'labeler';
-  } else if (reviewers.length === 1) {
-    commonId = reviewers[0];
-    commonRole = 'reviewer';
-  }
+  if (annotators.length === 1) { commonId = annotators[0]; commonRole = 'labeler'; }
+  else if (reviewers.length === 1) { commonId = reviewers[0]; commonRole = 'reviewer'; }
 
   if (!commonId) {
     commonId = prompt('Multiple reviewers/labelers found. Enter ID for filename:', 'transcripts') || 'transcripts';
@@ -1996,13 +2082,53 @@ function exportPdf() {
 
   const today = new Date().toISOString().slice(0, 10);
   const exportTitle = `${commonId} ${today}`;
+  const htmlString = buildExportHtml(docs, exportTitle, commonId, commonRole);
 
-  const w = window.open('', '_blank');
-  if (!w) { alert('popup blocked — allow popups to export'); return; }
-  w.document.open();
-  w.document.write(buildExportHtml(docs, exportTitle, commonId, commonRole));
-  w.document.close();
-  w.addEventListener('load', () => setTimeout(() => w.print(), 500));
+  if (!DRIVE_WORKER_URL) {
+    // No worker configured — use browser print dialog as before
+    const w = window.open('', '_blank');
+    if (!w) { alert('popup blocked — allow popups to export'); return; }
+    w.document.open();
+    w.document.write(htmlString);
+    w.document.close();
+    w.addEventListener('load', () => setTimeout(() => w.print(), 500));
+    return;
+  }
+
+  showDriveToast('Generating PDF…');
+  let blob;
+  try {
+    blob = await generatePdfBlob(htmlString, exportTitle);
+  } catch (err) {
+    // Fall back to print dialog if PDF generation fails
+    hideDriveToast();
+    console.warn('html2pdf failed, falling back to print dialog:', err);
+    const w = window.open('', '_blank');
+    if (!w) { alert('popup blocked — allow popups to export'); return; }
+    w.document.open();
+    w.document.write(htmlString);
+    w.document.close();
+    w.addEventListener('load', () => setTimeout(() => w.print(), 500));
+    return;
+  }
+
+  // Trigger local download
+  const dlUrl = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = dlUrl;
+  a.download = `${exportTitle}.pdf`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(dlUrl), 60000);
+
+  // Upload to Drive in background
+  showDriveToast('Saving to Drive…');
+  uploadPdfToDrive(blob, `${exportTitle}.pdf`)
+    .then(result => {
+      showDriveToast(`Saved to Drive — <a href="${result.url}" target="_blank">open</a>`, 8000);
+    })
+    .catch(err => {
+      showDriveToast(`Drive save failed: ${err.message}`, 6000);
+    });
 }
 
 function buildExportHtml(docs, title, commonId, commonRole) {
