@@ -2373,7 +2373,7 @@ async function uploadSession(sessionId, fileRecords, annotJson, metaJson) {
   const token = getGhToken();
   if (!token) throw new Error('No GitHub token — enter one when sharing');
 
-  // Create all blobs in parallel
+  // Create all blobs in parallel (these are immutable and don't depend on branch state)
   const blobEntries = await Promise.all([
     ...fileRecords.map(async ({ name, buffer }) => {
       const blob = await ghApi('/git/blobs', 'POST', { content: bufferToBase64(buffer), encoding: 'base64' });
@@ -2385,18 +2385,34 @@ async function uploadSession(sessionId, fileRecords, annotJson, metaJson) {
       .then(b => ({ path: `snapshots/${sessionId}/meta.json`, sha: b.sha })),
   ]);
 
-  const ref = await ghApi(`/git/ref/heads/${GH_BRANCH}`);
-  const headCommit = await ghApi(`/git/commits/${ref.object.sha}`);
-  const tree = await ghApi('/git/trees', 'POST', {
-    base_tree: headCommit.tree.sha,
-    tree: blobEntries.map(({ path, sha }) => ({ path, mode: '100644', type: 'blob', sha }))
-  });
-  const commit = await ghApi('/git/commits', 'POST', {
-    message: `Share session ${sessionId}`,
-    tree: tree.sha,
-    parents: [ref.object.sha]
-  });
-  await ghApi(`/git/refs/heads/${GH_BRANCH}`, 'PATCH', { sha: commit.sha });
+  // Retry loop for the ref update to handle "not a fast-forward" errors
+  let retries = 3;
+  while (retries > 0) {
+    try {
+      const ref = await ghApi(`/git/ref/heads/${GH_BRANCH}`);
+      const headCommit = await ghApi(`/git/commits/${ref.object.sha}`);
+      const tree = await ghApi('/git/trees', 'POST', {
+        base_tree: headCommit.tree.sha,
+        tree: blobEntries.map(({ path, sha }) => ({ path, mode: '100644', type: 'blob', sha }))
+      });
+      const commit = await ghApi('/git/commits', 'POST', {
+        message: `Share session ${sessionId}`,
+        tree: tree.sha,
+        parents: [ref.object.sha]
+      });
+      await ghApi(`/git/refs/heads/${GH_BRANCH}`, 'PATCH', { sha: commit.sha });
+      return; // Success!
+    } catch (e) {
+      const isFastForwardErr = e.message.includes('422') && e.message.includes('fast forward');
+      if (isFastForwardErr && retries > 1) {
+        retries--;
+        // Wait a bit before retrying to let GitHub state settle
+        await new Promise(r => setTimeout(r, 1000));
+        continue;
+      }
+      throw e;
+    }
+  }
 }
 
 function serializeAnnotations() {
