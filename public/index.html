@@ -836,10 +836,15 @@ async function handleFiles(files) {
       const name = computeSnapshotName(rawReads[i], file);
       return new File([await file.arrayBuffer()], name, { lastModified: file.lastModified });
     }));
-    await saveFilesToDb(renamedFiles).catch(e => console.warn('IndexedDB save failed:', e));
+    // Merge with previously cached files; new files win on name collision
+    const existing = await loadFilesFromDb().catch(() => []);
+    const byName = new Map(existing.map(f => [f.name, f]));
+    for (const f of renamedFiles) byName.set(f.name, f);
+    const mergedFiles = [...byName.values()];
+    await saveFilesToDb(mergedFiles).catch(e => console.warn('IndexedDB save failed:', e));
     uploadStatus.textContent = '';
     $('upload-go').disabled = false;
-    await processSnapshots(renamedFiles);
+    await processSnapshots(mergedFiles);
   } catch (err) {
     console.error(err);
     uploadStatus.textContent = 'Error reading files: ' + err.message;
