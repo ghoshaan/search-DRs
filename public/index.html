@@ -407,6 +407,21 @@
         <input class="filter-input" id="filter-reviewer" placeholder="Filter by reviewer…" autocomplete="off">
         <div class="filter-suggestions" id="reviewer-suggestions"></div>
       </div>
+      <div class="filter-group" style="flex: 0 0 auto; min-width: 150px;">
+        <label class="filter-label" for="filter-status">Review Status</label>
+        <select class="filter-input" id="filter-status">
+          <option value="">All statuses</option>
+          <option value="reviewed">Reviewed</option>
+          <option value="unreviewed">Unreviewed</option>
+        </select>
+      </div>
+      <div class="filter-group" style="flex: 0 0 auto; min-width: 150px;">
+        <label class="filter-label" for="filter-annotated">Annotated</label>
+        <select class="filter-input" id="filter-annotated">
+          <option value="">All</option>
+          <option value="yes">Has annotation</option>
+        </select>
+      </div>
       <button class="filter-clear" id="filter-clear-btn">Clear filters</button>
     </div>
     <div style="padding: 16px 32px 24px;">
@@ -1073,9 +1088,13 @@ window.addEventListener('popstate', e => {
 $('sort-order').addEventListener('change', rerun);
 $('filter-labeler').addEventListener('input', rerun);
 $('filter-reviewer').addEventListener('input', rerun);
+$('filter-status').addEventListener('change', rerun);
+$('filter-annotated').addEventListener('change', rerun);
 $('filter-clear-btn').addEventListener('click', () => {
   $('filter-labeler').value = '';
   $('filter-reviewer').value = '';
+  $('filter-status').value = '';
+  $('filter-annotated').value = '';
   rerun();
 });
 
@@ -1131,15 +1150,30 @@ function populateFilterSuggestions() {
   setupFilterSuggestions('filter-reviewer', 'reviewer-suggestions', 'reviewedBy');
 }
 
+function hasAnnotation(d) {
+  const id = String(d.id);
+  if (majorSet.has(id) || tlEditsMap.has(id)) return true;
+  const saved = commentsMap.get(id);
+  if (!saved) return false;
+  const text = typeof saved === 'string' ? saved : (saved.text || '');
+  const images = Array.isArray(saved?.images) ? saved.images : [];
+  return !!(text.trim() || images.length);
+}
+
 function rerun() {
   currentPage = 1;
 
   const labelerFilter = ($('filter-labeler').value || '').trim().toLowerCase();
   const reviewerFilter = ($('filter-reviewer').value || '').trim().toLowerCase();
+  const statusFilter = ($('filter-status')?.value || '').trim();
+  const annotatedFilter = ($('filter-annotated')?.value || '').trim();
 
   filteredDocs = allDocs.filter(d => {
     if (labelerFilter && !(d.annotator || '').toLowerCase().includes(labelerFilter)) return false;
     if (reviewerFilter && !(d.reviewedBy || '').toLowerCase().includes(reviewerFilter)) return false;
+    if (statusFilter === 'reviewed' && !d.reviewed) return false;
+    if (statusFilter === 'unreviewed' && d.reviewed) return false;
+    if (annotatedFilter === 'yes' && !hasAnnotation(d)) return false;
     return true;
   });
 
@@ -1166,9 +1200,11 @@ function rerun() {
 
 function renderPage() {
   const pag = $('pagination');
+  const annotatedCount = filteredDocs.filter(hasAnnotation).length;
   if (!filteredDocs.length) {
     results.innerHTML = `<div class="empty"><div class="glyph">∅</div>no recordings found.</div>`;
     pag.innerHTML = '';
+    statusL.textContent = '0 recordings';
     statusR.textContent = `showing 0 docs`;
     return;
   }
@@ -1180,6 +1216,7 @@ function renderPage() {
   const end = start + PAGE_SIZE;
   const slice = filteredDocs.slice(start, end);
 
+  statusL.textContent = `${filteredDocs.length.toLocaleString()} recordings${annotatedCount > 0 ? ` · ${annotatedCount} annotated` : ''}`;
   statusR.textContent = `showing ${start + 1}-${Math.min(end, filteredDocs.length)} of ${filteredDocs.length.toLocaleString()}`;
   results.innerHTML = slice.map(d => renderDoc(d)).join('');
   renderPagination(totalPages);
@@ -1908,10 +1945,13 @@ function exportPdf() {
   const annotators = [...new Set(docs.map(d => d.annotator).filter(Boolean))];
   
   let commonId = '';
+  let commonRole = '';
   if (annotators.length === 1) {
     commonId = annotators[0];
+    commonRole = 'labeler';
   } else if (reviewers.length === 1) {
     commonId = reviewers[0];
+    commonRole = 'reviewer';
   }
 
   if (!commonId) {
@@ -1924,12 +1964,12 @@ function exportPdf() {
   const w = window.open('', '_blank');
   if (!w) { alert('popup blocked — allow popups to export'); return; }
   w.document.open();
-  w.document.write(buildExportHtml(docs, exportTitle));
+  w.document.write(buildExportHtml(docs, exportTitle, commonId, commonRole));
   w.document.close();
   w.addEventListener('load', () => setTimeout(() => w.print(), 500));
 }
 
-function buildExportHtml(docs, title) {
+function buildExportHtml(docs, title, commonId, commonRole) {
   const today = new Date().toISOString().slice(0, 10);
   const pcts = docs.filter(d => d.versions && d.versions.length).map(d => {
     const tlEdit = tlEditsMap.get(String(d.id));
@@ -1938,7 +1978,26 @@ function buildExportHtml(docs, title) {
   });
   const avgPct = pcts.length ? Math.round(pcts.reduce((a, b) => a + b, 0) / pcts.length) : null;
   const majorCount = docs.filter(d => majorSet.has(String(d.id))).length;
-  const statsHtml = (avgPct !== null || majorCount > 0) ? `<div class="export-stats">${avgPct !== null ? `<span>avg. ${avgPct}% changed</span>` : ''}${majorCount > 0 ? `<span class="export-stats-major">${majorCount} major</span>` : ''}</div>` : '';
+  const approvedCount = docs.filter(d => d.reviewed).length;
+  const unapprovedCount = docs.filter(d => !d.reviewed && !d.reviewedBy).length;
+  const commentCount = docs.filter(d => {
+    const saved = commentsMap.get(String(d.id));
+    if (!saved) return false;
+    const text = typeof saved === 'string' ? saved : (saved.text || '');
+    const images = Array.isArray(saved?.images) ? saved.images : [];
+    return !!(text.trim() || images.length);
+  }).length;
+  const tlEditCount = docs.filter(d => tlEditsMap.has(String(d.id))).length;
+
+  const statParts = [];
+  statParts.push(`<span>${approvedCount} approved</span>`);
+  if (unapprovedCount > 0) statParts.push(`<span>${unapprovedCount} unapproved</span>`);
+  if (majorCount > 0) statParts.push(`<span class="export-stats-major">${majorCount} major</span>`);
+  if (commentCount > 0) statParts.push(`<span>${commentCount} with comments</span>`);
+  if (tlEditCount > 0) statParts.push(`<span style="color:#7a3fb0;">${tlEditCount} TL edited</span>`);
+  if (avgPct !== null) statParts.push(`<span>avg. ${avgPct}% changed</span>`);
+  const statsHtml = `<div class="export-stats">${statParts.join('')}</div>`;
+
   const docsHtml = docs.map(d => exportRow(d)).join('');
   const styles = document.querySelector('style').innerHTML;
   const genComment = $('general-comment').value;
@@ -1954,8 +2013,8 @@ function buildExportHtml(docs, title) {
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Fraunces:opsz,wght@9..144,600&display=swap">
 <style>${styles}</style>
 </head><body class="export-body">
-<h1 class="export-h1">ATC Transcript Export</h1>
-<div class="export-meta">${docs.length} recording${docs.length === 1 ? '' : 's'} · exported ${today}</div>
+<h1 class="export-h1">ATC ${commonRole === 'labeler' ? 'Labeler' : commonRole === 'reviewer' ? 'Reviewer' : 'Labeler/Reviewer'} Audit Report</h1>
+<div class="export-meta">${commonId ? escapeHtml(commonId) + ' &middot; ' : ''}${docs.length} recording${docs.length === 1 ? '' : 's'} &middot; exported ${today}</div>
 ${statsHtml}
 ${genCommentHtml}
 ${docsHtml}
