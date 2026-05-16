@@ -93,8 +93,7 @@
   .tag-batch { color: var(--amber); border-color: rgba(255,179,71,0.4); }
   .tag-dur { color: var(--ink-dim); border: none; padding-left: 4px; }
   .tag-reviewed { color: var(--pilot); border-color: rgba(111,207,151,0.4); cursor: help; }
-  .tag-unapproved { color: var(--red); border-color: rgba(229,115,115,0.4); opacity: 0.8; }
-  .tag-missing-history { color: var(--amber); border-color: rgba(255,179,71,0.4); opacity: 0.8; }
+  .tag-unapproved { color: var(--ink-faint); border-color: var(--line-2); opacity: 0.8; }
   .segments { display: grid; gap: 4px; margin-top: 8px; }
 
   .seg { display: grid; grid-template-columns: 56px auto 1fr; gap: 12px; align-items: baseline; padding: 4px 0; }
@@ -157,6 +156,17 @@
   .copy-key svg { width: 12px; height: 12px; display: block; }
   .copy-key:hover { color: var(--amber); border-color: rgba(255,179,71,0.4); }
   .copy-key.copied { color: var(--pilot); border-color: rgba(111,207,151,0.4); }
+  .adsb-btn {
+    flex-shrink: 0; user-select: none; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 20px; height: 20px; padding: 0; border: 1px solid transparent;
+    color: var(--ink-faint); background: transparent;
+    vertical-align: middle;
+    transition: color 0.15s, border-color 0.15s;
+    text-decoration: none;
+  }
+  .adsb-btn svg { width: 12px; height: 12px; display: block; }
+  .adsb-btn:hover { color: var(--amber); border-color: rgba(255,179,71,0.4); }
   .result-key-inner { flex: 1; min-width: 0; }
   .result-key-inner .result-key { display: inline; flex: none; }
 
@@ -179,6 +189,22 @@
 
   .empty { padding: 80px 32px; text-align: center; color: var(--ink-faint); }
   .empty .glyph { font-family: 'Fraunces', serif; font-size: 65px; font-style: italic; color: var(--line-2); margin-bottom: 12px; }
+
+  /* Filter bar */
+  .filter-bar { padding: 12px 32px; border-bottom: 1px solid var(--line); display: flex; gap: 12px; flex-wrap: wrap; }
+  .filter-group { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 180px; position: relative; }
+  .filter-suggestions { position: absolute; top: 100%; left: 0; right: 0; background: var(--panel); border: 1px solid var(--line-2); border-top: none; z-index: 200; max-height: 220px; overflow-y: auto; display: none; }
+  .filter-suggestions.open { display: block; }
+  .filter-suggestion-item { padding: 6px 10px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 13px; gap: 8px; }
+  .filter-suggestion-item:hover, .filter-suggestion-item.active { background: rgba(255,179,71,0.1); color: var(--ink); }
+  .filter-suggestion-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .filter-suggestion-count { flex-shrink: 0; font-size: 10px; color: var(--ink-faint); background: var(--bg); border: 1px solid var(--line-2); padding: 1px 5px; border-radius: 2px; }
+  .filter-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.14em; color: var(--ink-faint); }
+  .filter-input { background: var(--bg); border: 1px solid var(--line-2); color: var(--ink); font-family: inherit; font-size: 13px; padding: 7px 10px; outline: none; width: 100%; transition: border-color 0.15s; }
+  .filter-input:focus { border-color: var(--amber); }
+  .filter-input::placeholder { color: var(--ink-faint); }
+  .filter-clear { background: transparent; border: 1px solid var(--line-2); color: var(--ink-faint); font-family: inherit; font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; padding: 7px 14px; cursor: pointer; transition: all 0.15s; align-self: flex-end; white-space: nowrap; }
+  .filter-clear:hover { color: var(--amber); border-color: rgba(255,179,71,0.4); }
 
   /* Selection */
   .result-key-wrap { display: flex; gap: 10px; align-items: center; flex: 1; min-width: 0; }
@@ -268,6 +294,25 @@
   .pdf-modal-close:hover { color: var(--amber); border-color: var(--amber); }
   .pdf-modal iframe { flex: 1; border: none; background: #fff; }
 
+  /* Share modal */
+  .share-modal-overlay {
+    display: none; position: fixed; inset: 0; z-index: 100;
+    background: rgba(0,0,0,0.85); align-items: center; justify-content: center;
+  }
+  .share-modal-overlay.open { display: flex; }
+  .share-modal {
+    width: min(92vw, 500px); background: var(--panel); border: 1px solid var(--line-2);
+    display: flex; flex-direction: column;
+  }
+  .share-modal-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 16px; border-bottom: 1px solid var(--line);
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.14em; color: var(--ink-dim);
+  }
+  .share-modal-body { padding: 20px 16px; display: flex; flex-direction: column; gap: 12px; }
+  .share-url-row { display: flex; gap: 8px; }
+  .share-url-row .filter-input { flex: 1; font-size: 12px; }
+
   @media print {
     .upload-view, .selection-bar, header, .status, .pagination, footer, .comment-wrap, .version-badge { display: none !important; }
     body { background: white; color: black; background-image: none; }
@@ -315,6 +360,22 @@
 <body>
 
 
+<div class="share-modal-overlay" id="share-modal-overlay">
+  <div class="share-modal">
+    <div class="share-modal-header">
+      <span>Session shared</span>
+      <button class="pdf-modal-close" id="share-modal-close">Close</button>
+    </div>
+    <div class="share-modal-body">
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:var(--ink-faint);">Share link — opens with current data, annotations &amp; filters</div>
+      <div class="share-url-row">
+        <input type="text" id="share-url-input" class="filter-input" readonly>
+        <button class="sel-btn primary" id="share-url-copy" style="white-space:nowrap;">Copy</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="pdf-modal-overlay" id="pdf-modal-overlay">
   <div class="pdf-modal">
     <div class="pdf-modal-header">
@@ -329,13 +390,13 @@
   <div class="upload-card">
     <img src="favicon.svg" alt="" style="position: absolute; top: 20px; left: 24px; width: 56px; height: 56px; opacity: 0.85;">
     <h1 class="upload-title" style="margin-top: 52px;">lazy<em>detective</em></h1>
-    <div class="upload-sub">upload one or more snapshots to view</div>
+    <div class="upload-sub">upload one or more data files to view</div>
     <div style="margin-bottom: 24px;">
       <button onclick="document.getElementById('pdf-modal-overlay').classList.add('open')" style="color: var(--amber); background: transparent; font-family: inherit; text-decoration: none; font-size: 11px; text-transform: uppercase; letter-spacing: 0.14em; border: 1px solid var(--line-2); padding: 10px; display: block; width: 100%; text-align: center; transition: all 0.15s; cursor: pointer;" onmouseover="this.style.borderColor='var(--amber)'" onmouseout="this.style.borderColor='var(--line-2)'">Instructions</button>
     </div>
     <div id="resume-panel" style="display:none; margin-bottom: 20px; padding: 14px; border: 1px solid var(--line-2); background: rgba(255,179,71,0.04);">
       <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.14em; color:var(--ink-dim); margin-bottom: 10px;">
-        Recent uploads &middot; <span id="resume-count">0</span> snapshot<span id="resume-plural">s</span> cached
+        Recent uploads &middot; <span id="resume-count">0</span> file<span id="resume-plural">s</span> cached
       </div>
       <div style="display:flex; gap:10px;">
         <button type="button" class="upload-btn" id="resume-btn" style="margin:0; flex:1;">Continue</button>
@@ -344,7 +405,7 @@
     </div>
     <form class="upload-form" id="upload-form">
       <div class="file-input-group">
-        <label for="file-inputs">NDJSON Snapshots</label>
+        <label for="file-inputs">NDJSON Data Files</label>
         <input type="file" id="file-inputs" accept=".ndjson" multiple required>
       </div>
       <button class="upload-btn" id="upload-go" type="submit">Load Snapshots</button>
@@ -353,17 +414,6 @@
   </div>
 </div>
 
-<div class="upload-view" id="pick-view" style="display:none;">
-  <div class="upload-card" style="width: fit-content; max-width: 90vw; min-width: 340px;">
-    <img src="favicon.svg" alt="" style="position: absolute; top: 20px; left: 24px; width: 56px; height: 56px; opacity: 0.85;">
-    <h1 class="upload-title" style="margin-top: 52px;">lazy<em>detective</em></h1>
-    <div class="upload-sub">view selected snapshots</div>
-    <div id="pick-file-list" style="margin-bottom: 20px; font-size: 13px; display: flex; flex-direction: column; gap: 6px;"></div>
-    <button class="upload-btn" id="pick-load-btn">Load</button>
-    <div class="upload-status" id="pick-status"></div>
-    <button type="button" id="pick-back-btn" style="background: transparent; border: none; color: var(--ink-faint); font-family: inherit; font-size: 11px; text-transform: uppercase; letter-spacing: 0.14em; cursor: pointer; margin-top: 14px; padding: 0; display: block; width: 100%; text-align: center;">← Back</button>
-  </div>
-</div>
 
 <div class="app" id="app">
   <header>
@@ -374,13 +424,42 @@
         <option value="diff" selected>Sort: % Change</option>
         <option value="key">Sort: Key</option>
       </select>
-      <a class="meta-link" id="change-snapshots-btn" style="cursor:pointer;">Snapshots</a>
+      <a class="meta-link" id="change-snapshots-btn" style="cursor:pointer;">Upload data</a>
+      <a class="meta-link" id="share-btn" style="cursor:pointer;">Share</a>
       <a class="meta-link" onclick="document.getElementById('pdf-modal-overlay').classList.add('open')" style="cursor:pointer;">Instructions</a>
     </div>
   </header>
 
   <div id="view-main">
-    <div style="padding: 0 32px 24px;">
+    <div class="filter-bar">
+      <div class="filter-group">
+        <label class="filter-label" for="filter-labeler">Labeler</label>
+        <input class="filter-input" id="filter-labeler" placeholder="Filter by labeler…" autocomplete="off">
+        <div class="filter-suggestions" id="labeler-suggestions"></div>
+      </div>
+      <div class="filter-group">
+        <label class="filter-label" for="filter-reviewer">Reviewer</label>
+        <input class="filter-input" id="filter-reviewer" placeholder="Filter by reviewer…" autocomplete="off">
+        <div class="filter-suggestions" id="reviewer-suggestions"></div>
+      </div>
+      <div class="filter-group" style="flex: 0 0 auto; min-width: 150px;">
+        <label class="filter-label" for="filter-status">Review Status</label>
+        <select class="filter-input" id="filter-status">
+          <option value="">All statuses</option>
+          <option value="reviewed">Reviewed</option>
+          <option value="unreviewed">Unreviewed</option>
+        </select>
+      </div>
+      <div class="filter-group" style="flex: 0 0 auto; min-width: 150px;">
+        <label class="filter-label" for="filter-annotated">Annotated</label>
+        <select class="filter-input" id="filter-annotated">
+          <option value="">All</option>
+          <option value="yes">Has annotation</option>
+        </select>
+      </div>
+      <button class="filter-clear" id="filter-clear-btn">Clear filters</button>
+    </div>
+    <div style="padding: 16px 32px 24px;">
       <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--ink-faint); margin-bottom: 8px;">General Comments</div>
       <textarea id="general-comment" class="comment-input" style="min-height: 80px;" placeholder="Enter general comments for the export..."></textarea>
       <div class="comment-images" id="general-comment-images"></div>
@@ -414,7 +493,6 @@ const uploadView = $('upload-view');
 const uploadForm = $('upload-form');
 const uploadStatus = $('upload-status');
 const fileInputs = $('file-inputs');
-const pickView = $('pick-view');
 
 const app = $('app');
 const results = $('results');
@@ -425,6 +503,11 @@ let allDocs = [];
 let snapshots = [];
 
 const SELECTION_KEY = 'atc-search-selection-v1';
+
+const GH_OWNER = 'ghoshaan';
+const GH_REPO = 'lazy-detective';
+const GH_BRANCH = 'main';
+const GH_TOKEN_KEY = 'lazy-detective-gh-token';
 let selection = new Set();
 const MAJOR_KEY = 'atc-search-major-v1';
 let majorSet = new Set();
@@ -442,11 +525,21 @@ let currentPage = 1;
 const PAGE_SIZE = 50;
 let filteredDocs = []; 
 
-function loadComments() {
-  try {
-    const saved = localStorage.getItem(COMMENTS_KEY);
-    if (saved) commentsMap = new Map(JSON.parse(saved));
-  } catch { commentsMap = new Map(); }
+async function loadComments() {
+  const fromDb = await loadCommentsFromDb();
+  if (fromDb.size > 0) {
+    commentsMap = fromDb;
+  } else {
+    // one-time migration from localStorage
+    try {
+      const saved = localStorage.getItem(COMMENTS_KEY);
+      if (saved) {
+        commentsMap = new Map(JSON.parse(saved));
+        await saveCommentsToDb();
+        localStorage.removeItem(COMMENTS_KEY);
+      }
+    } catch { commentsMap = new Map(); }
+  }
   try {
     const raw = localStorage.getItem(GENERAL_COMMENTS_KEY);
     if (raw) {
@@ -466,7 +559,7 @@ function loadComments() {
   }
 }
 function saveComments() {
-  localStorage.setItem(COMMENTS_KEY, JSON.stringify([...commentsMap]));
+  saveCommentsToDb();
 }
 
 const TL_EDITS_KEY = 'atc-search-tl-edits-v1';
@@ -651,6 +744,90 @@ function sameSnapshot(a, b) {
          (a.annotator || null) === (b.annotator || null);
 }
 
+// ====================== ADSB URL Builder ======================
+
+const _AIRPORT_IGNORE = new Set(['NY','APP','DEP','CENTER','CENTRE','CENT','RADAR','TOWER','GROUND','CTR','FINAL','FINA','FREQ','VAD','GND','TWR','APPR','ARR','ARRIVAL','DEPARTURE','V2']);
+
+function extractAirportFromKey(s) {
+  const u = String(s || '').toUpperCase();
+  const first = u.split('-')[0]?.trim();
+  const firstLetters = first.replace(/[^A-Z]/g, '');
+  if (/^[A-Z]{4}\d*$/.test(first) && !_AIRPORT_IGNORE.has(firstLetters)) return firstLetters.slice(0, 4);
+  const dateSplit = u.split(/-(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)-/);
+  const parts = (dateSplit[0] || u).split('-').filter(Boolean);
+  for (const rawPart of parts) {
+    const p = rawPart.toUpperCase();
+    const letters = p.replace(/[^A-Z]/g, '');
+    if (_AIRPORT_IGNORE.has(p) || _AIRPORT_IGNORE.has(letters) || letters.startsWith('FINA')) continue;
+    const icao = p.match(/^([A-Z]{4})\d*$/);
+    if (icao && !_AIRPORT_IGNORE.has(icao[1])) return icao[1];
+    if (/^[A-Z]{3}$/.test(p) && !_AIRPORT_IGNORE.has(p)) return p;
+  }
+  const domestic = u.match(/(?<![A-Z])(?:K[A-Z]{3}|PA[A-Z]{2}|PH[A-Z]{2}|P[A-Z]{3}|C[A-Z]{3})(?![A-Z])/);
+  return domestic ? domestic[0] : null;
+}
+
+function buildAipChartsUrl(rawKey) {
+  const icao = extractAirportFromKey(rawKey);
+  if (!icao || !/^[A-Z]{4}$/.test(icao)) return null;
+  return `https://ghoshaan.github.io/aip-charts/${encodeURIComponent(icao)}`;
+}
+
+function buildAdsbReplayUrl(rawKey) {
+  const raw = String(rawKey || '').trim();
+  if (!raw) return null;
+
+  const upper = raw.toUpperCase();
+  const MONTHS = { JAN:'01',FEB:'02',MAR:'03',APR:'04',MAY:'05',JUN:'06',JUL:'07',AUG:'08',SEP:'09',OCT:'10',NOV:'11',DEC:'12' };
+  const BAD = new Set(['CENT','CENTER','CENTRE','CTR','APP','DEP','TWR','GND','RADAR','FINAL','FINA']);
+
+  const extractAirport = extractAirportFromKey;
+
+  let replay = null, airport = null;
+
+  // Flex dashed: -Sep-14-2025-0726Z
+  let m = upper.match(/-([A-Z]{3})-(\d{1,2})-(\d{4})-(\d{4})Z\b/);
+  if (m && MONTHS[m[1]]) {
+    const day = m[2].padStart(2,'0'), year = m[3], hr = m[4].slice(0,2), mn = m[4].slice(2,4);
+    replay = `${year}-${MONTHS[m[1]]}-${day}-${hr}:${mn}`;
+    airport = extractAirport(raw);
+  }
+
+  // IATA compact: SJC-20260414131831_...
+  if (!replay) {
+    m = raw.match(/\b[A-Za-z]{2,4}-(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})\d{2}_/i);
+    if (m) { replay = `${m[1]}-${m[2]}-${m[3]}-${m[4]}:${m[5]}`; airport = extractAirport(raw); }
+  }
+
+  // New compact: 250914_0726_115.wav
+  if (!replay) {
+    m = raw.match(/\b(\d{2})(\d{2})(\d{2})_(\d{2})(\d{2})_\d+\.wav\b/i);
+    if (m) {
+      const yy = Number(m[1]);
+      replay = `${yy >= 70 ? 1900 + yy : 2000 + yy}-${m[2]}-${m[3]}-${m[4]}:${m[5]}`;
+      airport = extractAirport(raw);
+    }
+  }
+
+  // Old named: Sep-14-2025-0726Z
+  if (!replay) {
+    m = raw.match(/(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)-(\d{1,2})-(\d{4})-(\d{4})Z/i);
+    if (m) {
+      const mo = MONTHS[m[1].toUpperCase()];
+      if (mo) {
+        replay = `${m[3]}-${mo}-${String(m[2]).padStart(2,'0')}-${m[4].slice(0,2)}:${m[4].slice(2,4)}`;
+        airport = extractAirport(raw);
+      }
+    }
+  }
+
+  if (!replay) return null;
+
+  if (airport && BAD.has(airport.toUpperCase())) airport = null;
+  const airportParam = /^[A-Z]{3,4}$/.test(airport || '') ? `&airport=${encodeURIComponent(airport)}` : '';
+  return `https://globe.adsbexchange.com/?replay=${encodeURIComponent(replay)}${airportParam}`;
+}
+
 // ====================== File Handling ======================
 
 async function readNDJSON(file, batchName, snapshotDate) {
@@ -741,9 +918,10 @@ async function processSnapshots(files) {
   allDocs.sort((a, b) => String(a.key || '').localeCompare(String(b.key || '')));
 
   showApp();
-  loadComments();
+  await loadComments();
   loadMajor();
   loadTlEdits();
+  populateFilterSuggestions();
   $('m-docs').textContent = allDocs.length.toLocaleString();
   statusL.textContent = `ready · ${allDocs.length.toLocaleString()} recordings`;
   rerun();
@@ -753,16 +931,54 @@ async function processSnapshots(files) {
 // ====================== IndexedDB ======================
 
 const DB_NAME = 'lazy-detective-db';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const FILES_STORE = 'files';
+const COMMENTS_STORE = 'comments';
 
 function openDb() {
   return new Promise((resolve, reject) => {
     const req = indexedDB.open(DB_NAME, DB_VERSION);
-    req.onupgradeneeded = e => e.target.result.createObjectStore(FILES_STORE, { keyPath: 'name' });
+    req.onupgradeneeded = e => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains(FILES_STORE)) db.createObjectStore(FILES_STORE, { keyPath: 'name' });
+      if (!db.objectStoreNames.contains(COMMENTS_STORE)) db.createObjectStore(COMMENTS_STORE, { keyPath: 'id' });
+    };
     req.onsuccess = e => resolve(e.target.result);
     req.onerror = e => reject(e.target.error);
   });
+}
+
+async function saveCommentsToDb() {
+  try {
+    const db = await openDb();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(COMMENTS_STORE, 'readwrite');
+      const store = tx.objectStore(COMMENTS_STORE);
+      store.clear();
+      for (const [id, val] of commentsMap) store.put({ id, ...(typeof val === 'string' ? { text: val, images: [] } : val) });
+      tx.oncomplete = () => resolve();
+      tx.onerror = e => reject(e.target.error);
+    });
+  } catch (e) { console.warn('Failed to save comments to IndexedDB:', e); }
+}
+
+async function loadCommentsFromDb() {
+  try {
+    const db = await openDb();
+    const tx = db.transaction(COMMENTS_STORE, 'readonly');
+    return new Promise((resolve, reject) => {
+      const req = tx.objectStore(COMMENTS_STORE).getAll();
+      req.onsuccess = e => {
+        const map = new Map();
+        for (const row of e.target.result) {
+          const { id, ...rest } = row;
+          map.set(String(id), rest);
+        }
+        resolve(map);
+      };
+      req.onerror = e => reject(e.target.error);
+    });
+  } catch (e) { console.warn('Failed to load comments from IndexedDB:', e); return new Map(); }
 }
 
 async function saveFilesToDb(files) {
@@ -820,10 +1036,19 @@ async function handleFiles(files) {
     const rawReads = await Promise.all(fileList.map((file, idx) =>
       readNDJSON(file, file.name, (idx + 1).toString().padStart(2, '0'))
     ));
-    const namedFiles = fileList.map((file, i) => ({ file, name: computeSnapshotName(rawReads[i], file) }));
+    const renamedFiles = await Promise.all(fileList.map(async (file, i) => {
+      const name = computeSnapshotName(rawReads[i], file);
+      return new File([await file.arrayBuffer()], name, { lastModified: file.lastModified });
+    }));
+    // Merge with previously cached files; new files win on name collision
+    const existing = await loadFilesFromDb().catch(() => []);
+    const byName = new Map(existing.map(f => [f.name, f]));
+    for (const f of renamedFiles) byName.set(f.name, f);
+    const mergedFiles = [...byName.values()];
+    await saveFilesToDb(mergedFiles).catch(e => console.warn('IndexedDB save failed:', e));
     uploadStatus.textContent = '';
     $('upload-go').disabled = false;
-    showPickView(namedFiles);
+    await processSnapshots(mergedFiles);
   } catch (err) {
     console.error(err);
     uploadStatus.textContent = 'Error reading files: ' + err.message;
@@ -831,93 +1056,14 @@ async function handleFiles(files) {
   }
 }
 
-function showPickView(namedFiles, { fromViewer = false } = {}) {
-  uploadView.style.display = 'none';
-  app.classList.remove('unlocked');
-  pickView.style.display = 'flex';
-  const list = $('pick-file-list');
-  const allRow = namedFiles.length > 1
-    ? `<label style="display:flex; gap:10px; align-items:center; cursor:pointer; padding: 8px 10px; border: 1px solid var(--line-2); border-bottom: 1px solid var(--line-2); margin-bottom: 2px;" onmouseover="this.style.borderColor='var(--amber)'" onmouseout="this.style.borderColor='var(--line-2)'">
-        <input type="checkbox" id="pick-all-cb" checked style="accent-color: var(--amber); width:14px; height:14px; flex-shrink:0;">
-        <span style="font-size:11px; text-transform:uppercase; letter-spacing:0.12em; color:var(--ink-dim);">All</span>
-      </label>`
-    : '';
-  list.innerHTML = allRow + namedFiles.map((nf, i) => `
-    <label style="display:flex; gap:10px; align-items:center; cursor:pointer; padding: 8px 10px; border: 1px solid var(--line-2); transition: border-color 0.12s;" onmouseover="this.style.borderColor='var(--amber)'" onmouseout="this.style.borderColor='var(--line-2)'">
-      <input type="checkbox" class="pick-cb" data-idx="${i}" checked style="accent-color: var(--amber); width:14px; height:14px; flex-shrink:0;">
-      <span style="font-size:12px; font-family:'JetBrains Mono',ui-monospace,monospace; color:var(--ink); word-break:break-all;">${escapeHtml(nf.name)}</span>
-    </label>
-  `).join('');
-
-  const loadBtn = $('pick-load-btn');
-  loadBtn.disabled = false;
-  loadBtn.textContent = 'Load';
-  const pickStatus = $('pick-status');
-  pickStatus.textContent = '';
-
-  const getCbs = () => [...list.querySelectorAll('.pick-cb')];
-  const allCb = list.querySelector('#pick-all-cb');
-
-  const updateBtn = () => {
-    const cbs = getCbs();
-    const n = cbs.filter(cb => cb.checked).length;
-    loadBtn.disabled = n === 0;
-    loadBtn.textContent = n === namedFiles.length ? 'Load' : n === 0 ? 'Load (select files)' : `Load (${n})`;
-    if (allCb) {
-      allCb.checked = n === cbs.length;
-      allCb.indeterminate = n > 0 && n < cbs.length;
-    }
-  };
-
-  if (allCb) {
-    allCb.addEventListener('change', () => {
-      getCbs().forEach(cb => { cb.checked = allCb.checked; });
-      updateBtn();
-    });
-  }
-  list.addEventListener('change', e => { if (e.target !== allCb) updateBtn(); });
-  updateBtn();
-
-  loadBtn.onclick = async () => {
-    const cbs = [...list.querySelectorAll('.pick-cb')];
-    const selected = cbs.filter(cb => cb.checked).map(cb => namedFiles[parseInt(cb.dataset.idx)]);
-    if (!selected.length) return;
-    loadBtn.disabled = true;
-    pickStatus.textContent = 'Loading...';
-    try {
-      // Save ALL files to IDB so the full library is preserved for future picks
-      const allRenamed = await Promise.all(namedFiles.map(async ({ file, name }) =>
-        new File([await file.arrayBuffer()], name, { lastModified: file.lastModified })
-      ));
-      await saveFilesToDb(allRenamed).catch(e => console.warn('IndexedDB save failed:', e));
-      // Process only the selected subset
-      const selectedRenamed = cbs.filter(cb => cb.checked).map(cb => allRenamed[parseInt(cb.dataset.idx)]);
-      await processSnapshots(selectedRenamed);
-    } catch (err) {
-      console.error(err);
-      pickStatus.textContent = 'Error: ' + err.message;
-      loadBtn.disabled = false;
-    }
-  };
-
-  $('pick-back-btn').onclick = () => {
-    pickView.style.display = 'none';
-    if (fromViewer) {
-      app.classList.add('unlocked');
-    } else {
-      uploadView.style.display = 'flex';
-      $('upload-go').disabled = false;
-    }
-  };
-}
-
 uploadForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   handleFiles(fileInputs.files);
 });
 
-// On load, check IndexedDB for cached files and show resume panel.
+// On load, check for shared session first, then fall back to cached files.
 (async () => {
+  if (await maybeLoadSharedSession()) return;
   try {
     const files = await loadFilesFromDb();
     if (!files.length) return;
@@ -926,11 +1072,17 @@ uploadForm.addEventListener('submit', async (e) => {
     $('resume-count').textContent = files.length;
     $('resume-plural').textContent = files.length === 1 ? '' : 's';
     panel.style.display = 'block';
-    $('resume-btn').addEventListener('click', () => {
+    $('resume-btn').addEventListener('click', async () => {
       $('resume-btn').disabled = true;
       $('start-fresh-btn').disabled = true;
-      const namedFiles = files.map(f => ({ file: f, name: f.name }));
-      showPickView(namedFiles);
+      uploadStatus.textContent = 'Loading...';
+      try {
+        await processSnapshots(files);
+      } catch (err) {
+        console.error(err);
+        uploadStatus.textContent = 'Error: ' + err.message;
+        $('resume-btn').disabled = false;
+      }
     });
     $('start-fresh-btn').addEventListener('click', async () => {
       try { await clearDb(); } catch (e) { console.warn('Could not clear IDB', e); }
@@ -958,27 +1110,13 @@ uploadView.addEventListener('drop', e => {
 
 function showApp() {
   uploadView.style.display = 'none';
-  pickView.style.display = 'none';
   app.classList.add('unlocked');
   if (history.state?.view !== 'app') {
     history.pushState({ view: 'app' }, '');
   }
 }
 
-async function switchSnapshots() {
-  try {
-    const files = await loadFilesFromDb();
-    if (!files.length) { location.reload(); return; }
-    app.classList.remove('unlocked');
-    const namedFiles = files.map(f => ({ file: f, name: f.name }));
-    showPickView(namedFiles, { fromViewer: true });
-  } catch (e) {
-    console.warn('Could not load from IDB:', e);
-    location.reload();
-  }
-}
-
-$('change-snapshots-btn').addEventListener('click', switchSnapshots);
+$('change-snapshots-btn').addEventListener('click', () => location.reload());
 
 // Browser back button now reloads without wiping IDB, so the Recent uploads
 // panel still shows the saved files you can resume.
@@ -989,10 +1127,96 @@ window.addEventListener('popstate', e => {
 });
 
 $('sort-order').addEventListener('change', rerun);
+$('filter-labeler').addEventListener('input', rerun);
+$('filter-reviewer').addEventListener('input', rerun);
+$('filter-status').addEventListener('change', rerun);
+$('filter-annotated').addEventListener('change', rerun);
+$('filter-clear-btn').addEventListener('click', () => {
+  $('filter-labeler').value = '';
+  $('filter-reviewer').value = '';
+  $('filter-status').value = '';
+  $('filter-annotated').value = '';
+  rerun();
+});
+
+function buildCountMap(field) {
+  const map = new Map();
+  for (const d of allDocs) {
+    const v = d[field];
+    if (v) map.set(v, (map.get(v) || 0) + 1);
+  }
+  return map;
+}
+
+function setupFilterSuggestions(inputId, suggestionsId, field) {
+  const input = $(inputId);
+  const box = $(suggestionsId);
+  let counts = new Map();
+
+  function getOptions(query) {
+    const q = query.toLowerCase();
+    return [...counts.entries()]
+      .filter(([v]) => !q || v.toLowerCase().includes(q))
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+  }
+
+  function renderSuggestions() {
+    const q = input.value.trim();
+    const opts = getOptions(q);
+    if (!opts.length) { box.classList.remove('open'); return; }
+    box.innerHTML = opts.map(([v, n]) =>
+      `<div class="filter-suggestion-item" data-val="${escapeAttr(v)}">` +
+      `<span class="filter-suggestion-name">${escapeHtml(v)}</span>` +
+      `<span class="filter-suggestion-count">${n}</span></div>`
+    ).join('');
+    box.classList.add('open');
+  }
+
+  input.addEventListener('focus', () => { counts = buildCountMap(field); renderSuggestions(); });
+  input.addEventListener('input', () => { counts = buildCountMap(field); renderSuggestions(); rerun(); });
+  input.addEventListener('blur', () => setTimeout(() => box.classList.remove('open'), 150));
+
+  box.addEventListener('mousedown', e => {
+    const item = e.target.closest('.filter-suggestion-item');
+    if (!item) return;
+    e.preventDefault();
+    input.value = item.dataset.val;
+    box.classList.remove('open');
+    rerun();
+  });
+}
+
+function populateFilterSuggestions() {
+  setupFilterSuggestions('filter-labeler', 'labeler-suggestions', 'annotator');
+  setupFilterSuggestions('filter-reviewer', 'reviewer-suggestions', 'reviewedBy');
+}
+
+function hasAnnotation(d) {
+  const id = String(d.id);
+  if (majorSet.has(id) || tlEditsMap.has(id)) return true;
+  const saved = commentsMap.get(id);
+  if (!saved) return false;
+  const text = typeof saved === 'string' ? saved : (saved.text || '');
+  const images = Array.isArray(saved?.images) ? saved.images : [];
+  return !!(text.trim() || images.length);
+}
 
 function rerun() {
   currentPage = 1;
-  filteredDocs = [...allDocs];
+
+  const labelerFilter = ($('filter-labeler').value || '').trim().toLowerCase();
+  const reviewerFilter = ($('filter-reviewer').value || '').trim().toLowerCase();
+  const statusFilter = ($('filter-status')?.value || '').trim();
+  const annotatedFilter = ($('filter-annotated')?.value || '').trim();
+
+  filteredDocs = allDocs.filter(d => {
+    if (labelerFilter && !(d.annotator || '').toLowerCase().includes(labelerFilter)) return false;
+    if (reviewerFilter && !(d.reviewedBy || '').toLowerCase().includes(reviewerFilter)) return false;
+    if (statusFilter === 'reviewed' && !d.reviewed) return false;
+    if (statusFilter === 'unreviewed' && d.reviewed) return false;
+    if (annotatedFilter === 'yes' && !hasAnnotation(d)) return false;
+    return true;
+  });
 
   const sort = $('sort-order').value;
   if (sort === 'diff') {
@@ -1013,13 +1237,16 @@ function rerun() {
   }
 
   renderPage();
+  syncFilterUrl();
 }
 
 function renderPage() {
   const pag = $('pagination');
+  const annotatedCount = filteredDocs.filter(hasAnnotation).length;
   if (!filteredDocs.length) {
     results.innerHTML = `<div class="empty"><div class="glyph">∅</div>no recordings found.</div>`;
     pag.innerHTML = '';
+    statusL.textContent = '0 recordings';
     statusR.textContent = `showing 0 docs`;
     return;
   }
@@ -1031,6 +1258,7 @@ function renderPage() {
   const end = start + PAGE_SIZE;
   const slice = filteredDocs.slice(start, end);
 
+  statusL.textContent = `${filteredDocs.length.toLocaleString()} recordings${annotatedCount > 0 ? ` · ${annotatedCount} annotated` : ''}`;
   statusR.textContent = `showing ${start + 1}-${Math.min(end, filteredDocs.length)} of ${filteredDocs.length.toLocaleString()}`;
   results.innerHTML = slice.map(d => renderDoc(d)).join('');
   renderPagination(totalPages);
@@ -1060,14 +1288,9 @@ function renderDoc(d) {
     : '';
 
   const dur = displayDoc.duration ? `${displayDoc.duration.toFixed(1)}s` : '—';
-  const isMissingHistory = snapshots.length > 1 && d.snapshotStates.size === 1;
-  const missingBadge = isMissingHistory 
-    ? `<span class="tag tag-missing-history" title="Only exists in one snapshot">missing history</span>` 
-    : '';
-
   const reviewTag = displayDoc.reviewed
-    ? `<span class="tag tag-reviewed">✓ approved</span>`
-    : (displayDoc.reviewedBy ? '' : `<span class="tag tag-unapproved">unapproved</span>`);
+    ? `<span class="tag tag-reviewed">✓ reviewed</span>`
+    : `<span class="tag tag-unapproved">unreviewed</span>`;
   
   const hasTlEdit = tlEditsMap.has(String(d.id));
   const vBadge = (showHistory && (d.versions.length > 0 || hasTlEdit))
@@ -1120,17 +1343,26 @@ function renderDoc(d) {
     ? `<span class="copy-key" data-copy="${escapeAttr(displayDoc.key)}" title="Copy global key" role="button" aria-label="Copy global key"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="5" width="9" height="9" rx="1"/><path d="M3 11V3a1 1 0 0 1 1-1h7"/></svg></span>`
     : '';
 
+  const adsbUrl = displayDoc.key ? buildAdsbReplayUrl(displayDoc.key) : null;
+  const adsbEl = adsbUrl
+    ? `<a class="adsb-btn" href="${escapeAttr(adsbUrl)}" target="_blank" rel="noopener" title="Open ADSB replay" aria-label="Open ADSB replay"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8 Q5 3 8 8 Q11 13 14 8"/><circle cx="8" cy="8" r="1.2" fill="currentColor" stroke="none"/></svg></a>`
+    : '';
+
+  const aipUrl = displayDoc.key ? buildAipChartsUrl(displayDoc.key) : null;
+  const aipEl = aipUrl
+    ? `<a class="adsb-btn" href="${escapeAttr(aipUrl)}" target="_blank" rel="noopener" title="Open AIP charts" aria-label="Open AIP charts"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="2" width="10" height="12" rx="1"/><line x1="5" y1="5.5" x2="11" y2="5.5"/><line x1="5" y1="8" x2="11" y2="8"/><line x1="5" y1="10.5" x2="8.5" y2="10.5"/></svg></a>`
+    : '';
+
   const isSel = selection.has(d.id) ? 'checked' : '';
   const cbEl = `<input type="checkbox" class="select-cb" data-sel="${escapeAttr(String(d.id))}" ${isSel}>`;
 
   return `
     <article class="result" data-docid="${escapeAttr(String(d.id))}">
       <header class="result-head">
-        <div class="result-key-wrap">${cbEl}<span class="result-key-inner">${keyEl}${copyKeyEl}</span></div>
+        <div class="result-key-wrap">${cbEl}<span class="result-key-inner">${keyEl}${copyKeyEl}${adsbEl}${aipEl}</span></div>
        <div class="result-tags">
           ${vBadge}
           ${tlBadge}
-          ${missingBadge}
           ${reviewTag}
           <span class="tag-dur">${dur}</span>
         </div>
@@ -1749,10 +1981,13 @@ function exportPdf() {
   const annotators = [...new Set(docs.map(d => d.annotator).filter(Boolean))];
   
   let commonId = '';
+  let commonRole = '';
   if (annotators.length === 1) {
     commonId = annotators[0];
+    commonRole = 'labeler';
   } else if (reviewers.length === 1) {
     commonId = reviewers[0];
+    commonRole = 'reviewer';
   }
 
   if (!commonId) {
@@ -1765,12 +2000,12 @@ function exportPdf() {
   const w = window.open('', '_blank');
   if (!w) { alert('popup blocked — allow popups to export'); return; }
   w.document.open();
-  w.document.write(buildExportHtml(docs, exportTitle));
+  w.document.write(buildExportHtml(docs, exportTitle, commonId, commonRole));
   w.document.close();
   w.addEventListener('load', () => setTimeout(() => w.print(), 500));
 }
 
-function buildExportHtml(docs, title) {
+function buildExportHtml(docs, title, commonId, commonRole) {
   const today = new Date().toISOString().slice(0, 10);
   const pcts = docs.filter(d => d.versions && d.versions.length).map(d => {
     const tlEdit = tlEditsMap.get(String(d.id));
@@ -1779,7 +2014,26 @@ function buildExportHtml(docs, title) {
   });
   const avgPct = pcts.length ? Math.round(pcts.reduce((a, b) => a + b, 0) / pcts.length) : null;
   const majorCount = docs.filter(d => majorSet.has(String(d.id))).length;
-  const statsHtml = (avgPct !== null || majorCount > 0) ? `<div class="export-stats">${avgPct !== null ? `<span>avg. ${avgPct}% changed</span>` : ''}${majorCount > 0 ? `<span class="export-stats-major">${majorCount} major</span>` : ''}</div>` : '';
+  const reviewedCount = docs.filter(d => d.reviewed).length;
+  const unreviewedCount = docs.filter(d => !d.reviewed && !d.reviewedBy).length;
+  const commentCount = docs.filter(d => {
+    const saved = commentsMap.get(String(d.id));
+    if (!saved) return false;
+    const text = typeof saved === 'string' ? saved : (saved.text || '');
+    const images = Array.isArray(saved?.images) ? saved.images : [];
+    return !!(text.trim() || images.length);
+  }).length;
+  const tlEditCount = docs.filter(d => tlEditsMap.has(String(d.id))).length;
+
+  const statParts = [];
+  statParts.push(`<span>${reviewedCount} reviewed</span>`);
+  if (unreviewedCount > 0) statParts.push(`<span>${unreviewedCount} unreviewed</span>`);
+  if (majorCount > 0) statParts.push(`<span class="export-stats-major">${majorCount} major</span>`);
+  if (commentCount > 0) statParts.push(`<span>${commentCount} with comments</span>`);
+  if (tlEditCount > 0) statParts.push(`<span style="color:#7a3fb0;">${tlEditCount} TL edited</span>`);
+  if (avgPct !== null) statParts.push(`<span>avg. ${avgPct}% changed</span>`);
+  const statsHtml = `<div class="export-stats">${statParts.join('')}</div>`;
+
   const docsHtml = docs.map(d => exportRow(d)).join('');
   const styles = document.querySelector('style').innerHTML;
   const genComment = $('general-comment').value;
@@ -1795,8 +2049,8 @@ function buildExportHtml(docs, title) {
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Fraunces:opsz,wght@9..144,600&display=swap">
 <style>${styles}</style>
 </head><body class="export-body">
-<h1 class="export-h1">ATC Transcript Export</h1>
-<div class="export-meta">${docs.length} recording${docs.length === 1 ? '' : 's'} · exported ${today}</div>
+<h1 class="export-h1">ATC ${commonRole === 'labeler' ? 'Labeler' : commonRole === 'reviewer' ? 'Reviewer' : 'Labeler/Reviewer'} Audit Report</h1>
+<div class="export-meta">${commonId ? escapeHtml(commonId) + ' &middot; ' : ''}${docs.length} recording${docs.length === 1 ? '' : 's'} &middot; exported ${today}</div>
 ${statsHtml}
 ${genCommentHtml}
 ${docsHtml}
@@ -1808,8 +2062,8 @@ function exportRow(d) {
   const facets = ['airport', 'position', 'date', 'time'].filter(f => d[f]).map(f => `<span class="export-tag">${escapeHtml(d[f])}</span>`).join('');
 
   const review = d.reviewed
-    ? `<span class="export-tag reviewed">✓ approved</span>`
-    : (d.reviewedBy ? '' : `<span class="export-tag unapproved">unapproved</span>`);
+    ? `<span class="export-tag reviewed">✓ reviewed</span>`
+    : `<span class="export-tag unapproved">unreviewed</span>`;
 
   const labeler = d.annotator ? `<span class="export-tag">labeler: ${escapeHtml(d.annotator)}</span>` : '';
   const reviewer = d.reviewedBy ? `<span class="export-tag">reviewer: ${escapeHtml(d.reviewedBy)}</span>` : '';
@@ -1900,6 +2154,245 @@ document.getElementById('pdf-modal-close').addEventListener('click', () => {
 });
 document.getElementById('pdf-modal-overlay').addEventListener('click', e => {
   if (e.target === e.currentTarget) e.currentTarget.classList.remove('open');
+});
+
+// ====================== GitHub Share ======================
+
+function getGhToken() { return localStorage.getItem(GH_TOKEN_KEY) || null; }
+function setGhToken(t) { localStorage.setItem(GH_TOKEN_KEY, t.trim()); }
+function clearGhToken() { localStorage.removeItem(GH_TOKEN_KEY); }
+
+function bufferToBase64(buf) {
+  const bytes = new Uint8Array(buf);
+  let bin = '';
+  for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+  return btoa(bin);
+}
+function textToBase64(str) { return bufferToBase64(new TextEncoder().encode(str)); }
+function base64ToBuffer(b64) {
+  const bin = atob(b64.replace(/\n/g, ''));
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return bytes.buffer;
+}
+
+async function ghApi(path, method = 'GET', body = null) {
+  const token = getGhToken();
+  const headers = { 'Accept': 'application/vnd.github.v3+json' };
+  if (token) headers['Authorization'] = `token ${token}`;
+  if (body) headers['Content-Type'] = 'application/json';
+  const res = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}${path}`, {
+    method, headers, body: body ? JSON.stringify(body) : undefined
+  });
+  if (!res.ok) throw new Error(`GitHub ${res.status}: ${await res.text()}`);
+  return res.json();
+}
+
+async function ghFetchFile(sessionId, name) {
+  const token = getGhToken();
+  const headers = { 'Accept': 'application/vnd.github.v3+json' };
+  if (token) headers['Authorization'] = `token ${token}`;
+  const res = await fetch(
+    `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/snapshots/${sessionId}/${encodeURIComponent(name)}`,
+    { headers }
+  );
+  if (!res.ok) throw new Error(`Fetch ${name} failed (${res.status})`);
+  const data = await res.json();
+  if (data.content) return base64ToBuffer(data.content);
+  return fetch(data.download_url).then(r => r.arrayBuffer());
+}
+
+function genSessionId() {
+  const d = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+  return `${d}-${Math.random().toString(36).slice(2, 6)}`;
+}
+
+async function uploadSession(sessionId, fileRecords, annotJson, metaJson) {
+  const token = getGhToken();
+  if (!token) throw new Error('No GitHub token — enter one when sharing');
+
+  // Create all blobs in parallel
+  const blobEntries = await Promise.all([
+    ...fileRecords.map(async ({ name, buffer }) => {
+      const blob = await ghApi('/git/blobs', 'POST', { content: bufferToBase64(buffer), encoding: 'base64' });
+      return { path: `snapshots/${sessionId}/${name}`, sha: blob.sha };
+    }),
+    ghApi('/git/blobs', 'POST', { content: textToBase64(annotJson), encoding: 'base64' })
+      .then(b => ({ path: `snapshots/${sessionId}/annotations.json`, sha: b.sha })),
+    ghApi('/git/blobs', 'POST', { content: textToBase64(metaJson), encoding: 'base64' })
+      .then(b => ({ path: `snapshots/${sessionId}/meta.json`, sha: b.sha })),
+  ]);
+
+  const ref = await ghApi(`/git/ref/heads/${GH_BRANCH}`);
+  const headCommit = await ghApi(`/git/commits/${ref.object.sha}`);
+  const tree = await ghApi('/git/trees', 'POST', {
+    base_tree: headCommit.tree.sha,
+    tree: blobEntries.map(({ path, sha }) => ({ path, mode: '100644', type: 'blob', sha }))
+  });
+  const commit = await ghApi('/git/commits', 'POST', {
+    message: `Share session ${sessionId}`,
+    tree: tree.sha,
+    parents: [ref.object.sha]
+  });
+  await ghApi(`/git/refs/heads/${GH_BRANCH}`, 'PATCH', { sha: commit.sha });
+}
+
+function serializeAnnotations() {
+  return JSON.stringify({
+    version: 1,
+    comments: [...commentsMap.entries()],
+    major: [...majorSet],
+    tlEdits: [...tlEditsMap.entries()],
+    generalComment: { text: $('general-comment').value, images: generalCommentImages },
+  });
+}
+
+function loadSharedAnnotations(json) {
+  try {
+    const d = JSON.parse(json);
+    commentsMap = new Map((d.comments || []).map(([id, v]) => [String(id), v]));
+    majorSet = new Set((d.major || []).map(String));
+    tlEditsMap = new Map((d.tlEdits || []).map(([id, v]) => [String(id), v]));
+    const gc = d.generalComment || {};
+    $('general-comment').value = gc.text || '';
+    generalCommentImages = gc.images || [];
+    renderGeneralCommentImages();
+  } catch (e) { console.warn('Failed to load shared annotations:', e); }
+}
+
+function buildShareUrl(sessionId) {
+  const params = new URLSearchParams();
+  if (sessionId) params.set('session', sessionId);
+  const labeler = $('filter-labeler').value.trim();
+  const reviewer = $('filter-reviewer').value.trim();
+  const status = $('filter-status').value;
+  const annotated = $('filter-annotated').value;
+  const sort = $('sort-order').value;
+  if (labeler) params.set('labeler', labeler);
+  if (reviewer) params.set('reviewer', reviewer);
+  if (status) params.set('status', status);
+  if (annotated) params.set('annotated', annotated);
+  if (sort && sort !== 'diff') params.set('sort', sort);
+  const str = params.toString();
+  return `${location.origin}${location.pathname}${str ? '?' + str : ''}`;
+}
+
+function syncFilterUrl() {
+  const session = new URLSearchParams(location.search).get('session');
+  history.replaceState(null, '', buildShareUrl(session));
+}
+
+function restoreFiltersFromUrl(params) {
+  $('filter-labeler').value = params.get('labeler') || '';
+  $('filter-reviewer').value = params.get('reviewer') || '';
+  $('filter-status').value = params.get('status') || '';
+  $('filter-annotated').value = params.get('annotated') || '';
+  $('sort-order').value = params.get('sort') || 'diff';
+}
+
+async function maybeLoadSharedSession() {
+  const params = new URLSearchParams(location.search);
+  const sessionId = params.get('session');
+  if (!sessionId) return false;
+
+  uploadStatus.textContent = 'Loading shared session…';
+
+  try {
+    const metaBuf = await ghFetchFile(sessionId, 'meta.json');
+    const meta = JSON.parse(new TextDecoder().decode(metaBuf));
+
+    const files = await Promise.all(meta.files.map(async name => {
+      const buf = await ghFetchFile(sessionId, name);
+      return new File([buf], name);
+    }));
+
+    let annotText = null;
+    try {
+      const buf = await ghFetchFile(sessionId, 'annotations.json');
+      annotText = new TextDecoder().decode(buf);
+    } catch {}
+
+    await saveFilesToDb(files).catch(() => {});
+    await processSnapshots(files);
+
+    if (annotText) {
+      loadSharedAnnotations(annotText);
+      await saveCommentsToDb();
+      saveMajor();
+      saveTlEdits();
+      saveGeneralComment();
+    }
+
+    restoreFiltersFromUrl(params);
+    rerun();
+    return true;
+  } catch (e) {
+    console.error('Shared session load failed:', e);
+    uploadStatus.textContent = `Could not load shared session: ${e.message}`;
+    return false;
+  }
+}
+
+function showShareModal(url) {
+  $('share-url-input').value = url;
+  $('share-modal-overlay').classList.add('open');
+  $('share-url-input').select();
+}
+
+$('share-modal-close').addEventListener('click', () => $('share-modal-overlay').classList.remove('open'));
+$('share-modal-overlay').addEventListener('click', e => {
+  if (e.target === e.currentTarget) e.currentTarget.classList.remove('open');
+});
+$('share-url-copy').addEventListener('click', () => {
+  navigator.clipboard?.writeText($('share-url-input').value).catch(() => {});
+  $('share-url-copy').textContent = 'Copied!';
+  setTimeout(() => { $('share-url-copy').textContent = 'Copy'; }, 1500);
+});
+
+$('share-btn').addEventListener('click', async () => {
+  let token = getGhToken();
+  if (!token) {
+    token = prompt('Enter your GitHub personal access token (repo write access).\nStored locally, never sent anywhere except GitHub.');
+    if (!token?.trim()) return;
+    setGhToken(token);
+    token = token.trim();
+  }
+
+  const btn = $('share-btn');
+  btn.textContent = 'Sharing…';
+  btn.style.pointerEvents = 'none';
+
+  try {
+    const files = await loadFilesFromDb();
+    if (!files.length) { alert('No data loaded to share.'); return; }
+
+    const sessionId = genSessionId();
+    const fileRecords = await Promise.all(files.map(async f => ({
+      name: f.name.replace(/[^\w.\-]/g, '_'),
+      buffer: await f.arrayBuffer()
+    })));
+
+    const annotJson = serializeAnnotations();
+    const metaJson = JSON.stringify({
+      sessionId,
+      createdAt: new Date().toISOString(),
+      files: fileRecords.map(f => f.name),
+    });
+
+    await uploadSession(sessionId, fileRecords, annotJson, metaJson);
+    showShareModal(buildShareUrl(sessionId));
+  } catch (e) {
+    console.error(e);
+    if (e.message.includes('401') || e.message.includes('403')) {
+      clearGhToken();
+      alert('Token invalid or insufficient permissions. Please try again.');
+    } else {
+      alert('Share failed: ' + e.message);
+    }
+  } finally {
+    btn.textContent = 'Share';
+    btn.style.pointerEvents = '';
+  }
 });
 
 function loadSelection() {
