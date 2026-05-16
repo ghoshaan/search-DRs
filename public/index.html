@@ -2159,7 +2159,6 @@ function buildExportHtml(docs, title, commonId, commonRole) {
   const statsHtml = `<div class="export-stats">${statParts.join('')}</div>`;
 
   const docsHtml = docs.map(d => exportRow(d)).join('');
-  const styles = document.querySelector('style').innerHTML;
   const genComment = $('general-comment').value;
   const genCommentHtml = (genComment || generalCommentImages.length) ? `
     <div class="export-comment" style="margin-bottom: 24pt; background: #f0f7f2; border-color: #66bb6a;">
@@ -2171,10 +2170,52 @@ function buildExportHtml(docs, title, commonId, commonRole) {
   return `<!doctype html><html><head><meta charset="utf-8">
 <title>${escapeHtml(title)}</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Fraunces:opsz,wght@9..144,600&display=swap">
-<style>${styles}</style>
 <style>
-  :root { --bg: #fff; --panel: #f5f5f5; --line: #e0e0e0; --line-2: #ccc; --ink: #111; --ink-dim: #555; --ink-faint: #888; --hl-bg: #fff3cd; --hl-fg: #856404; }
-  body { background: #fff !important; color: #111 !important; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body { background: #fff; color: #111; font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif; font-size: 10pt; line-height: 1.4; }
+  @page { size: letter landscape; margin: 0.45in; }
+  .export-body { color: #111; font-size: 10pt; line-height: 1.4; margin: 0; padding: 0; }
+  .export-h1 { font-size: 15pt; margin: 0 0 3pt; font-weight: 600; font-family: 'Fraunces', serif; }
+  .export-meta { font-size: 8.5pt; color: #666; margin-bottom: 12pt; padding-bottom: 7pt; border-bottom: 1px solid #ccc; text-transform: uppercase; letter-spacing: 0.1em; }
+  .export-row { page-break-inside: avoid; break-inside: avoid; margin-bottom: 12pt; padding-bottom: 10pt; border-bottom: 1px solid #e0e0e0; }
+  .export-row:last-child { border-bottom: none; }
+  .export-key { font-family: 'JetBrains Mono', monospace; font-size: 10.5pt; font-weight: 600; word-break: break-all; margin-bottom: 2pt; }
+  a.export-key { color: #0055aa; text-decoration: underline; display: block; }
+  .export-tags { font-size: 8.5pt; color: #555; margin-bottom: 5pt; display: flex; gap: 10pt; flex-wrap: wrap; }
+  .export-tag { display: inline-block; }
+  .export-tag.reviewed { color: #2a7a3a; font-weight: 600; }
+  .export-tag.unapproved { color: #999; }
+  .export-tag.major { color: #c0392b; font-weight: 600; }
+  .export-stats { font-size: 9pt; color: #555; margin-bottom: 14pt; display: flex; gap: 16pt; }
+  .export-stats-major { color: #c0392b; font-weight: 600; }
+  .export-segs { margin: 4pt 0; display: block; }
+  .export-seg { display: grid; grid-template-columns: 40pt auto 1fr; gap: 4pt; align-items: start; margin-bottom: 1.5pt; }
+  .export-seg-time { color: #999; font-family: 'JetBrains Mono', monospace; font-size: 8.5pt; }
+  .export-seg-role { font-size: 8.5pt; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; }
+  .export-seg-role.pilot { color: #2a7a3a; }
+  .export-seg-role.atc { color: #b86b00; }
+  .export-seg-role.unknown { color: #888; }
+  .export-seg-text { color: #111; overflow-wrap: break-word; word-break: break-word; line-height: 1.35; }
+  .export-versions-h { font-size: 8.5pt; font-weight: 700; margin: 8pt 0 3pt; color: #555; text-transform: uppercase; letter-spacing: 0.06em; }
+  .export-ver { border-left: 2pt solid #ddd; padding: 3pt 0 3pt 9pt; margin: 4pt 0; page-break-inside: avoid; break-inside: avoid; }
+  .export-ver-h { font-size: 8.5pt; color: #666; margin-bottom: 3pt; }
+  .export-ver-h b { color: #111; font-weight: 600; }
+  .export-comment { background: #fdfaf5; border-left: 2pt solid #ffb347; padding: 5pt 9pt; margin-top: 6pt; font-size: 9.5pt; color: #333; }
+  .export-comment-imgs { display: flex; flex-wrap: wrap; gap: 8pt; margin-top: 7pt; }
+  .export-comment-img { max-width: 100%; height: auto; border: 1px solid #ccc; max-height: 3in; object-fit: contain; }
+  .seg { display: grid; grid-template-columns: 40pt auto 1fr; gap: 4pt; align-items: start; margin-bottom: 1.5pt; }
+  .seg.seg-removed { border-left: 2px solid #e57373; padding-left: 6px; opacity: 0.8; }
+  .seg.seg-added   { border-left: 2px solid #66bb6a; padding-left: 6px; opacity: 0.8; }
+  .seg-time { color: #999; font-family: 'JetBrains Mono', monospace; font-size: 8.5pt; }
+  .seg-role { font-size: 8.5pt; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; }
+  .seg-role.pilot { color: #2a7a3a; }
+  .seg-role.atc { color: #b86b00; }
+  .seg-role.unknown { color: #888; }
+  .seg-text { color: #111; overflow-wrap: break-word; word-break: break-word; line-height: 1.35; }
+  mark.diff-del { background: transparent; color: #c0392b; text-decoration: line-through; padding: 0; font-style: normal; }
+  mark.diff-add { background: rgba(102,187,106,0.2); color: #2a7a3a; padding: 0; font-style: normal; }
+  .diff-aligned { display: inline-flex; flex-wrap: wrap; column-gap: 0.35em; row-gap: 12px; align-items: center; }
 </style>
 </head><body class="export-body">
 <h1 class="export-h1">ATC ${commonRole === 'labeler' ? 'Labeler' : commonRole === 'reviewer' ? 'Reviewer' : 'Labeler/Reviewer'} Audit Report</h1>
