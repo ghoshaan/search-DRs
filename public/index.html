@@ -2014,8 +2014,8 @@ function buildExportHtml(docs, title, commonId, commonRole) {
   });
   const avgPct = pcts.length ? Math.round(pcts.reduce((a, b) => a + b, 0) / pcts.length) : null;
   const majorCount = docs.filter(d => majorSet.has(String(d.id))).length;
-  const approvedCount = docs.filter(d => d.reviewed).length;
-  const unapprovedCount = docs.filter(d => !d.reviewed && !d.reviewedBy).length;
+  const reviewedCount = docs.filter(d => d.reviewed).length;
+  const unreviewedCount = docs.filter(d => !d.reviewed && !d.reviewedBy).length;
   const commentCount = docs.filter(d => {
     const saved = commentsMap.get(String(d.id));
     if (!saved) return false;
@@ -2026,8 +2026,8 @@ function buildExportHtml(docs, title, commonId, commonRole) {
   const tlEditCount = docs.filter(d => tlEditsMap.has(String(d.id))).length;
 
   const statParts = [];
-  statParts.push(`<span>${approvedCount} approved</span>`);
-  if (unapprovedCount > 0) statParts.push(`<span>${unapprovedCount} unapproved</span>`);
+  statParts.push(`<span>${reviewedCount} reviewed</span>`);
+  if (unreviewedCount > 0) statParts.push(`<span>${unreviewedCount} unreviewed</span>`);
   if (majorCount > 0) statParts.push(`<span class="export-stats-major">${majorCount} major</span>`);
   if (commentCount > 0) statParts.push(`<span>${commentCount} with comments</span>`);
   if (tlEditCount > 0) statParts.push(`<span style="color:#7a3fb0;">${tlEditCount} TL edited</span>`);
