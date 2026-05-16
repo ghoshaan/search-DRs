@@ -2031,18 +2031,19 @@ async function generatePdfBlob(htmlString, title) {
   // has the correct style context (iframe bodies lose their stylesheet).
   const parsed = new DOMParser().parseFromString(htmlString, 'text/html');
 
-  // Inject export CSS into main doc, minus @page and body rules to avoid flicker.
+  // Inject export CSS into main doc, mapping body styles to our container.
   const rawCss = Array.from(parsed.head.querySelectorAll('style'))
     .map(s => s.textContent).join('\n')
     .replace(/@page\s*\{[^}]*\}/g, '')
-    .replace(/(?:html\s*,\s*)?body\s*\{[^}]*\}/g, '');
+    .replace(/(?:html\s*,\s*)?body/g, '.export-body');
   const tmpStyle = document.createElement('style');
   tmpStyle.textContent = rawCss;
   document.head.appendChild(tmpStyle);
 
   const container = document.createElement('div');
   container.className = 'export-body';
-  container.style.cssText = 'position:fixed;left:-9999px;top:0;width:1400px;background:#fff;color:#111;font-size:10pt;line-height:1.4;';
+  // Use a more robust background/color set and ensure it is off-screen but visible to the renderer
+  container.style.cssText = 'position:fixed;left:-9999px;top:-9999px;width:1400px;background:#ffffff;color:#111111;font-size:10pt;line-height:1.4;z-index:-1;';
   Array.from(parsed.body.childNodes).forEach(n => container.appendChild(document.adoptNode(n)));
   document.body.appendChild(container);
 
@@ -2052,8 +2053,14 @@ async function generatePdfBlob(htmlString, title) {
   const opt = {
     margin: [0.45, 0.45, 0.45, 0.45],
     filename: `${title}.pdf`,
-    html2canvas: { scale: 1.5, useCORS: true, logging: false, windowWidth: 1400 },
-    jsPDF: { unit: 'in', format: [11, 8.5], orientation: 'landscape' },
+    html2canvas: { 
+      scale: 1.5, 
+      useCORS: true, 
+      logging: false, 
+      windowWidth: 1400,
+      backgroundColor: '#ffffff'
+    },
+    jsPDF: { unit: 'in', format: [14, 8.5], orientation: 'landscape' },
     pagebreak: { mode: ['css', 'legacy'] },
   };
 
