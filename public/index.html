@@ -1227,7 +1227,9 @@ function showApp() {
   }
 }
 
-$('change-snapshots-btn').addEventListener('click', () => location.reload());
+$('change-snapshots-btn').addEventListener('click', () => {
+  location.href = location.pathname;
+});
 
 // Browser back button now reloads without wiping IDB, so the Recent uploads
 // panel still shows the saved files you can resume.
@@ -1414,12 +1416,10 @@ function renderDoc(d) {
   
   const hasTlEdit = tlEditsMap.has(String(d.id));
   const suppressHistory = !hasTlEdit && d.versions.length > 0 && !d.reviewedBy && (d.pct || 0) === 0 && !d.hasPunctChange;
-  const vBadge = (showHistory && !suppressHistory && (d.versions.length > 0 || hasTlEdit))
+  const vBadge = (!suppressHistory && (d.versions.length > 0 || hasTlEdit))
     ? `<button class="version-badge" data-vid="${escapeAttr(String(d.id))}">&#x1F4DC;${d.versions.length > 0 ? ' ' + d.versions.length : ''}</button>`
     : '';
-  const tlBadge = showHistory
-    ? `<button class="tag tag-tl-edit${hasTlEdit ? ' has-edit' : ''}" data-tlbtn="${escapeAttr(String(d.id))}">${hasTlEdit ? 'Edit ✎' : 'Edit'}</button>`
-    : '';
+  const tlBadge = `<button class="tag tag-tl-edit${hasTlEdit ? ' has-edit' : ''}" data-tlbtn="${escapeAttr(String(d.id))}">${hasTlEdit ? 'Edit ✎' : 'Edit'}</button>`;
 
   const punctTag = d.hasPunctChange ? `<span class="tag" style="color:var(--ink-dim);border-color:var(--line-2);">punctuation</span>` : '';
 
@@ -1496,9 +1496,9 @@ function renderDoc(d) {
       <div class="segments">${segs}</div>
       ${audioEl}
       ${metaLine}
-      ${showHistory ? renderHistory(d) : ''}
+      ${renderHistory(d)}
       ${commentUI}
-      ${showHistory ? renderTlEditor(d) : ''}
+      ${renderTlEditor(d)}
     </article>
   `;
 }
@@ -2820,8 +2820,12 @@ $('share-btn').addEventListener('click', async () => {
 
   try {
     const activeBatches = new Set();
-    filteredDocs.forEach(d => activeBatches.add(d.batch));
-    allDocs.filter(d => selection.has(d.id)).forEach(d => activeBatches.add(d.batch));
+    const addBatches = (d) => {
+      activeBatches.add(d.batch);
+      if (d.versions) d.versions.forEach(v => activeBatches.add(v.batch));
+    };
+    filteredDocs.forEach(addBatches);
+    allDocs.filter(d => selection.has(d.id)).forEach(addBatches);
 
     const allFiles = await loadFilesFromDb();
     const files = allFiles.filter(f => activeBatches.has(f.name));
