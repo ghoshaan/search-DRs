@@ -16,33 +16,33 @@
     --amber: #ffb347;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: var(--bg); color: var(--ink); font-family: 'JetBrains Mono', monospace; font-size: 13px; min-height: 100vh; }
+  body { background: var(--bg); color: var(--ink); font-family: 'JetBrains Mono', monospace; font-size: 16px; min-height: 100vh; }
 
   header { border-bottom: 1px solid var(--line); padding: 18px 28px; display: flex; align-items: baseline; gap: 16px; }
-  .site-title { font-family: 'Fraunces', serif; font-weight: 300; font-size: 20px; cursor: pointer; }
+  .site-title { font-family: 'Fraunces', serif; font-weight: 300; font-size: 24px; cursor: pointer; }
   .site-title em { font-style: italic; color: var(--amber); font-weight: 600; }
-  .page-label { color: var(--ink-dim); font-size: 11px; text-transform: uppercase; letter-spacing: 0.14em; }
+  .page-label { color: var(--ink-dim); font-size: 13px; text-transform: uppercase; letter-spacing: 0.14em; }
 
   .toolbar { padding: 24px 28px 0; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
-  .search { flex: 1; min-width: 220px; max-width: 480px; background: var(--panel); border: 1px solid var(--line); color: var(--ink); font-family: inherit; font-size: 13px; padding: 10px 14px; outline: none; }
+  .search { flex: 1; min-width: 220px; max-width: 480px; background: var(--panel); border: 1px solid var(--line); color: var(--ink); font-family: inherit; font-size: 16px; padding: 10px 14px; outline: none; }
   .search:focus { border-color: var(--amber); }
   .search::placeholder { color: var(--ink-dim); }
 
-  .meta { padding: 14px 28px 0; font-size: 11px; color: var(--ink-dim); text-transform: uppercase; letter-spacing: 0.1em; }
+  .meta { padding: 14px 28px 0; font-size: 14px; color: var(--ink-dim); text-transform: uppercase; letter-spacing: 0.1em; }
 
   .list { padding: 12px 28px 48px; }
-  .entry { display: flex; align-items: baseline; gap: 20px; flex-wrap: wrap; padding: 13px 0; border-bottom: 1px solid var(--line); }
+  .entry { display: flex; align-items: baseline; gap: 20px; flex-wrap: wrap; padding: 16px 0; border-bottom: 1px solid var(--line); }
   .entry:last-child { border-bottom: none; }
-  .entry-id { font-weight: 700; color: var(--ink); }
-  .entry-date { color: var(--ink-dim); font-size: 11px; }
-  .entry-by { color: var(--ink-dim); font-size: 11px; font-style: italic; }
-  .entry-link { color: var(--amber); text-decoration: none; font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; }
+  .entry-id { font-weight: 700; color: var(--ink); font-size: 17px; }
+  .entry-date { color: var(--ink-dim); font-size: 14px; }
+  .entry-by { color: var(--ink-dim); font-size: 14px; font-style: italic; }
+  .entry-link { color: var(--amber); text-decoration: none; font-size: 14px; text-transform: uppercase; letter-spacing: 0.12em; }
   .entry-link:hover { text-decoration: underline; }
-  .entry-del { background: none; border: none; color: var(--ink-dim); cursor: pointer; font-size: 15px; padding: 0; line-height: 1; margin-left: auto; opacity: 0.4; font-family: inherit; }
+  .entry-del { background: none; border: none; color: var(--ink-dim); cursor: pointer; font-size: 20px; padding: 0; line-height: 1; margin-left: auto; opacity: 0.4; font-family: inherit; }
   .entry-del:hover { color: #e55; opacity: 1; }
 
-  .empty { padding: 48px 28px; color: var(--ink-dim); font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; }
-  .loading { padding: 48px 28px; color: var(--ink-dim); font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; }
+  .empty { padding: 48px 28px; color: var(--ink-dim); font-size: 14px; text-transform: uppercase; letter-spacing: 0.12em; }
+  .loading { padding: 48px 28px; color: var(--ink-dim); font-size: 14px; text-transform: uppercase; letter-spacing: 0.12em; }
 </style>
 </head>
 <body>
