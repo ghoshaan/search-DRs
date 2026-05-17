@@ -113,11 +113,22 @@ document.getElementById('list').addEventListener('click', e => {
   try {
     const btn = e.target.closest('.entry-del');
     if (btn) {
+      if (btn.textContent === '...') return; // Already deleting
       e.preventDefault();
       e.stopPropagation();
       const key = btn.dataset.key;
       console.log('Delete button clicked for key:', key);
-      deleteEntry(key);
+      
+      const originalContent = btn.textContent;
+      btn.textContent = '...';
+      btn.style.opacity = '0.5';
+      btn.style.cursor = 'wait';
+
+      deleteEntry(key).catch(err => {
+        btn.textContent = originalContent;
+        btn.style.opacity = '';
+        btn.style.cursor = '';
+      });
     }
   } catch (err) {
     console.error('Error in click event listener:', err);
@@ -127,7 +138,9 @@ document.getElementById('list').addEventListener('click', e => {
 
 async function deleteEntry(key) {
   console.log('deleteEntry requested for key:', key);
-  if (!confirm('Remove this entry from the directory?')) return;
+  if (!confirm('Remove this entry from the directory?')) {
+    throw new Error('Cancelled');
+  }
 
   try {
     const ghPath = '/contents/public/directory.json';
@@ -138,15 +151,19 @@ async function deleteEntry(key) {
       const errText = await getRes.text();
       console.error('Failed to fetch directory:', getRes.status, errText);
       alert('Failed to fetch directory: ' + getRes.status);
-      return;
+      throw new Error('Fetch failed');
     }
     const data = await getRes.json();
     const entries = JSON.parse(atob(data.content.replace(/\n/g, '')));
     console.log('Directory fetched, current entries:', entries.length);
 
-    const updated = entries.filter(e => (e.fileId || e.filename) !== key);
+    const updated = entries.filter(e => String(e.fileId || e.filename) !== String(key));
     if (updated.length === entries.length) {
       console.warn('Entry not found in directory for key:', key);
+      alert('Entry not found in directory. It may have already been removed.');
+      // Refresh anyway to sync
+      allEntries = entries;
+      render(document.getElementById('search').value);
       return;
     }
 
@@ -163,15 +180,19 @@ async function deleteEntry(key) {
       const errText = await putRes.text();
       console.error('Failed to update directory:', putRes.status, errText);
       alert('Failed to update directory: ' + putRes.status);
-      return;
+      throw new Error('Update failed');
     }
 
     console.log('Directory updated successfully.');
-    allEntries = allEntries.filter(e => (e.fileId || e.filename) !== key);
+    allEntries = allEntries.filter(e => String(e.fileId || e.filename) !== String(key));
+    console.log('Local allEntries updated, new length:', allEntries.length);
     render(document.getElementById('search').value);
   } catch (err) {
-    console.error('Unexpected error in deleteEntry:', err);
-    alert('An unexpected error occurred: ' + err.message);
+    if (err.message !== 'Cancelled') {
+      console.error('Unexpected error in deleteEntry:', err);
+      alert('An unexpected error occurred: ' + err.message);
+    }
+    throw err;
   }
 }
 
