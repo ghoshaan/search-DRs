@@ -1310,7 +1310,8 @@ function renderDoc(d) {
     : `<span class="tag tag-unapproved">unreviewed</span>`;
   
   const hasTlEdit = tlEditsMap.has(String(d.id));
-  const vBadge = (showHistory && (d.versions.length > 0 || hasTlEdit))
+  const suppressHistory = !hasTlEdit && d.versions.length > 0 && !d.reviewedBy && (d.pct || 0) === 0;
+  const vBadge = (showHistory && !suppressHistory && (d.versions.length > 0 || hasTlEdit))
     ? `<button class="version-badge" data-vid="${escapeAttr(String(d.id))}">&#x1F4DC;${d.versions.length > 0 ? ' ' + d.versions.length : ''}</button>`
     : '';
   const tlBadge = showHistory
@@ -1633,6 +1634,7 @@ function renderHistory(d) {
 
   // No TL edits — original behaviour: labeler → reviewer using timestamp-based matching
   const pct = d.pct || 0;
+  if (pct === 0 && !d.reviewedBy) return '';
   const pctHtml = pct > 0 ? ` · <span style="color:var(--red);opacity:0.75">${pct}% changed</span>` : '';
   const segs = renderVersionSegs(initial.segments, d.segments);
   return `<div class="history-panel" id="hp-${escapeAttr(id)}"><div class="version-block prior"><div class="version-block-header"><span class="version-block-date">${escapeHtml(initial.snapshotDate || '—')}</span><span class="version-block-glyph">⟲</span><span class="version-block-desc">initial state${pctHtml}</span></div>${segs}</div></div>`;
