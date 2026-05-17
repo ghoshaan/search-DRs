@@ -658,7 +658,7 @@ function renderGeneralCommentImages() {
   if (!container) return;
   container.innerHTML = generalCommentImages.map((src, i) => `
     <div class="pasted-img-wrap">
-      <img src="${src}" onclick="openLightbox(this.src)">
+      <img src="${src}" >
       <button class="remove-img-gen" data-idx="${i}">&times;</button>
     </div>
   `).join('');
@@ -1437,7 +1437,7 @@ function renderDoc(d) {
   const images = Array.isArray(saved.images) ? saved.images : [];
   const imgsHtml = images.map((src, i) => `
     <div class="pasted-img-wrap">
-      <img src="${src}" onclick="openLightbox(this.src)">
+      <img src="${src}" >
       <button class="remove-img" data-cid="${escapeAttr(String(d.id))}" data-idx="${i}">&times;</button>
     </div>
   `).join('');
@@ -1845,7 +1845,7 @@ function handlePaste(e) {
             const final = commentsMap.get(id);
             container.innerHTML = final.images.map((src, i) => `
               <div class="pasted-img-wrap">
-                <img src="${src}" onclick="openLightbox(this.src)">
+                <img src="${src}" >
                 <button class="remove-img" data-cid="${escapeAttr(id)}" data-idx="${i}">&times;</button>
               </div>
             `).join('');
@@ -1858,6 +1858,12 @@ function handlePaste(e) {
 }
 
 document.addEventListener('click', e => {
+  // Pasted image — open lightbox
+  if (e.target.tagName === 'IMG' && e.target.closest('.pasted-img-wrap')) {
+    openLightbox(e.target.src);
+    return;
+  }
+
   // TL badge — toggle editor open/closed
   const tlBtn = e.target.closest('[data-tlbtn]');
   if (tlBtn) {
@@ -2028,7 +2034,7 @@ document.addEventListener('click', e => {
                 const final = commentsMap.get(id);
                 container.innerHTML = final.images.map((src, i) => `
                   <div class="pasted-img-wrap">
-                    <img src="${src}" onclick="openLightbox(this.src)">
+                    <img src="${src}" >
                     <button class="remove-img" data-cid="${escapeAttr(id)}" data-idx="${i}">&times;</button>
                   </div>
                 `).join('');
@@ -2096,7 +2102,7 @@ document.addEventListener('click', e => {
       if (container) {
         container.innerHTML = (current.images || []).map((src, i) => `
           <div class="pasted-img-wrap">
-            <img src="${src}" onclick="openLightbox(this.src)">
+            <img src="${src}" >
             <button class="remove-img" data-cid="${escapeAttr(id)}" data-idx="${i}">&times;</button>
           </div>
         `).join('');
