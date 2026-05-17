@@ -44,7 +44,18 @@
       "Bash(Select-Object -ExpandProperty FullName)",
       "Bash(Sort-Object)",
       "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\ghosh\\\\Desktop\\\\atc-search\" -Force)",
-      "Bash(Select-Object Name, FullName, PSIsContainer)"
+      "Bash(Select-Object Name, FullName, PSIsContainer)",
+      "Bash(npx wrangler *)",
+      "Bash(curl *)",
+      "Bash(git -C \"C:/Users/ghosh/Desktop/atc-search\" add public/index.html)",
+      "Bash(git -C C:/Users/ghosh/Desktop/atc-search commit -m ' *)",
+      "Bash(git -C \"C:/Users/ghosh/Desktop/atc-search\" push)",
+      "Bash(git -C \"C:/Users/ghosh/Desktop/atc-search\" add public/index.html worker/src/index.js)",
+      "Bash(git -C \"C:/Users/ghosh/Desktop/atc-search\" add public/directory.html)",
+      "Bash(git -C \"C:/Users/ghosh/Desktop/atc-search\" pull --rebase)",
+      "Bash(git -C \"C:/Users/ghosh/Desktop/atc-search\" stash)",
+      "Bash(git -C \"C:/Users/ghosh/Desktop/atc-search\" stash pop)",
+      "Bash(git -C \"C:/Users/ghosh/Desktop/atc-search\" add public/index.html public/directory.html worker/src/index.js)"
     ]
   }
 }
