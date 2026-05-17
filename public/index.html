@@ -1124,12 +1124,15 @@ let dragCounter = 0;
 
 ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(name => {
   window.addEventListener(name, e => {
-    e.preventDefault();
-    e.stopPropagation();
+    if (e.dataTransfer?.types?.includes('Files')) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
   }, false);
 });
 
 window.addEventListener('dragenter', e => {
+  if (!e.dataTransfer?.types?.includes('Files')) return;
   dragCounter++;
   if (dragCounter === 1) {
     dropOverlay.style.display = 'flex';
@@ -1138,6 +1141,7 @@ window.addEventListener('dragenter', e => {
 }, false);
 
 window.addEventListener('dragleave', e => {
+  if (!e.dataTransfer?.types?.includes('Files')) return;
   dragCounter--;
   if (dragCounter === 0) {
     dropOverlay.style.display = 'none';
@@ -1146,14 +1150,17 @@ window.addEventListener('dragleave', e => {
 }, false);
 
 window.addEventListener('dragover', e => {
+  if (!e.dataTransfer?.types?.includes('Files')) return;
   e.dataTransfer.dropEffect = 'copy';
 }, false);
 
 window.addEventListener('drop', e => {
+  if (!e.dataTransfer?.types?.includes('Files')) return;
   dragCounter = 0;
   dropOverlay.style.display = 'none';
   uploadCard.classList.remove('drag-over');
-  handleFiles(e.dataTransfer.files);
+  const ndjsonFiles = Array.from(e.dataTransfer.files).filter(f => f.name.toLowerCase().endsWith('.ndjson'));
+  if (ndjsonFiles.length > 0) handleFiles(ndjsonFiles);
 }, false);
 
 function showApp() {
