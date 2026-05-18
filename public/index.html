@@ -250,12 +250,16 @@
   }
   /* Comments */
   .comment-wrap { margin-top: 14px; padding-top: 10px; border-top: 1px dashed var(--line-2); }
-  .comment-row { display: flex; gap: 8px; align-items: stretch; }
-  .comment-row .comment-input { flex: 1; width: auto; resize: none; min-height: 0; }
+  .result-body { display: flex; gap: 12px; align-items: flex-start; margin-top: 8px; }
+  .result-rating-col { display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; }
+  .result-content { flex: 1; min-width: 0; }
+  .result-content .segments { margin-top: 0; }
+  .result-content .history-panel { margin-top: 0; }
+  .comment-row { display: flex; gap: 8px; align-items: flex-start; }
+  .comment-row .comment-input { flex: 1; width: auto; }
   .comment-input { width: 100%; background: var(--panel); border: 1px solid var(--line-2); color: var(--ink); font-family: inherit; font-size: 13px; padding: 8px 12px; border-radius: 0; outline: none; resize: vertical; min-height: 44px; transition: border-color 0.15s; }
   .comment-input:focus { border-color: var(--amber); box-shadow: 0 0 0 1px var(--amber); }
-  .comment-btns { display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; }
-  .paste-btn { width: 66px; min-height: 28px; background: var(--panel); border: 1px solid rgba(64,149,255,0.4); color: #4095ff; font-size: 11px; font-family: inherit; cursor: pointer; transition: all 0.15s; line-height: 1.3; }
+  .paste-btn { width: 52px; min-height: 28px; background: var(--panel); border: 1px solid rgba(64,149,255,0.4); color: #4095ff; font-size: 11px; font-family: inherit; cursor: pointer; transition: all 0.15s; line-height: 1.3; flex-shrink: 0; }
   .paste-btn:hover { border-color: #4095ff; color: #4095ff; background: rgba(64,149,255,0.08); }
   .rating-btn { width: 66px; min-height: 34px; background: var(--panel); border: 1px solid var(--line-2); color: var(--ink-dim); font-size: 11px; font-family: inherit; cursor: pointer; transition: all 0.15s; line-height: 1.3; }
   .reject-btn:hover { border-color: #c0392b; color: #c0392b; }
@@ -1472,17 +1476,19 @@ function renderDoc(d) {
   `).join('');
 
   const docRating = ratingMap.get(String(d.id)) || null;
+  const ratingCol = `
+    <div class="result-rating-col">
+      <button class="rating-btn reject-btn${docRating === 'reject' ? ' active' : ''}" data-rating="reject" data-rid="${escapeAttr(String(d.id))}">&#10005;<br>Reject</button>
+      <button class="rating-btn major-btn${docRating === 'major' ? ' active' : ''}" data-rating="major" data-rid="${escapeAttr(String(d.id))}">&#9873;<br>Major</button>
+      <button class="rating-btn minor-btn${docRating === 'minor' ? ' active' : ''}" data-rating="minor" data-rid="${escapeAttr(String(d.id))}">&#9651;<br>Minor</button>
+      <button class="rating-btn good-btn${docRating === 'good' ? ' active' : ''}" data-rating="good" data-rid="${escapeAttr(String(d.id))}">&#10003;<br>Good</button>
+    </div>
+  `;
   const commentUI = `
     <div class="comment-wrap">
       <div class="comment-row">
-        <div class="comment-btns">
-          <button class="paste-btn" data-cid="${escapeAttr(String(d.id))}" title="Paste text or image from clipboard">&#128203; Paste</button>
-          <button class="rating-btn reject-btn${docRating === 'reject' ? ' active' : ''}" data-rating="reject" data-rid="${escapeAttr(String(d.id))}">&#10005;<br>Reject</button>
-          <button class="rating-btn major-btn${docRating === 'major' ? ' active' : ''}" data-rating="major" data-rid="${escapeAttr(String(d.id))}">&#9873;<br>Major</button>
-          <button class="rating-btn minor-btn${docRating === 'minor' ? ' active' : ''}" data-rating="minor" data-rid="${escapeAttr(String(d.id))}">&#9651;<br>Minor</button>
-          <button class="rating-btn good-btn${docRating === 'good' ? ' active' : ''}" data-rating="good" data-rid="${escapeAttr(String(d.id))}">&#10003;<br>Good</button>
-        </div>
         <textarea class="comment-input" data-cid="${escapeAttr(String(d.id))}" placeholder="Add a comment or paste screenshot...">${escapeHtml(text)}</textarea>
+        <button class="paste-btn" data-cid="${escapeAttr(String(d.id))}" title="Paste text or image from clipboard">&#128203; Paste</button>
       </div>
       <div class="comment-images" id="imgs-${escapeAttr(String(d.id))}">${imgsHtml}</div>
     </div>
@@ -1518,10 +1524,15 @@ function renderDoc(d) {
           <span class="tag-dur">${dur}</span>
         </div>
       </header>
-      ${hasTlEdit ? '' : `<div class="segments">${segs}</div>`}
+      <div class="result-body">
+        ${ratingCol}
+        <div class="result-content">
+          ${hasTlEdit ? '' : `<div class="segments">${segs}</div>`}
+          ${renderHistory(d)}
+        </div>
+      </div>
       ${audioEl}
       ${metaLine}
-      ${renderHistory(d)}
       ${commentUI}
       ${renderTlEditor(d)}
     </article>
