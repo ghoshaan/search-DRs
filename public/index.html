@@ -181,7 +181,7 @@
 
   .diff-aligned { display: inline-flex; flex-wrap: wrap; column-gap: 0.35em; row-gap: 12px; align-items: center; }
   .da-col { display: inline-flex; flex-direction: column; }
-  .da-col > span, .da-eq { display: block; min-height: 1.55em; white-space: nowrap; }
+  .da-col > span, .diff-aligned > .da-eq { display: block; min-height: 1.55em; white-space: nowrap; }
   .da-eq  { color: var(--ink-faint); }
   .da-del { color: var(--red); text-decoration: line-through; }
   .da-ins { color: var(--green); }
@@ -1553,6 +1553,22 @@ function lcsWords(a, b) {
   return dp;
 }
 
+function charDiff(a, b) {
+  const m = a.length, n = b.length;
+  const dp = Array.from({ length: m + 1 }, () => new Uint16Array(n + 1));
+  for (let i = 1; i <= m; i++)
+    for (let j = 1; j <= n; j++)
+      dp[i][j] = a[i-1] === b[j-1] ? dp[i-1][j-1] + 1 : Math.max(dp[i-1][j], dp[i][j-1]);
+  const slots = [];
+  let i = m, j = n;
+  while (i > 0 || j > 0) {
+    if (i > 0 && j > 0 && a[i-1] === b[j-1]) { slots.push({ type: 'eq', char: a[i-1] }); i--; j--; }
+    else if (j > 0 && (i === 0 || dp[i][j-1] > dp[i-1][j])) { slots.push({ type: 'ins', char: b[j-1] }); j--; }
+    else { slots.push({ type: 'del', char: a[i-1] }); i--; }
+  }
+  return slots.reverse();
+}
+
 function alignedWordDiff(oldText, newText) {
   const ow = (oldText || '').split(/\s+/).filter(Boolean);
   const nw = (newText || '').split(/\s+/).filter(Boolean);
@@ -1618,8 +1634,26 @@ function renderAlignedDiff(slots) {
       top = `<span></span>`;
       bot = `<span class="da-ins">${renderText(sl.word)}</span>`;
     } else {
-      top = `<span class="da-del">${renderText(sl.oldWord)}</span>`;
-      bot = `<span class="da-ins">${renderText(sl.newWord)}</span>`;
+      if (normWord(sl.oldWord) === normWord(sl.newWord)) {
+        const diff = charDiff(sl.oldWord, sl.newWord);
+        let t = '', b = '';
+        for (const s of diff) {
+          if (s.type === 'eq') {
+            const txt = renderText(s.char);
+            t += `<span class="da-eq">${txt}</span>`;
+            b += `<span class="da-eq">${txt}</span>`;
+          } else if (s.type === 'del') {
+            t += `<mark class="diff-del">${renderText(s.char)}</mark>`;
+          } else if (s.type === 'ins') {
+            b += `<mark class="diff-add">${renderText(s.char)}</mark>`;
+          }
+        }
+        top = `<span>${t}</span>`;
+        bot = `<span>${b}</span>`;
+      } else {
+        top = `<span class="da-del">${renderText(sl.oldWord)}</span>`;
+        bot = `<span class="da-ins">${renderText(sl.newWord)}</span>`;
+      }
     }
     return `<span class="da-col">${top}${bot}</span>`;
   });
