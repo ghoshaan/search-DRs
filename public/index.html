@@ -2371,48 +2371,21 @@ function hideDriveToast() {
   $('drive-toast').classList.remove('visible');
 }
 
-let _html2pdfLib = null;
-async function loadHtml2Pdf() {
-  if (_html2pdfLib) return _html2pdfLib;
-  if (typeof html2pdf !== 'undefined') { _html2pdfLib = html2pdf; return _html2pdfLib; }
-  await new Promise((resolve, reject) => {
-    const s = document.createElement('script');
-    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
-    s.onload = resolve;
-    s.onerror = reject;
-    document.head.appendChild(s);
-  });
-  _html2pdfLib = html2pdf;
-  return _html2pdfLib;
+function openPrintWindow(htmlString) {
+  const w = window.open('', '_blank');
+  if (!w) { alert('popup blocked — allow popups to export'); return false; }
+  w.document.open();
+  w.document.write(htmlString);
+  w.document.close();
+  w.addEventListener('load', () => setTimeout(() => w.print(), 500));
+  return true;
 }
 
-async function generatePdfBlob(htmlString, title) {
-  const lib = await loadHtml2Pdf();
-
-  const opt = {
-    margin: [0.4, 0.4, 0.4, 0.4],
-    filename: `${title}.pdf`,
-    html2canvas: { 
-      scale: 1.5, 
-      useCORS: true, 
-      backgroundColor: '#ffffff',
-      scrollY: 0,
-      scrollX: 0,
-      logging: false
-    },
-    jsPDF: { unit: 'in', format: [14, 8.5], orientation: 'landscape' },
-    pagebreak: { mode: ['css', 'legacy'] }
-  };
-
-  // Using .from(htmlString) is the most robust way to render a full HTML document 
-  // into a PDF without interference from the main page's styles or layout.
-  return await lib().set(opt).from(htmlString).output('blob');
-}
-
-async function uploadPdfToDrive(blob, filename) {
+async function uploadFileToDrive(blob, filename, mimeType) {
   const form = new FormData();
   form.append('file', blob, filename);
   form.append('filename', filename);
+  form.append('mimeType', mimeType);
   const name = getUserName();
   if (name) form.append('preparedBy', name);
   const res = await fetch(DRIVE_WORKER_URL, { method: 'POST', body: form });
@@ -2460,30 +2433,7 @@ async function exportPdfToDevice() {
   if (!meta) return;
   const { docs, exportTitle, commonId, commonRole, tlName } = meta;
   const htmlString = buildExportHtml(docs, exportTitle, commonId, commonRole, tlName);
-
-  showDriveToast('Generating PDF…');
-  let blob;
-  try {
-    blob = await generatePdfBlob(htmlString, exportTitle);
-  } catch (err) {
-    hideDriveToast();
-    console.warn('html2pdf failed, falling back to print dialog:', err);
-    const w = window.open('', '_blank');
-    if (!w) { alert('popup blocked — allow popups to export'); return; }
-    w.document.open();
-    w.document.write(htmlString);
-    w.document.close();
-    w.addEventListener('load', () => setTimeout(() => w.print(), 500));
-    return;
-  }
-
-  hideDriveToast();
-  const dlUrl = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = dlUrl;
-  a.download = `${exportTitle}.pdf`;
-  a.click();
-  setTimeout(() => URL.revokeObjectURL(dlUrl), 60000);
+  openPrintWindow(htmlString);
 }
 
 async function exportPdfToDrive() {
@@ -2493,40 +2443,20 @@ async function exportPdfToDrive() {
   const htmlString = buildExportHtml(docs, exportTitle, commonId, commonRole, tlName);
 
   if (!DRIVE_WORKER_URL) {
-    showDriveToast('Drive not configured — saving to device instead', 4000);
+    showDriveToast('Drive not configured — opening print dialog', 4000);
     return exportPdfToDevice();
   }
 
-  showDriveToast('Generating PDF…');
-  let blob;
-  try {
-    blob = await generatePdfBlob(htmlString, exportTitle);
-  } catch (err) {
-    hideDriveToast();
-    console.warn('html2pdf failed, falling back to print dialog:', err);
-    const w = window.open('', '_blank');
-    if (!w) { alert('popup blocked — allow popups to export'); return; }
-    w.document.open();
-    w.document.write(htmlString);
-    w.document.close();
-    w.addEventListener('load', () => setTimeout(() => w.print(), 500));
-    return;
-  }
-
   showDriveToast('Saving to Drive…');
-  uploadPdfToDrive(blob, `${exportTitle}.pdf`)
+  const blob = new Blob([htmlString], { type: 'text/html' });
+  uploadFileToDrive(blob, `${exportTitle}.html`, 'text/html')
     .then(result => {
       showDriveToast('Saved to Drive', 4000);
       window.open(result.url, '_blank');
     })
     .catch(err => {
-      showDriveToast(`Drive save failed — saving locally instead`, 6000);
-      const dlUrl = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = dlUrl;
-      a.download = `${exportTitle}.pdf`;
-      a.click();
-      setTimeout(() => URL.revokeObjectURL(dlUrl), 60000);
+      showDriveToast(`Drive save failed — opening print dialog`, 6000);
+      exportPdfToDevice();
     });
 }
 

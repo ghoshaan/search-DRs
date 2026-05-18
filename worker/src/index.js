@@ -32,8 +32,9 @@ export default {
 
       const formData = await request.formData();
       const file = formData.get('file');
-      const filename = formData.get('filename') || 'audit-report.pdf';
+      const filename = formData.get('filename') || 'audit-report.html';
       const preparedBy = formData.get('preparedBy') || '';
+      const mimeType = formData.get('mimeType') || 'application/pdf';
 
       if (!file) {
         return jsonResponse({ error: 'No file provided' }, 400, corsHeaders);
@@ -44,15 +45,15 @@ export default {
         env.GOOGLE_CLIENT_SECRET,
         env.GOOGLE_REFRESH_TOKEN
       );
-      const pdfBuffer = await file.arrayBuffer();
-      const result = await uploadToDrive(accessToken, pdfBuffer, filename, env.FOLDER_ID);
+      const fileBuffer = await file.arrayBuffer();
+      const result = await uploadToDrive(accessToken, fileBuffer, filename, env.FOLDER_ID, mimeType);
 
       const driveUrl = `https://drive.google.com/file/d/${result.id}/view`;
 
-      const nameMatch = filename.match(/^(.*?)\s+(\d{4}-\d{2}-\d{2})\.pdf$/i);
+      const nameMatch = filename.match(/^(.*?)\s+(\d{4}-\d{2}-\d{2})\.(pdf|html)$/i);
       const entry = {
         filename,
-        id: nameMatch ? nameMatch[1] : filename.replace(/\.pdf$/i, ''),
+        id: nameMatch ? nameMatch[1] : filename.replace(/\.(pdf|html)$/i, ''),
         date: nameMatch ? nameMatch[2] : new Date().toISOString().slice(0, 10),
         driveUrl,
         fileId: result.id,
@@ -98,8 +99,8 @@ async function refreshAccessToken(clientId, clientSecret, refreshToken) {
   return data.access_token;
 }
 
-async function uploadToDrive(accessToken, pdfBuffer, filename, folderId) {
-  const metadata = { name: filename, mimeType: 'application/pdf' };
+async function uploadToDrive(accessToken, fileBuffer, filename, folderId, mimeType = 'application/pdf') {
+  const metadata = { name: filename, mimeType };
   if (folderId) metadata.parents = [folderId];
 
   const boundary = 'atc_pdf_upload_boundary';
@@ -108,8 +109,8 @@ async function uploadToDrive(accessToken, pdfBuffer, filename, folderId) {
   const metaPart = enc.encode(
     `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(metadata)}\r\n`
   );
-  const filePart = enc.encode(`--${boundary}\r\nContent-Type: application/pdf\r\n\r\n`);
-  const fileBytes = new Uint8Array(pdfBuffer);
+  const filePart = enc.encode(`--${boundary}\r\nContent-Type: ${mimeType}\r\n\r\n`);
+  const fileBytes = new Uint8Array(fileBuffer);
   const closePart = enc.encode(`\r\n--${boundary}--`);
 
   const total = metaPart.length + filePart.length + fileBytes.length + closePart.length;
@@ -214,7 +215,7 @@ async function handleDriveSearch(request, env, url, corsHeaders) {
     );
 
     const safeQ = q.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-    const driveQuery = `name contains '${safeQ}' and mimeType = 'application/pdf' and trashed = false`;
+    const driveQuery = `name contains '${safeQ}' and (mimeType = 'application/pdf' or mimeType = 'text/html') and trashed = false`;
 
     const listUrl = new URL('https://www.googleapis.com/drive/v3/files');
     listUrl.searchParams.set('q', driveQuery);
@@ -235,11 +236,11 @@ async function handleDriveSearch(request, env, url, corsHeaders) {
 
     const data = await res.json();
     const files = (data.files || []).map(f => {
-      const nameMatch = f.name.match(/^(.*?)\s+(\d{4}-\d{2}-\d{2})\.pdf$/i);
+      const nameMatch = f.name.match(/^(.*?)\s+(\d{4}-\d{2}-\d{2})\.(pdf|html)$/i);
       return {
         fileId: f.id,
         name: f.name,
-        id: nameMatch ? nameMatch[1] : f.name.replace(/\.pdf$/i, ''),
+        id: nameMatch ? nameMatch[1] : f.name.replace(/\.(pdf|html)$/i, ''),
         date: nameMatch ? nameMatch[2] : (f.createdTime || '').slice(0, 10),
         driveUrl: f.webViewLink || `https://drive.google.com/file/d/${f.id}/view`,
       };
