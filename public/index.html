@@ -2436,49 +2436,49 @@ function buildExportHtml(docs, title, commonId, commonRole, tlName) {
 <style>
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; }
-  body { background: #fff; color: #111; font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif; font-size: 10pt; line-height: 1.4; }
+  body { background: #fff; color: #000; font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif; font-size: 11pt; line-height: 1.5; }
   @page { size: letter landscape; margin: 0.45in; }
-  .export-body { color: #111; font-size: 10pt; line-height: 1.4; margin: 0; padding: 0; }
-  .export-h1 { font-size: 15pt; margin: 0 0 3pt; font-weight: 600; font-family: 'Fraunces', serif; }
-  .export-meta { font-size: 8.5pt; color: #666; margin-bottom: 12pt; padding-bottom: 7pt; border-bottom: 1px solid #ccc; text-transform: uppercase; letter-spacing: 0.1em; }
-  .export-row { page-break-inside: avoid; break-inside: avoid; margin-bottom: 12pt; padding-bottom: 10pt; border-bottom: 1px solid #e0e0e0; }
+  .export-body { color: #000; font-size: 11pt; line-height: 1.5; margin: 0; padding: 0; }
+  .export-h1 { font-size: 18pt; margin: 0 0 4pt; font-weight: 600; font-family: 'Fraunces', serif; }
+  .export-meta { font-size: 10pt; color: #444; margin-bottom: 14pt; padding-bottom: 8pt; border-bottom: 1px solid #aaa; text-transform: uppercase; letter-spacing: 0.05em; }
+  .export-row { page-break-inside: avoid; break-inside: avoid; margin-bottom: 16pt; padding-bottom: 12pt; border-bottom: 1px solid #ccc; }
   .export-row:last-child { border-bottom: none; }
-  .export-key { font-family: 'JetBrains Mono', monospace; font-size: 10.5pt; font-weight: 600; word-break: break-all; margin-bottom: 2pt; }
-  a.export-key { color: #0055aa; text-decoration: underline; display: block; }
-  .export-tags { font-size: 8.5pt; color: #555; margin-bottom: 5pt; display: flex; gap: 10pt; flex-wrap: wrap; }
+  .export-key { font-family: 'JetBrains Mono', monospace; font-size: 11.5pt; font-weight: 700; word-break: break-all; margin-bottom: 3pt; }
+  a.export-key { color: #004499; text-decoration: underline; display: block; }
+  .export-tags { font-size: 10pt; color: #333; margin-bottom: 6pt; display: flex; gap: 12pt; flex-wrap: wrap; }
   .export-tag { display: inline-block; }
-  .export-tag.reviewed { color: #2a7a3a; font-weight: 600; }
-  .export-tag.unapproved { color: #999; }
-  .export-tag.major { color: #c0392b; font-weight: 600; }
-  .export-stats { font-size: 9pt; color: #555; margin-bottom: 14pt; display: flex; gap: 16pt; }
-  .export-stats-major { color: #c0392b; font-weight: 600; }
-  .export-segs { margin: 4pt 0; display: block; }
-  .export-seg { display: grid; grid-template-columns: 40pt auto 1fr; gap: 4pt; align-items: start; margin-bottom: 1.5pt; }
-  .export-seg-time { color: #999; font-family: 'JetBrains Mono', monospace; font-size: 8.5pt; }
-  .export-seg-role { font-size: 8.5pt; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; }
-  .export-seg-role.pilot { color: #2a7a3a; }
-  .export-seg-role.atc { color: #b86b00; }
-  .export-seg-role.unknown { color: #888; }
-  .export-seg-text { color: #111; overflow-wrap: break-word; word-break: break-word; line-height: 1.35; }
-  .export-versions-h { font-size: 8.5pt; font-weight: 700; margin: 8pt 0 3pt; color: #555; text-transform: uppercase; letter-spacing: 0.06em; }
-  .export-ver { border-left: 2pt solid #ddd; padding: 3pt 0 3pt 9pt; margin: 4pt 0; page-break-inside: avoid; break-inside: avoid; }
-  .export-ver-h { font-size: 8.5pt; color: #666; margin-bottom: 3pt; }
-  .export-ver-h b { color: #111; font-weight: 600; }
-  .export-comment { background: #fdfaf5; border-left: 2pt solid #ffb347; padding: 5pt 9pt; margin-top: 6pt; font-size: 9.5pt; color: #333; }
-  .export-comment-imgs { display: flex; flex-wrap: wrap; gap: 8pt; margin-top: 7pt; }
-  .export-comment-img { max-width: 100%; height: auto; border: 1px solid #ccc; max-height: 3in; object-fit: contain; }
-  .seg { display: grid; grid-template-columns: 40pt auto 1fr; gap: 4pt; align-items: start; margin-bottom: 1.5pt; }
-  .seg.seg-removed { border-left: 2px solid #e57373; padding-left: 6px; opacity: 0.8; }
-  .seg.seg-added   { border-left: 2px solid #66bb6a; padding-left: 6px; opacity: 0.8; }
-  .seg-time { color: #999; font-family: 'JetBrains Mono', monospace; font-size: 8.5pt; }
-  .seg-role { font-size: 8.5pt; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; }
-  .seg-role.pilot { color: #2a7a3a; }
-  .seg-role.atc { color: #b86b00; }
-  .seg-role.unknown { color: #888; }
-  .seg-text { color: #111; overflow-wrap: break-word; word-break: break-word; line-height: 1.35; }
-  mark.diff-del { background: transparent; color: #c0392b; text-decoration: line-through; padding: 0; font-style: normal; }
-  mark.diff-add { background: rgba(102,187,106,0.2); color: #2a7a3a; padding: 0; font-style: normal; }
-  .diff-aligned { display: inline-flex; flex-wrap: wrap; column-gap: 0.35em; row-gap: 12px; align-items: center; }
+  .export-tag.reviewed { color: #1a5a2a; font-weight: 700; }
+  .export-tag.unapproved { color: #666; font-weight: 500; }
+  .export-tag.major { color: #a02010; font-weight: 700; }
+  .export-stats { font-size: 10.5pt; color: #222; margin-bottom: 16pt; display: flex; gap: 20pt; font-weight: 500; }
+  .export-stats-major { color: #a02010; font-weight: 700; }
+  .export-segs { margin: 6pt 0; display: block; }
+  .export-seg { display: grid; grid-template-columns: 45pt auto 1fr; gap: 6pt; align-items: start; margin-bottom: 2pt; }
+  .export-seg-time { color: #555; font-family: 'JetBrains Mono', monospace; font-size: 9.5pt; font-weight: 500; }
+  .export-seg-role { font-size: 10pt; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; }
+  .export-seg-role.pilot { color: #1a5a2a; }
+  .export-seg-role.atc { color: #985b00; }
+  .export-seg-role.unknown { color: #555; }
+  .export-seg-text { color: #000; overflow-wrap: break-word; word-break: break-word; line-height: 1.4; }
+  .export-versions-h { font-size: 10pt; font-weight: 700; margin: 10pt 0 4pt; color: #333; text-transform: uppercase; letter-spacing: 0.05em; }
+  .export-ver { border-left: 2.5pt solid #bbb; padding: 4pt 0 4pt 10pt; margin: 6pt 0; page-break-inside: avoid; break-inside: avoid; }
+  .export-ver-h { font-size: 10pt; color: #444; margin-bottom: 4pt; }
+  .export-ver-h b { color: #000; font-weight: 700; }
+  .export-comment { background: #fdfaf5; border-left: 2.5pt solid #ffb347; padding: 6pt 10pt; margin-top: 8pt; font-size: 10.5pt; color: #111; }
+  .export-comment-imgs { display: flex; flex-wrap: wrap; gap: 10pt; margin-top: 8pt; }
+  .export-comment-img { max-width: 100%; height: auto; border: 1px solid #aaa; max-height: 3.5in; object-fit: contain; }
+  .seg { display: grid; grid-template-columns: 45pt auto 1fr; gap: 6pt; align-items: start; margin-bottom: 2pt; }
+  .seg.seg-removed { border-left: 2px solid #d32f2f; padding-left: 8px; opacity: 1; }
+  .seg.seg-added   { border-left: 2px solid #388e3c; padding-left: 8px; opacity: 1; }
+  .seg-time { color: #555; font-family: 'JetBrains Mono', monospace; font-size: 9.5pt; font-weight: 500; }
+  .seg-role { font-size: 10pt; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; }
+  .seg-role.pilot { color: #1a5a2a; }
+  .seg-role.atc { color: #985b00; }
+  .seg-role.unknown { color: #555; }
+  .seg-text { color: #000; overflow-wrap: break-word; word-break: break-word; line-height: 1.4; }
+  mark.diff-del { background: #fee; color: #b71c1c; text-decoration: line-through; padding: 0 1px; font-style: normal; font-weight: 500; }
+  mark.diff-add { background: #e8f5e9; color: #1b5e20; padding: 0 1px; font-style: normal; font-weight: 600; }
+  .diff-aligned { display: inline-flex; flex-wrap: wrap; column-gap: 0.4em; row-gap: 14px; align-items: center; }
 </style>
 </head><body class="export-body">
 
