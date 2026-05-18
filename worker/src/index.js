@@ -223,6 +223,7 @@ async function handleDriveSearch(request, env, url, corsHeaders) {
     listUrl.searchParams.set('pageSize', '50');
     listUrl.searchParams.set('supportsAllDrives', 'true');
     listUrl.searchParams.set('includeItemsFromAllDrives', 'true');
+    listUrl.searchParams.set('corpora', 'allDrives');
 
     const res = await fetch(listUrl.toString(), {
       headers: { Authorization: `Bearer ${accessToken}` },
