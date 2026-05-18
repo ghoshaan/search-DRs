@@ -1443,9 +1443,6 @@ function renderDoc(d) {
   
   const hasTlEdit = tlEditsMap.has(String(d.id));
   const suppressHistory = !hasTlEdit && d.versions.length > 0 && !d.reviewedBy && (d.pct || 0) === 0 && !d.hasPunctChange;
-  const vBadge = (!suppressHistory && (d.versions.length > 0 || hasTlEdit))
-    ? `<button class="version-badge open" data-vid="${escapeAttr(String(d.id))}">&#x1F4DC;${d.versions.length > 0 ? ' ' + d.versions.length : ''}</button>`
-    : '';
   const tlBadge = `<button class="tag tag-tl-edit${hasTlEdit ? ' has-edit' : ''}" data-tlbtn="${escapeAttr(String(d.id))}">${hasTlEdit ? 'Edit ✎' : 'Edit'}</button>`;
 
   const punctTag = d.hasPunctChange ? `<span class="tag" style="color:var(--ink-dim);border-color:var(--line-2);">punctuation</span>` : '';
@@ -1515,7 +1512,7 @@ function renderDoc(d) {
   return `
     <article class="result" data-docid="${escapeAttr(String(d.id))}">
       <header class="result-head">
-        <div class="result-key-wrap">${cbEl}${vBadge}${tlBadge}<span class="result-key-inner">${keyEl}${copyKeyEl}${adsbEl}${aipEl}</span></div>
+        <div class="result-key-wrap">${cbEl}${tlBadge}<span class="result-key-inner">${keyEl}${copyKeyEl}${adsbEl}${aipEl}</span></div>
         <div class="result-tags">
           ${reviewTag}
           <span class="tag-dur">${dur}</span>
