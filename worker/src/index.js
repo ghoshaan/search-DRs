@@ -100,7 +100,12 @@ async function refreshAccessToken(clientId, clientSecret, refreshToken) {
 }
 
 async function uploadToDrive(accessToken, fileBuffer, filename, folderId, mimeType = 'application/pdf') {
-  const metadata = { name: filename, mimeType };
+  // HTML uploads: tell Drive to convert to Google Doc (selectable text, working links).
+  // File content-type stays text/html (source); metadata mimeType is the target.
+  const targetMimeType = mimeType === 'text/html'
+    ? 'application/vnd.google-apps.document'
+    : mimeType;
+  const metadata = { name: filename, mimeType: targetMimeType };
   if (folderId) metadata.parents = [folderId];
 
   const boundary = 'atc_pdf_upload_boundary';
