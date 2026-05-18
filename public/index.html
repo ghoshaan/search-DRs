@@ -1622,43 +1622,59 @@ function alignedWordDiff(oldText, newText) {
 function renderAlignedDiff(slots) {
   if (!slots.some(s => s.type !== 'eq')) return slots.map(s => renderText(s.word)).join(' ');
 
-  const cols = slots.map(sl => {
-    if (sl.type === 'eq') {
-      return `<span class="da-eq">${renderText(sl.word)}</span>`;
-    }
-    let top = '', bot = '';
-    if (sl.type === 'del') {
-      top = `<span class="da-del">${renderText(sl.word)}</span>`;
-      bot = `<span></span>`;
-    } else if (sl.type === 'ins') {
-      top = `<span></span>`;
-      bot = `<span class="da-ins">${renderText(sl.word)}</span>`;
-    } else {
-      if (normWord(sl.oldWord) === normWord(sl.newWord)) {
-        const diff = charDiff(sl.oldWord, sl.newWord);
-        let t = '', b = '';
-        for (const s of diff) {
-          if (s.type === 'eq') {
-            const txt = renderText(s.char);
-            t += `<span class="da-eq">${txt}</span>`;
-            b += `<span class="da-eq">${txt}</span>`;
-          } else if (s.type === 'del') {
-            t += `<mark class="diff-del">${renderText(s.char)}</mark>`;
-          } else if (s.type === 'ins') {
-            b += `<mark class="diff-add">${renderText(s.char)}</mark>`;
-          }
-        }
-        top = `<span>${t}</span>`;
-        bot = `<span>${b}</span>`;
-      } else {
-        top = `<span class="da-del">${renderText(sl.oldWord)}</span>`;
-        bot = `<span class="da-ins">${renderText(sl.newWord)}</span>`;
-      }
-    }
-    return `<span class="da-col">${top}${bot}</span>`;
-  });
+  const result = [];
+  let i = 0;
+  while (i < slots.length) {
+    const sl = slots[i];
 
-  return `<span class="diff-aligned">${cols.join('')}</span>`;
+    if (sl.type === 'eq') {
+      result.push(`<span class="da-eq">${renderText(sl.word)}</span>`);
+      i++;
+      continue;
+    }
+
+    if (sl.type === 'pair' && normWord(sl.oldWord) === normWord(sl.newWord)) {
+      // Punctuation-only change: Unified inline
+      const diff = charDiff(sl.oldWord, sl.newWord);
+      let unified = '';
+      for (const s of diff) {
+        if (s.type === 'eq') {
+          unified += renderText(s.char);
+        } else if (s.type === 'del') {
+          unified += `<mark class="diff-del">${renderText(s.char)}</mark>`;
+        } else if (s.type === 'ins') {
+          unified += `<mark class="diff-add">${renderText(s.char)}</mark>`;
+        }
+      }
+      result.push(`<span>${unified}</span>`);
+      i++;
+      continue;
+    }
+
+    // Word change (del, ins, or word-pair): Group consecutive changes
+    let groupOld = [], groupNew = [];
+    while (i < slots.length) {
+      const curr = slots[i];
+      if (curr.type === 'eq') break;
+      if (curr.type === 'pair' && normWord(curr.oldWord) === normWord(curr.newWord)) break;
+
+      if (curr.type === 'del') {
+        groupOld.push(curr.word);
+      } else if (curr.type === 'ins') {
+        groupNew.push(curr.word);
+      } else { // type === 'pair' (and normWords differ)
+        groupOld.push(curr.oldWord);
+        groupNew.push(curr.newWord);
+      }
+      i++;
+    }
+
+    const top = groupOld.length ? `<span class="da-del">${groupOld.map(renderText).join(' ')}</span>` : '<span></span>';
+    const bot = groupNew.length ? `<span class="da-ins">${groupNew.map(renderText).join(' ')}</span>` : '<span></span>';
+    result.push(`<span class="da-col">${top}${bot}</span>`);
+  }
+
+  return `<span class="diff-aligned">${result.join('')}</span>`;
 }
 
 function wordDiff(oldText, newText) {
