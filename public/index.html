@@ -1001,6 +1001,7 @@ async function processSnapshots(files) {
   await loadComments();
   loadMajor();
   loadTlEdits();
+  loadSelection();
   populateFilterSuggestions();
   $('m-docs').textContent = allDocs.length.toLocaleString();
   statusL.textContent = `${isAppVisible ? 'added' : 'ready'} · ${allDocs.length.toLocaleString()} recordings`;
@@ -2692,11 +2693,13 @@ function serializeAnnotations(activeIds = null) {
   let comments = [...commentsMap.entries()];
   let major = [...majorSet];
   let tlEdits = [...tlEditsMap.entries()];
+  let sel = [...selection];
 
   if (activeIds) {
     comments = comments.filter(([id]) => activeIds.has(String(id)));
     major = major.filter(id => activeIds.has(String(id)));
     tlEdits = tlEdits.filter(([id]) => activeIds.has(String(id)));
+    sel = sel.filter(id => activeIds.has(String(id)));
   }
 
   return JSON.stringify({
@@ -2704,6 +2707,7 @@ function serializeAnnotations(activeIds = null) {
     comments,
     major,
     tlEdits,
+    selection: sel,
     generalComment: { text: $('general-comment').value, images: generalCommentImages },
   });
 }
@@ -2714,6 +2718,7 @@ function loadSharedAnnotations(json) {
     commentsMap = new Map((d.comments || []).map(([id, v]) => [String(id), v]));
     majorSet = new Set((d.major || []).map(String));
     tlEditsMap = new Map((d.tlEdits || []).map(([id, v]) => [String(id), v]));
+    selection = new Set((d.selection || []).map(String));
     const gc = d.generalComment || {};
     $('general-comment').value = gc.text || '';
     generalCommentImages = gc.images || [];
@@ -2785,6 +2790,8 @@ async function maybeLoadSharedSession() {
       saveMajor();
       saveTlEdits();
       saveGeneralComment();
+      saveSelection();
+      updateSelectionBar();
     }
 
     restoreFiltersFromUrl(params);
