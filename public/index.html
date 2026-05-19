@@ -99,7 +99,8 @@
   .segments { display: grid; gap: 4px; margin-top: 8px; }
 
   .seg { display: grid; grid-template-columns: 56px auto 1fr; gap: 12px; align-items: baseline; padding: 4px 0; }
-  .seg-time { color: var(--ink-faint); font-size: 13px; font-variant-numeric: tabular-nums; }
+  .seg-time { color: var(--ink-faint); font-size: 13px; font-variant-numeric: tabular-nums; cursor: pointer; }
+  .seg-time:hover { color: var(--amber); }
   .seg-role { font-size: 11px; text-transform: uppercase; letter-spacing: 0.14em; white-space: nowrap; padding-right: 4px; }
   .seg-role.pilot { color: var(--pilot); }
   .seg-role.atc { color: var(--atc); }
@@ -121,7 +122,8 @@
   .tl-editor.open { display: block; }
   .tl-editor-header { font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; color: #d4a0ff; margin-bottom: 10px; opacity: 0.8; }
   .tl-seg-row { display: grid; grid-template-columns: 56px 72px 1fr 28px; gap: 8px; align-items: center; margin-bottom: 6px; }
-  .tl-seg-time { font-size: 12px; color: var(--ink-faint); font-variant-numeric: tabular-nums; }
+  .tl-seg-time { font-size: 12px; color: var(--ink-faint); font-variant-numeric: tabular-nums; cursor: pointer; }
+  .tl-seg-time:hover { color: var(--amber); }
   .tl-role-select { background: var(--bg); border: 1px solid var(--line-2); color: var(--ink); font-family: inherit; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; padding: 3px 4px; outline: none; transition: border-color 0.15s; width: 100%; }
   .tl-role-select:focus { border-color: #d4a0ff; }
   .tl-text-input { background: var(--bg); border: 1px solid var(--line-2); color: var(--ink); font-family: inherit; font-size: 13px; padding: 4px 8px; outline: none; width: 100%; transition: border-color 0.15s; }
@@ -1560,7 +1562,7 @@ function renderDoc(d) {
 
   const segs = (displayDoc.segments || []).map(s => `
     <div class="seg">
-      <span class="seg-time">${formatMs(s.start)}</span>
+      <span class="seg-time" data-start-ms="${s.start}">${formatMs(s.start)}</span>
       <span class="seg-role ${s.role || 'unknown'}">${s.spId ? `<b style="opacity:0.5;margin-right:4px;">${s.spId}</b>` : ''}${escapeHtml(s.role || '?')}</span>
       <span class="seg-text">${renderText(s.text)}</span>
     </div>
@@ -1879,25 +1881,25 @@ function renderVersionSegs(segments, currentSegments) {
   for (const { old: s, cur } of pairs) {
     while (ii < sortedInserted.length && sortedInserted[ii].start < s.start) {
       const n = sortedInserted[ii++];
-      parts.push(`<div class="seg seg-added"><span class="seg-time">${formatMs(n.start)}</span><span class="seg-role ${n.role}">${n.spId ? `<b style="opacity:0.5;margin-right:4px;">${n.spId}</b>` : ''}${escapeHtml(n.role)}</span><span class="seg-text"><mark class="diff-add">${renderText(n.text)}</mark></span></div>`);
+      parts.push(`<div class="seg seg-added"><span class="seg-time" data-start-ms="${n.start}">${formatMs(n.start)}</span><span class="seg-role ${n.role}">${n.spId ? `<b style="opacity:0.5;margin-right:4px;">${n.spId}</b>` : ''}${escapeHtml(n.role)}</span><span class="seg-text"><mark class="diff-add">${renderText(n.text)}</mark></span></div>`);
     }
     if (cur) {
       const textHtml = renderAlignedDiff(alignedWordDiff(s.text, cur.text));
       const oldRole = s.role || 'unknown', newRole = cur.role || 'unknown';
-      const roleHtml = oldRole !== newRole 
+      const roleHtml = oldRole !== newRole
         ? `<span class="seg-role">${s.spId ? `<b style="opacity:0.5;margin-right:4px;">${s.spId}</b>` : ''}<mark class="diff-del">${escapeHtml(s.role)}</mark><mark class="diff-add">${escapeHtml(cur.role)}</mark></span>`
         : `<span class="seg-role ${oldRole}">${s.spId ? `<b style="opacity:0.5;margin-right:4px;">${s.spId}</b>` : ''}${escapeHtml(s.role)}</span>`;
       const timeHtml = Math.round(s.start) !== Math.round(cur.start)
         ? `<span class="time-diff"><mark class="diff-del">${formatMs(s.start)}</mark><mark class="diff-add">${formatMs(cur.start)}</mark></span>`
         : formatMs(s.start);
-      parts.push(`<div class="seg"><span class="seg-time">${timeHtml}</span>${roleHtml}<span class="seg-text">${textHtml}</span></div>`);
+      parts.push(`<div class="seg"><span class="seg-time" data-start-ms="${cur.start}">${timeHtml}</span>${roleHtml}<span class="seg-text">${textHtml}</span></div>`);
     } else {
-      parts.push(`<div class="seg seg-removed"><span class="seg-time">${formatMs(s.start)}</span><span class="seg-role ${s.role}">${s.spId ? `<b style="opacity:0.5;margin-right:4px;">${s.spId}</b>` : ''}${escapeHtml(s.role)}</span><span class="seg-text"><mark class="diff-del">${renderText(s.text)}</mark></span></div>`);
+      parts.push(`<div class="seg seg-removed"><span class="seg-time" data-start-ms="${s.start}">${formatMs(s.start)}</span><span class="seg-role ${s.role}">${s.spId ? `<b style="opacity:0.5;margin-right:4px;">${s.spId}</b>` : ''}${escapeHtml(s.role)}</span><span class="seg-text"><mark class="diff-del">${renderText(s.text)}</mark></span></div>`);
     }
   }
   while (ii < sortedInserted.length) {
     const n = sortedInserted[ii++];
-    parts.push(`<div class="seg seg-added"><span class="seg-time">${formatMs(n.start)}</span><span class="seg-role ${n.role}">${n.spId ? `<b style="opacity:0.5;margin-right:4px;">${n.spId}</b>` : ''}${escapeHtml(n.role)}</span><span class="seg-text"><mark class="diff-add">${renderText(n.text)}</mark></span></div>`);
+    parts.push(`<div class="seg seg-added"><span class="seg-time" data-start-ms="${n.start}">${formatMs(n.start)}</span><span class="seg-role ${n.role}">${n.spId ? `<b style="opacity:0.5;margin-right:4px;">${n.spId}</b>` : ''}${escapeHtml(n.role)}</span><span class="seg-text"><mark class="diff-add">${renderText(n.text)}</mark></span></div>`);
   }
   return `<div class="segments">${parts.join('')}</div>`;
 }
@@ -1916,11 +1918,11 @@ function renderIndexedSegDiff(oldSegs, newSegs) {
       const roleHtml = oldRole !== newRole
         ? `<span class="seg-role">${s.spId ? `<b style="opacity:0.5;margin-right:4px;">${s.spId}</b>` : ''}<mark class="diff-del">${escapeHtml(s.role)}</mark><mark class="diff-add">${escapeHtml(t.role)}</mark></span>`
         : `<span class="seg-role ${oldRole}">${t.spId ? `<b style="opacity:0.5;margin-right:4px;">${t.spId}</b>` : ''}${escapeHtml(t.role)}</span>`;
-      parts.push(`<div class="seg"><span class="seg-time">${formatMs(t.start)}</span>${roleHtml}<span class="seg-text">${textHtml}</span></div>`);
+      parts.push(`<div class="seg"><span class="seg-time" data-start-ms="${t.start}">${formatMs(t.start)}</span>${roleHtml}<span class="seg-text">${textHtml}</span></div>`);
     } else if (s) {
-      parts.push(`<div class="seg seg-removed"><span class="seg-time">${formatMs(s.start)}</span><span class="seg-role ${s.role || 'unknown'}">${s.spId ? `<b style="opacity:0.5;margin-right:4px;">${s.spId}</b>` : ''}${escapeHtml(s.role || '?')}</span><span class="seg-text"><mark class="diff-del">${renderText(s.text)}</mark></span></div>`);
+      parts.push(`<div class="seg seg-removed"><span class="seg-time" data-start-ms="${s.start}">${formatMs(s.start)}</span><span class="seg-role ${s.role || 'unknown'}">${s.spId ? `<b style="opacity:0.5;margin-right:4px;">${s.spId}</b>` : ''}${escapeHtml(s.role || '?')}</span><span class="seg-text"><mark class="diff-del">${renderText(s.text)}</mark></span></div>`);
     } else {
-      parts.push(`<div class="seg seg-added"><span class="seg-time">${formatMs(t.start)}</span><span class="seg-role ${t.role || 'unknown'}">${t.spId ? `<b style="opacity:0.5;margin-right:4px;">${t.spId}</b>` : ''}${escapeHtml(t.role || '?')}</span><span class="seg-text"><mark class="diff-add">${renderText(t.text)}</mark></span></div>`);
+      parts.push(`<div class="seg seg-added"><span class="seg-time" data-start-ms="${t.start}">${formatMs(t.start)}</span><span class="seg-role ${t.role || 'unknown'}">${t.spId ? `<b style="opacity:0.5;margin-right:4px;">${t.spId}</b>` : ''}${escapeHtml(t.role || '?')}</span><span class="seg-text"><mark class="diff-add">${renderText(t.text)}</mark></span></div>`);
     }
   }
   return `<div class="segments">${parts.join('')}</div>`;
@@ -2098,6 +2100,25 @@ function handlePaste(e) {
 }
 
 document.addEventListener('click', e => {
+  // Timestamp → seek audio to that segment
+  const segTime = e.target.closest('.seg-time, .tl-seg-time');
+  if (segTime) {
+    const article = segTime.closest('article.result');
+    const audio = article?.querySelector('audio');
+    if (audio) {
+      let ms;
+      if (segTime.classList.contains('tl-seg-time')) {
+        const row = segTime.closest('.tl-seg-row');
+        ms = row ? Number(row.dataset.tlstart) : 0;
+      } else {
+        ms = Number(segTime.dataset.startMs);
+      }
+      audio.currentTime = ms / 1000;
+      audio.play();
+    }
+    return;
+  }
+
   // Pasted image — open lightbox
   if (e.target.tagName === 'IMG' && e.target.closest('.pasted-img-wrap')) {
     openLightbox(e.target.src);
