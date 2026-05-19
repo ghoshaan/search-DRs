@@ -208,10 +208,10 @@
   .filter-clear:hover { color: var(--amber); border-color: rgba(255,179,71,0.4); }
 
   /* Selection */
-  .result-head-row { display: flex; gap: 12px; align-items: center; flex: 1; min-width: 0; }
+  .result-head-row { display: flex; gap: 0; align-items: center; flex: 1; min-width: 0; }
   .result-head-left { width: 66px; flex-shrink: 0; display: flex; justify-content: flex-end; align-items: center; }
   .result-head-content { flex: 1; min-width: 0; display: flex; align-items: baseline; }
-  .result-head-time { width: 56px; flex-shrink: 0; display: flex; align-items: center; }
+  .result-head-time { width: 68px; flex-shrink: 0; display: flex; align-items: center; }
   .select-cb {
     appearance: none; -webkit-appearance: none;
     width: 14px; height: 14px; border: 1px solid var(--line-2);
@@ -1517,7 +1517,7 @@ function renderDoc(d) {
   
   const hasTlEdit = tlEditsMap.has(String(d.id));
   const suppressHistory = !hasTlEdit && d.versions.length > 0 && !d.reviewedBy && (d.pct || 0) === 0 && !d.hasPunctChange;
-  const tlBadge = `<button class="tag tag-tl-edit${hasTlEdit ? ' has-edit' : ''}" data-tlbtn="${escapeAttr(String(d.id))}">${hasTlEdit ? 'Edited' : 'Edit'}</button>`;
+  const tlBadge = `<button class="tag tag-tl-edit${hasTlEdit ? ' has-edit' : ''}" data-tlbtn="${escapeAttr(String(d.id))}">${hasTlEdit ? 'Edit ✎' : 'Edit'}</button>`;
 
   const punctTag = d.hasPunctChange ? `<span class="tag" style="color:var(--ink-dim);border-color:var(--line-2);">punctuation</span>` : '';
 
