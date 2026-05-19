@@ -3062,15 +3062,20 @@ $('share-btn').addEventListener('click', async () => {
 
     if (!files.length) { alert('No data loaded to share.'); return; }
 
-    const sessionId = genSessionId();
-    const fileRecords = await Promise.all(files.map(async f => ({
-      name: f.name.replace(/[^\w.\-]/g, '_'),
-      buffer: await f.arrayBuffer()
-    })));
-
     const activeIds = new Set();
     filteredDocs.forEach(d => activeIds.add(String(d.id)));
     allDocs.filter(d => selection.has(String(d.id))).forEach(d => activeIds.add(String(d.id)));
+
+    const sessionId = genSessionId();
+    const fileRecords = await Promise.all(files.map(async f => {
+      const text = await f.text();
+      const filtered = text.split('\n').filter(line => {
+        const t = line.trim();
+        if (!t) return false;
+        try { const id = JSON.parse(t)?.data_row?.id; return id && activeIds.has(String(id)); } catch { return false; }
+      }).join('\n');
+      return { name: f.name.replace(/[^\w.\-]/g, '_'), buffer: new TextEncoder().encode(filtered).buffer };
+    }));
 
     const annotJson = serializeAnnotations(activeIds);
     const metaJson = JSON.stringify({
